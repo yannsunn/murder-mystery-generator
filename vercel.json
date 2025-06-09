@@ -1,0 +1,46 @@
+{
+  "functions": {
+    "api/phase1-concept.js": { "maxDuration": 45 },
+    "api/phase2-characters.js": { "maxDuration": 50 },
+    "api/phase3-relationships.js": { "maxDuration": 45 },
+    "api/phase4-incident.js": { "maxDuration": 50 },
+    "api/phase5-clues.js": { "maxDuration": 50 },
+    "api/phase6-timeline.js": { "maxDuration": 45 },
+    "api/phase7-solution.js": { "maxDuration": 50 },
+    "api/phase8-gamemaster.js": { "maxDuration": 45 },
+    "api/groq-phase1-concept.js": { "maxDuration": 10 },
+    "api/groq-phase2-characters.js": { "maxDuration": 10 },
+    "api/groq-phase3-relationships.js": { "maxDuration": 8 },
+    "api/groq-phase4-incident.js": { "maxDuration": 10 },
+    "api/groq-phase5-clues.js": { "maxDuration": 10 },
+    "api/groq-phase6-timeline.js": { "maxDuration": 8 },
+    "api/groq-phase7-solution.js": { "maxDuration": 10 },
+    "api/groq-phase8-gamemaster.js": { "maxDuration": 8 },
+    "api/failsafe-concept.js": { "maxDuration": 45 },
+    "api/generate-handouts.js": { "maxDuration": 60 },
+    "api/generate-pdf.js": { "maxDuration": 60 }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-XSS-Protection", "value": "1; mode=block" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/public/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ],
+  "regions": ["iad1", "hnd1", "fra1"],
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "public"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "murder-mystery-app-vercel",
+  "version": "1.0.0",
+  "description": "マーダーミステリー制作支援ツール（Vercel版）",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "deploy": "vercel --prod",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0"
+  }
+}
