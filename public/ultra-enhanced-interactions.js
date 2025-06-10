@@ -379,8 +379,12 @@ class UltraUI {
     }, 200);
 
     this.currentStep = targetStep;
-    this.updateStepIndicator();
-    this.updateNavigationButtons();
+    if (typeof this.updateStepIndicator === 'function') {
+      this.updateStepIndicator();
+    }
+    if (typeof this.updateNavigationButtons === 'function') {
+      this.updateNavigationButtons();
+    }
     
     // ステップ変更音効
     this.playSound('step-change');
@@ -593,7 +597,9 @@ class UltraUI {
       try {
         const { data, step } = JSON.parse(saved);
         this.restoreFormData(data);
-        this.animateStepTransition(step);
+        if (typeof this.animateStepTransition === 'function') {
+          this.animateStepTransition(step);
+        }
         return true;
       } catch (e) {
         console.warn('Failed to load saved data:', e);

@@ -2,7 +2,7 @@
 // 処理時間: 6-10秒保証
 
 export const config = {
-  maxDuration: 8,
+  maxDuration: 90,
 };
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;

@@ -2,12 +2,14 @@
 // 処理時間: 5-10秒保証
 
 export const config = {
-  maxDuration: 10, // 超短時間設定
+  maxDuration: 90, // タイムアウト回避のため90秒に設定
 };
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 export default async function handler(request) {
+  const startTime = Date.now();
+  
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -46,56 +48,70 @@ export default async function handler(request) {
     
     const userPrompt = generateOptimizedPrompt({ participants, era, setting, incident_type, worldview, tone });
 
-    // Groq API呼び出し - 爆速処理
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-70b-versatile', // 高性能+高速モデル
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8,
-        max_tokens: 1200,
-        top_p: 0.9,
-        stream: false
-      })
-    });
+    // Groq API呼び出し - タイムアウト対応版
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000); // 45秒タイムアウト
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant', // 最高速モデル
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 1000, // トークン数を最適化
+          top_p: 0.9,
+          stream: false
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const concept = data.choices[0].message.content;
+
+      console.log('Groq Phase 1: Ultra-fast concept generated successfully');
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          content: concept,
+          provider: 'groq',
+          model: 'llama-3.1-8b-instant',
+          processing_time: `${Date.now() - startTime}ms`
+        }),
+        { status: 200, headers }
+      );
+
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Groq API request timeout after 45 seconds');
+      }
+      throw fetchError;
     }
-
-    const data = await response.json();
-    const concept = data.choices[0].message.content;
-
-    console.log('Groq Phase 1: Ultra-fast concept generated successfully');
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        phase: 'concept',
-        content: concept,
-        next_phase: 'characters',
-        estimated_cost: '$0.002',
-        progress: 12.5,
-        processing_time: '5-10秒',
-        provider: 'Groq (Ultra-Fast)'
-      }),
-      { status: 200, headers }
-    );
 
   } catch (error) {
     console.error('Groq concept generation error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: `Groq生成エラー: ${error.message}` 
+        error: `Groq生成エラー: ${error.message}`,
+        processing_time: `${Date.now() - startTime}ms`
       }),
       { status: 500, headers }
     );

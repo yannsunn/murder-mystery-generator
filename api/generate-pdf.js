@@ -2,7 +2,7 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export const config = {
-  maxDuration: 60,
+  maxDuration: 90, // PDF生成用に適切な時間設定
 };
 
 export default async function handler(req, res) {

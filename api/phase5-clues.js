@@ -2,7 +2,7 @@
 // 処理時間: 20-25秒
 
 export const config = {
-  maxDuration: 50,
+  maxDuration: 120,
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;

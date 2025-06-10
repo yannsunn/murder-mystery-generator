@@ -2,7 +2,7 @@
 // 処理時間: 15-20秒
 
 export const config = {
-  maxDuration: 45, // さらに短縮
+  maxDuration: 120, // OpenAI API用に適切な時間設定
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;

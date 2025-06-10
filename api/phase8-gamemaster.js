@@ -2,7 +2,7 @@
 // 処理時間: 15-20秒
 
 export const config = {
-  maxDuration: 45,
+  maxDuration: 120, // ゲームマスターガイドは最も複雑な処理
 };
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -102,7 +102,7 @@ ${concept}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-3.5-turbo', // 高速化のためのgpt-3.5-turboを使用
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
