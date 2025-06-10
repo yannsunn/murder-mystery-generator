@@ -130,14 +130,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // ボタン状態の更新
     if (prevBtn) {
       prevBtn.disabled = currentStep === 1;
-      prevBtn.style.display = currentStep === 1 ? 'none' : 'inline-block';
+      if (currentStep === 1) {
+        prevBtn.classList.add('hidden');
+      } else {
+        prevBtn.classList.remove('hidden');
+      }
     }
     if (nextBtn) {
-      nextBtn.style.display = currentStep === totalSteps ? 'none' : 'inline-block';
+      if (currentStep === totalSteps) {
+        nextBtn.classList.add('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+      }
     }
     if (generateBtn) {
-      generateBtn.style.display = currentStep === totalSteps ? 'inline-block' : 'none';
-      generateBtn.classList.remove('hidden');
+      if (currentStep === totalSteps) {
+        generateBtn.classList.remove('hidden');
+      } else {
+        generateBtn.classList.add('hidden');
+      }
     }
     
     // ステップインジケーターの更新

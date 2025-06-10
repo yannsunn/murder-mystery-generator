@@ -8,18 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="ultra-enhanced-style.css">
+  <link rel="stylesheet" href="simple-modern-style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵️</text></svg>">
 </head>
 <body>
-  <!-- 🚀 未来的ヘッダー -->
-  <header class="glass-effect">
-    <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 1rem 2rem;">
-      <div class="floating">
-        <h1>🕵️ Murder Mystery Generator</h1>
-        <p>世界最速AI駆動システム - タイムアウト0%保証</p>
-      </div>
-    </div>
+  <header>
+    <h1>🕵️ Murder Mystery Generator</h1>
+    <p>AI駆動マーダーミステリー生成システム</p>
   </header>
 
   <!-- 🎨 メインコンテンツ -->
@@ -27,10 +22,8 @@
     <!-- 🎯 メインカード -->
     <div class="card" id="main-card">
       <div class="card-header">
-        <h2 class="text-gradient">🎭 シナリオ生成システム</h2>
-        <p style="opacity: 0.8; margin-top: 0.5rem;">
-          Groq超高速AI × 8段階並列処理で45秒以内に完璧なシナリオを生成
-        </p>
+        <h2>🎭 シナリオ生成システム</h2>
+        <p>AI並列処理で高品質なマーダーミステリーシナリオを生成</p>
       </div>
       
       <!-- 🎪 革命的ステップインジケーター -->
@@ -231,8 +224,8 @@
           </div>
         </div>
         
-        <!-- 🎮 ナビゲーションボタン -->
-        <div class="button-group">
+        <!-- ナビゲーションボタン -->
+        <div class="button-container">
           <button type="button" id="prev-btn" class="btn btn-secondary" disabled>
             <span>←</span> 前へ
           </button>
@@ -240,33 +233,56 @@
             次へ <span>→</span>
           </button>
           <button type="button" id="stepwise-generation-btn" class="btn btn-success hidden">
-            <span>🚀</span> 超高速生成開始
+            <span>🚀</span> 生成開始
           </button>
         </div>
       </form>
     </div>
     
-    <!-- 📊 ローディング表示 -->
+    <!-- ローディング表示 -->
     <div id="loading-indicator" class="card hidden">
       <div class="loading-container">
+        <div class="loading-header">
+          <h3>🚀 AIシナリオ生成中...</h3>
+          <div class="progress-percentage" id="progress-percentage">0%</div>
+        </div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            <div class="progress-text" id="progress-text">準備中...</div>
+          </div>
+        </div>
+        
+        <div class="phase-info">
+          <div class="current-phase" id="current-phase">🚀 システム初期化中...</div>
+          <div class="phase-details" id="phase-details">AI エンジン起動中...</div>
+        </div>
+        
+        <div class="loading-stats">
+          <div class="stat-item">
+            <span class="stat-label">処理フェーズ</span>
+            <span class="stat-value" id="current-phase-number">1/8</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">推定残り時間</span>
+            <span class="stat-value" id="estimated-time">計算中...</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">生成方式</span>
+            <span class="stat-value" id="generation-method">AI並列処理</span>
+          </div>
+        </div>
+        
         <div class="loading-spinner"></div>
-        <div class="loading-text" id="loading-text">
-          超高速生成準備中...
-        </div>
-        <div class="progress-bar">
-          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
-        </div>
-        <div class="loading-details" id="loading-details">
-          Groq AI システム起動中...
-        </div>
       </div>
     </div>
     
-    <!-- 🎊 結果表示 -->
+    <!-- 結果表示 -->
     <div id="result-container" class="card hidden">
       <div class="result-header">
-        <h2 class="text-gradient">🎉 生成完了</h2>
-        <p>あなた専用のマーダーミステリーシナリオが完成しました！</p>
+        <h2>🎉 生成完了</h2>
+        <p>マーダーミステリーシナリオが完成しました</p>
       </div>
       
       <div class="result-content">
@@ -299,10 +315,8 @@
     </div>
   </main>
 
-  <!-- 🎭 フッター -->
-  <footer style="text-align: center; padding: 2rem; opacity: 0.7; font-size: 0.9rem;">
-    <p>🕵️ Murder Mystery Generator - Ultra Edition | AI-Powered by Groq & OpenAI</p>
-    <p style="margin-top: 0.5rem;">限界突破したタイムアウトフリーシステム</p>
+  <footer style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
+    <p>🕵️ Murder Mystery Generator | AI-Powered</p>
   </footer>
 
   <!-- 🚀 JavaScript -->
