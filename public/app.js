@@ -508,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function generateEmergencySimple(formData) {
     console.log('🆘 Emergency simple generation starting...');
     
-    const scenario = `# 🆘 緊急生成シナリオ
+    let scenario = `# 🆘 緊急生成シナリオ
 
 ## タイトル
 「秘密の書斎」
@@ -613,7 +613,7 @@ ${formData.participants}人の参加者が${formData.setting}で${formData.incid
           console.log(retryInfo);
           
           // リトライ状況を可視化
-          updateRetryStatus(endpoint, retryCount + 1, maxRetries, '504タイムアウト');
+          showLoading(`🔄 リトライ中 ${retryCount + 1}/${maxRetries}: ${endpoint}`);
           
           await new Promise(resolve => setTimeout(resolve, 2000)); // 2秒待機
           return callPhaseAPI(endpoint, data, retryCount + 1, maxRetries);
@@ -622,8 +622,8 @@ ${formData.participants}人の参加者が${formData.setting}で${formData.incid
         throw new Error(`${endpoint} Error (${response.status}): ${errorText}`);
       }
       
-      // 成功時のステータス更新
-      updateRetryStatus(endpoint, 0, 0, '成功');
+      // 成功時のログ出力
+      console.log(`✅ ${endpoint} API呼び出し成功`);
       
       const result = await response.json();
       
