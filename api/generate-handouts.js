@@ -1,7 +1,6 @@
 // Vercel API Route - ハンドアウト生成
 
 export const config = {
-  runtime: 'edge',
   maxDuration: 60,
 };
 
