@@ -257,13 +257,35 @@ document.addEventListener('DOMContentLoaded', function() {
     };
   }
   
-  // 最適化されたシナリオ生成（3つのアプローチ対応）
+  // 最適化されたシナリオ生成（診断機能付き）
   async function generateScenario() {
     console.log('Starting optimized scenario generation...');
     
     try {
       const formData = getFormData();
       console.log('Sending form data:', formData);
+      
+      // 初期進捗表示
+      updateProgress(5, '🔍 システム診断中...', 'API接続性をチェックしています...', '約45秒');
+      
+      // API接続性テスト
+      try {
+        const testResponse = await fetch('/api/test-simple', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('✅ API接続テスト成功:', testData);
+          updateProgress(8, '✅ API接続確認完了', 'システムが正常に動作しています', '約40秒');
+        } else {
+          throw new Error(`API接続テスト失敗: ${testResponse.status}`);
+        }
+      } catch (testError) {
+        console.error('❌ API接続テスト失敗:', testError);
+        updateProgress(5, '⚠️ API接続問題', 'フォールバックシステムを使用します', '約50秒');
+      }
       
       // アプローチ選択（8段階超細分化システム）
       const approach = 'ultra_phases'; // 'ultra_phases', 'phases', 'streaming', 'queue', 'simple'
@@ -310,13 +332,16 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🚀 Starting Groq ultra-fast generation...');
       
       // Phase 1: Groq超高速コンセプト生成 (5-10秒)
-      showLoading('Phase 1/8: Groq超高速コンセプト生成中... (10秒以内)', 12.5);
+      updateProgress(10, '🚀 Groq超高速コンセプト生成中...', 'Groq AIエンジンでシナリオの核心を構築中...', '約40秒');
+      showLoading('Phase 1/8: Groq超高速コンセプト生成中... (10秒以内)');
       results.concept = await callPhaseAPI('/api/groq-phase1-concept', formData);
       displayPartialResult('concept', results.concept);
+      updateProgress(20, '🚀 コンセプト完成', 'シナリオ基盤の構築が完了しました', '約35秒');
       console.log('🚀 Groq Ultra Phase 1 completed');
       
       // 【タイムアウト回避】Phase 2&3 Groq並列実行 (8-12秒)
-      showLoading('Phase 2&3/8: Groq並列超高速処理中... (15秒以内)', 37.5);
+      updateProgress(25, '👥 キャラクター&関係性構築中...', '魅力的なキャラクターと複雑な人間関係を並列生成中...', '約30秒');
+      showLoading('Phase 2&3/8: Groq並列超高速処理中... (15秒以内)');
       const [charactersResult, relationshipsResult] = await Promise.all([
         callGroqPhaseAPI('/api/groq-phase2-characters', {
           concept: results.concept,
@@ -332,10 +357,12 @@ document.addEventListener('DOMContentLoaded', function() {
       results.relationships = relationshipsResult;
       displayPartialResult('characters', results.characters);
       displayPartialResult('relationships', results.relationships);
+      updateProgress(45, '👥 キャラクター&関係性完成', 'キャラクター設定と人間関係が完成しました', '約25秒');
       console.log('🚀 Groq Ultra Phase 2&3 completed in parallel');
       
       // 【タイムアウト回避】Phase 4&5 Groq並列実行 (8-12秒)
-      showLoading('Phase 4&5/8: Groq並列詳細構築中... (15秒以内)', 62.5);
+      updateProgress(50, '🕵️ 事件&手がかり構築中...', '謎に満ちた事件と巧妙な手がかりを同時生成中...', '約20秒');
+      showLoading('Phase 4&5/8: Groq並列詳細構築中... (15秒以内)');
       const [incidentResult, cluesResult] = await Promise.all([
         callGroqPhaseAPI('/api/groq-phase4-incident', {
           concept: results.concept,
@@ -354,10 +381,12 @@ document.addEventListener('DOMContentLoaded', function() {
       results.clues = cluesResult;
       displayPartialResult('incident', results.incident);
       displayPartialResult('clues', results.clues);
+      updateProgress(70, '🕵️ 事件&手がかり完成', '事件の詳細と手がかりシステムが完成しました', '約15秒');
       console.log('🚀 Groq Ultra Phase 4&5 completed in parallel');
       
       // 【タイムアウト回避】Phase 6&7&8 Groq三重並列実行 (6-12秒)
-      showLoading('Phase 6&7&8/8: Groq三重並列最終処理中... (15秒以内)', 100);
+      updateProgress(75, '⏰ 最終仕上げ中...', 'タイムライン・真相・ゲームガイドを三重並列生成中...', '約10秒');
+      showLoading('Phase 6&7&8/8: Groq三重並列最終処理中... (15秒以内)');
       const [timelineResult, solutionResult, gamemasterResult] = await Promise.all([
         callGroqPhaseAPI('/api/groq-phase6-timeline', {
           characters: results.characters,
@@ -385,13 +414,16 @@ document.addEventListener('DOMContentLoaded', function() {
       results.gamemaster = gamemasterResult;
       displayPartialResult('timeline', results.timeline);
       displayPartialResult('solution', results.solution);
+      updateProgress(95, '🎯 最終処理完了', 'すべての要素が完成しました', '約5秒');
       console.log('🚀 Groq Ultra Phase 6&7&8 completed in triple parallel');
       
       // 最終統合
+      updateProgress(98, '🎮 シナリオ統合中...', '完璧なシナリオに仕上げています...', '約3秒');
       const finalScenario = integrateAllPhases(results);
       generatedScenario = finalScenario;
       
       console.log('🎯 All 8 Groq ultra phases completed - TIMEOUT-FREE Mode');
+      updateProgress(100, '🎉 生成完了！', 'あなた専用のマーダーミステリーシナリオが完成しました！', '完了');
       displayFinalScenario(finalScenario);
       
       // 【タイムアウト回避】ハンドアウトも並列生成
@@ -400,8 +432,16 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error('Groq generation failed, trying OpenAI fallback:', error);
+      updateProgress(15, '⚠️ Groq API問題', 'OpenAI APIにフォールバック中...', '約60秒');
       // Groq失敗時は従来のAPIにフォールバック
-      return await generateWithUltraPhasesOpenAI(formData);
+      try {
+        return await generateWithUltraPhasesOpenAI(formData);
+      } catch (fallbackError) {
+        console.error('OpenAI fallback also failed:', fallbackError);
+        updateProgress(20, '⚠️ 両API問題', '緊急フォールバック生成中...', '約10秒');
+        // 最終フォールバック: 緊急生成
+        return await generateEmergencyScenario(formData);
+      }
     }
   }
 
@@ -560,6 +600,131 @@ ${formData.participants}人の参加者が${formData.setting}で${formData.incid
 通常のAI生成が復旧したら、より詳細なシナリオを再生成してください。`;
     
     return scenario;
+  }
+
+  // 🚨 緊急フォールバック生成（API不要）
+  async function generateEmergencyScenario(formData) {
+    console.log('🚨 Emergency scenario generation starting...');
+    updateProgress(25, '🚨 緊急生成開始', 'ローカル生成システムを使用中...', '約30秒');
+    
+    // 段階的に進捗を更新しながら生成
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    updateProgress(40, '📝 基本構造生成', 'シナリオの骨組みを作成中...', '約20秒');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    updateProgress(60, '👥 キャラクター配置', '参加者に応じた人物設定中...', '約15秒');
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    updateProgress(80, '🔍 事件詳細設定', '謎解き要素を追加中...', '約10秒');
+    
+    const scenario = `# 🚨 緊急生成シナリオ
+
+## タイトル
+「秘密の館」
+
+## コンセプト
+${formData.participants}人の参加者が${formData.setting || '山荘'}で${formData.incident_type || '殺人事件'}に巻き込まれるマーダーミステリーです。
+
+各プレイヤーは独自の動機と秘密を持ち、限られた時間の中で真相を探り当てる必要があります。
+
+## 舞台設定
+${formData.era || '現代'}の${formData.setting || '閉鎖空間'}。外部との連絡が断たれた状況で、参加者たちは互いを疑い合いながらも協力して事件の真相に迫ります。
+
+## 人物設定`;
+
+    // キャラクター生成
+    const participantCount = parseInt(formData.participants) || 5;
+    let characterSection = '';
+    for (let i = 1; i <= participantCount; i++) {
+      characterSection += `
+
+### キャラクター${i}: ${getCharacterName(i)}
+- **年齢**: ${20 + i * 5}歳
+- **職業**: ${getCharacterJob(i)}
+- **性格**: ${getCharacterPersonality(i)}
+- **秘密**: ${getCharacterSecret(i)}
+- **動機**: ${getCharacterMotive(i)}`;
+    }
+    
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    updateProgress(95, '🎯 最終調整', 'シナリオを完成させています...', '約5秒');
+    
+    const fullScenario = scenario + characterSection + `
+
+## 事件の概要
+パーティーの最中、突然の停電。明かりが戻ると、一人の参加者が倒れていた。
+密室状況の中、犯人は参加者の中にいることが判明する。
+
+## ゲームの進行
+1. **情報開示フェーズ** (30分): 各自の情報を共有
+2. **調査フェーズ** (45分): 手がかりを探し、証言を集める  
+3. **議論フェーズ** (30分): 互いの証言を検証
+4. **投票フェーズ** (15分): 犯人を決定
+5. **真相発表** (15分): 正解と解説
+
+## 手がかり
+- 現場に残された謎のメモ
+- アリバイに矛盾のある証言
+- 隠された人間関係
+- 重要な時間の記録
+
+## 結論
+このシナリオは緊急生成版です。通常のAI生成が復旧したら、より詳細で高品質なシナリオを再生成することができます。
+
+---
+**⚠️ 注意**: これは緊急フォールバック版です。完全版の生成をご希望の場合は、しばらく時間をおいて再試行してください。`;
+
+    await new Promise(resolve => setTimeout(resolve, 500));
+    updateProgress(100, '🎉 緊急生成完了', '基本的なシナリオが完成しました', '完了');
+    
+    generatedScenario = fullScenario;
+    displayFinalScenario(fullScenario);
+    
+    return fullScenario;
+  }
+
+  // キャラクター生成用ヘルパー関数
+  function getCharacterName(index) {
+    const names = ['田中健一', '佐藤美咲', '鈴木拓海', '高橋由美', '伊藤浩二', '渡辺真理', '山田健太', '中村咲良'];
+    return names[index - 1] || `人物${index}`;
+  }
+
+  function getCharacterJob(index) {
+    const jobs = ['会社員', '教師', '医師', '弁護士', '記者', '芸術家', '研究者', '実業家'];
+    return jobs[index - 1] || '関係者';
+  }
+
+  function getCharacterPersonality(index) {
+    const personalities = ['真面目', '社交的', '慎重', '積極的', '内向的', '楽観的', '現実的', '理想主義'];
+    return personalities[index - 1] || '普通';
+  }
+
+  function getCharacterSecret(index) {
+    const secrets = [
+      '実は被害者と以前トラブルがあった',
+      '重要な証拠を隠している',
+      '事件当夜の行動に嘘がある',
+      '被害者の秘密を知っていた',
+      '金銭的な問題を抱えている',
+      '他の参加者との関係に秘密がある',
+      '過去の出来事が関係している',
+      '真の目的を隠している'
+    ];
+    return secrets[index - 1] || '何かを隠している';
+  }
+
+  function getCharacterMotive(index) {
+    const motives = [
+      '正義感から真実を明かしたい',
+      '自分の潔白を証明したい',
+      '大切な人を守りたい',
+      '隠している秘密がバレるのを恐れている',
+      '過去の恨みを晴らしたい',
+      '金銭的な利益を得たい',
+      '名誉を回復したい',
+      '真相を隠蔽したい'
+    ];
+    return motives[index - 1] || '事件を解決したい';
   }
 
   // Groq超高速API呼び出し（タイムアウト回避保証）
