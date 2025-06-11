@@ -2,12 +2,16 @@
   "name": "murder-mystery-app-vercel",
   "version": "1.0.0",
   "description": "マーダーミステリー制作支援ツール（Vercel版）",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build step required'",
     "deploy": "vercel --prod",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "push": "./scripts/auto-push.sh",
+    "quick-push": "git add . && git commit -m '⚡ Quick update' && git push origin main",
+    "smart-push": "npm run push"
   },
   "dependencies": {
     "pdf-lib": "^1.17.1"
