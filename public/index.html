@@ -1001,7 +1001,7 @@
         
         async generateAdditionalContent() {
           try {
-            console.log('🚀 ULTRA: Starting complete content generation...');
+            console.log('🚀 ULTRA: Starting enhanced content generation...');
             
             const scenarioContent = document.getElementById('scenario-content');
             if (!scenarioContent) {
@@ -1011,42 +1011,78 @@
             const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
             const formData = this.collectFormData();
             
-            // 並列で追加コンテンツを生成
-            const promises = [
-              apiClient.post('/groq-phase2-characters', { 
-                concept: scenarioText, 
-                participants: formData.participants 
-              }),
-              apiClient.post('/groq-phase3-relationships', { 
-                concept: scenarioText, 
-                participants: formData.participants 
-              }),
-              apiClient.post('/groq-phase5-clues', { 
-                concept: scenarioText, 
-                participants: formData.participants 
-              }),
-              apiClient.post('/groq-phase6-timeline', { 
-                concept: scenarioText, 
-                participants: formData.participants 
-              }),
-              apiClient.post('/groq-phase8-gamemaster', { 
-                concept: scenarioText, 
-                participants: formData.participants 
-              })
-            ];
+            console.log('📝 Scenario text length:', scenarioText.length);
+            console.log('🎯 Form data:', formData);
             
-            console.log('⚡ Generating characters, relationships, clues, timeline, GM guide...');
-            const results = await Promise.all(promises);
-            
-            this.additionalContent = {
-              characters: results[0].data?.data || [],
-              relationships: results[1].data?.data || [],
-              clues: results[2].data?.data || [],
-              timeline: results[3].data?.data || [],
-              gamemaster: results[4].data?.data || []
+            // 各APIを個別に呼び出してエラーを特定しやすくする
+            const additionalContent = {
+              characters: [],
+              relationships: [],
+              clues: [],
+              timeline: [],
+              gamemaster: []
             };
             
-            console.log('✅ Additional content generated:', this.additionalContent);
+            // キャラクター生成
+            try {
+              console.log('👥 Generating characters...');
+              const charactersResult = await apiClient.post('/groq-phase2-characters', { 
+                concept: scenarioText, 
+                participants: formData.participants,
+                era: formData.era,
+                setting: formData.setting
+              });
+              console.log('✅ Characters API response:', charactersResult);
+              additionalContent.characters = charactersResult.data?.content || charactersResult.data?.data || 'キャラクター生成に失敗しました';
+            } catch (error) {
+              console.warn('⚠️ Characters generation failed:', error);
+              additionalContent.characters = 'キャラクター生成中にエラーが発生しました';
+            }
+            
+            // 手がかり生成
+            try {
+              console.log('🔍 Generating clues...');
+              const cluesResult = await apiClient.post('/groq-phase5-clues', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              });
+              console.log('✅ Clues API response:', cluesResult);
+              additionalContent.clues = cluesResult.data?.content || cluesResult.data?.data || '手がかり生成に失敗しました';
+            } catch (error) {
+              console.warn('⚠️ Clues generation failed:', error);
+              additionalContent.clues = '手がかり生成中にエラーが発生しました';
+            }
+            
+            // タイムライン生成
+            try {
+              console.log('⏰ Generating timeline...');
+              const timelineResult = await apiClient.post('/groq-phase6-timeline', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              });
+              console.log('✅ Timeline API response:', timelineResult);
+              additionalContent.timeline = timelineResult.data?.content || timelineResult.data?.data || 'タイムライン生成に失敗しました';
+            } catch (error) {
+              console.warn('⚠️ Timeline generation failed:', error);
+              additionalContent.timeline = 'タイムライン生成中にエラーが発生しました';
+            }
+            
+            // ゲームマスターガイド生成
+            try {
+              console.log('🎮 Generating gamemaster guide...');
+              const gmResult = await apiClient.post('/groq-phase8-gamemaster', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              });
+              console.log('✅ GM Guide API response:', gmResult);
+              additionalContent.gamemaster = gmResult.data?.content || gmResult.data?.data || 'GMガイド生成に失敗しました';
+            } catch (error) {
+              console.warn('⚠️ GM Guide generation failed:', error);
+              additionalContent.gamemaster = 'GMガイド生成中にエラーが発生しました';
+            }
+            
+            this.additionalContent = additionalContent;
+            console.log('✅ Enhanced additional content generated:', this.additionalContent);
             this.displayAdditionalContent();
             
           } catch (error) {
@@ -1057,50 +1093,58 @@
         
         displayAdditionalContent() {
           const container = document.getElementById('additional-content');
-          if (!container) return;
+          if (!container) {
+            console.error('❌ Additional content container not found');
+            return;
+          }
+          
+          console.log('🎨 Displaying additional content:', this.additionalContent);
+          
+          const formatContent = (content) => {
+            if (!content) return '生成中...';
+            if (typeof content === 'string') return content;
+            if (Array.isArray(content)) return content.join('\n\n');
+            return JSON.stringify(content, null, 2);
+          };
           
           container.innerHTML = `
             <div class="additional-sections">
-              <h3>🎭 追加コンテンツ</h3>
+              <h3>🎭 生成された追加コンテンツ</h3>
               
               <div class="content-section">
-                <h4>👥 キャラクター</h4>
-                <div class="content-text">${Array.isArray(this.additionalContent.characters) ? 
-                  this.additionalContent.characters.join('\n\n') : 
-                  this.additionalContent.characters || '生成中...'}</div>
+                <h4>👥 詳細キャラクター設定</h4>
+                <div class="content-text">${formatContent(this.additionalContent.characters)}</div>
               </div>
               
               <div class="content-section">
-                <h4>🔗 人間関係</h4>
-                <div class="content-text">${Array.isArray(this.additionalContent.relationships) ? 
-                  this.additionalContent.relationships.join('\n\n') : 
-                  this.additionalContent.relationships || '生成中...'}</div>
+                <h4>🔍 証拠・手がかり</h4>
+                <div class="content-text">${formatContent(this.additionalContent.clues)}</div>
               </div>
               
               <div class="content-section">
-                <h4>🔍 手がかり</h4>
-                <div class="content-text">${Array.isArray(this.additionalContent.clues) ? 
-                  this.additionalContent.clues.join('\n\n') : 
-                  this.additionalContent.clues || '生成中...'}</div>
+                <h4>⏰ 詳細タイムライン</h4>
+                <div class="content-text">${formatContent(this.additionalContent.timeline)}</div>
               </div>
               
               <div class="content-section">
-                <h4>⏰ タイムライン</h4>
-                <div class="content-text">${Array.isArray(this.additionalContent.timeline) ? 
-                  this.additionalContent.timeline.join('\n\n') : 
-                  this.additionalContent.timeline || '生成中...'}</div>
+                <h4>🎮 ゲームマスター進行ガイド</h4>
+                <div class="content-text">${formatContent(this.additionalContent.gamemaster)}</div>
               </div>
               
               <div class="content-section">
-                <h4>🎮 ゲームマスターガイド</h4>
-                <div class="content-text">${Array.isArray(this.additionalContent.gamemaster) ? 
-                  this.additionalContent.gamemaster.join('\n\n') : 
-                  this.additionalContent.gamemaster || '生成中...'}</div>
+                <h4>📊 生成統計</h4>
+                <div class="content-text">
+                  キャラクター: ${this.additionalContent.characters ? '✅ 生成完了' : '❌ 失敗'}
+                  手がかり: ${this.additionalContent.clues ? '✅ 生成完了' : '❌ 失敗'}
+                  タイムライン: ${this.additionalContent.timeline ? '✅ 生成完了' : '❌ 失敗'}
+                  GMガイド: ${this.additionalContent.gamemaster ? '✅ 生成完了' : '❌ 失敗'}
+                </div>
               </div>
             </div>
           `;
           
           container.classList.remove('hidden');
+          console.log('✅ Additional content displayed successfully');
         }
 
         async downloadPDF() {
