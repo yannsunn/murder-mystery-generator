@@ -127,27 +127,23 @@ document.addEventListener('DOMContentLoaded', function() {
       console.error(`Step element not found: step-${currentStep}`);
     }
     
-    // ボタン状態の更新
-    if (prevBtn) {
-      prevBtn.disabled = currentStep === 1;
+    // ボタン状態の更新 - 完全固定位置レイアウト
+    if (prevBtn && nextBtn && generateBtn) {
       if (currentStep === 1) {
-        prevBtn.classList.add('hidden');
+        // ステップ1: 前へ非表示、次へ表示、生成ボタン非表示
+        prevBtn.style.visibility = 'hidden';
+        nextBtn.style.display = 'flex';
+        generateBtn.style.display = 'none';
+      } else if (currentStep === totalSteps) {
+        // 最終ステップ: 前へ表示、次へ非表示、生成ボタンを同じ位置に表示
+        prevBtn.style.visibility = 'visible';
+        nextBtn.style.display = 'none';
+        generateBtn.style.display = 'flex';
       } else {
-        prevBtn.classList.remove('hidden');
-      }
-    }
-    if (nextBtn) {
-      if (currentStep === totalSteps) {
-        nextBtn.classList.add('hidden');
-      } else {
-        nextBtn.classList.remove('hidden');
-      }
-    }
-    if (generateBtn) {
-      if (currentStep === totalSteps) {
-        generateBtn.classList.remove('hidden');
-      } else {
-        generateBtn.classList.add('hidden');
+        // 中間ステップ: 前へ表示、次へ表示、生成ボタン非表示
+        prevBtn.style.visibility = 'visible';
+        nextBtn.style.display = 'flex';
+        generateBtn.style.display = 'none';
       }
     }
     
@@ -228,7 +224,32 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
       `;
       
-      summary.innerHTML = summaryHTML;
+      // セキュアなDOM操作に変更
+      summary.innerHTML = '';
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'summary-content';
+      
+      const summaryItems = [
+        ['参加人数', `${sanitizeHTML(participants)}人`],
+        ['時代背景', sanitizeHTML(era)],
+        ['舞台設定', sanitizeHTML(setting)],
+        ['世界観', sanitizeHTML(worldview)],
+        ['トーン', sanitizeHTML(tone)],
+        ['事件の種類', sanitizeHTML(incidentType)],
+        ['複雑さ', sanitizeHTML(complexity)],
+        ['追加オプション', options.length > 0 ? options.join(', ') : 'なし']
+      ];
+      
+      summaryItems.forEach(([label, value]) => {
+        const p = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = label + ': ';
+        p.appendChild(strong);
+        p.appendChild(document.createTextNode(value));
+        summaryDiv.appendChild(p);
+      });
+      
+      summary.appendChild(summaryDiv);
     } catch (error) {
       console.error('Summary update error:', error);
       summary.innerHTML = '<p class="text-red-500">設定の読み込みでエラーが発生しました</p>';

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🕵️ Murder Mystery Generator v2.0</title>
+  <meta name="description" content="次世代モジュラーマーダーミステリー生成システム">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="simple-modern-style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵️</text></svg>">
+  
+  <!-- Cache Busting -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+</head>
+<body>
+  <header>
+    <h1>🕵️ Murder Mystery Generator v2.0</h1>
+    <p>次世代モジュラーAI生成システム</p>
+  </header>
+
+  <!-- メインコンテンツ -->
+  <main class="main-container">
+    <!-- メインカード -->
+    <div class="card" id="main-card">
+      <div class="card-header">
+        <h2>🎭 シナリオ生成システム</h2>
+        <p>AI並列処理で高品質なマーダーミステリーシナリオを生成</p>
+      </div>
+      
+      <!-- ステップインジケーター -->
+      <div class="step-indicator" id="step-indicator">
+        <div class="step-indicator-item active" data-step="1" data-title="基本設定">
+          <span>1</span>
+          <div class="step-title">基本設定</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator-item" data-step="2" data-title="世界観">
+          <span>2</span>
+          <div class="step-title">世界観</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator-item" data-step="3" data-title="事件設定">
+          <span>3</span>
+          <div class="step-title">事件設定</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator-item" data-step="4" data-title="詳細オプション">
+          <span>4</span>
+          <div class="step-title">詳細</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-indicator-item" data-step="5" data-title="確認・生成">
+          <span>5</span>
+          <div class="step-title">生成</div>
+        </div>
+      </div>
+      
+      <!-- フォームコンテナ -->
+      <form id="scenario-form" class="form-container">
+        <div id="step-container">
+          
+          <!-- ステップ1: 基本設定 -->
+          <div id="step-1" class="step fade-in">
+            <div class="step-header">
+              <h3 class="text-gradient">🎮 基本設定</h3>
+              <p>マーダーミステリーの基本パラメータを設定します</p>
+            </div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="participants" class="form-label">👥 参加人数</label>
+                <select id="participants" name="participants" class="form-select">
+                  <option value="4">4人 (コンパクト)</option>
+                  <option value="5" selected>5人 (推奨)</option>
+                  <option value="6">6人 (標準)</option>
+                  <option value="7">7人 (大規模)</option>
+                  <option value="8">8人 (エピック)</option>
+                </select>
+                <div class="form-hint">推奨は5-6人です</div>
+              </div>
+              
+              <div class="form-group">
+                <label for="era" class="form-label">⏰ 時代背景</label>
+                <select id="era" name="era" class="form-select">
+                  <option value="modern" selected>🏙️ 現代 (2020年代)</option>
+                  <option value="showa">🏮 昭和 (1926-1989)</option>
+                  <option value="near-future">🚀 近未来 (2030年代)</option>
+                  <option value="fantasy">🏰 ファンタジー</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="setting" class="form-label">🏢 舞台設定</label>
+                <select id="setting" name="setting" class="form-select">
+                  <option value="closed-space" selected>🏠 閉鎖空間 (密室)</option>
+                  <option value="mountain-villa">🏔️ 山荘 (隔離)</option>
+                  <option value="military-facility">⚔️ 軍事施設</option>
+                  <option value="underwater-facility">🌊 海中施設</option>
+                  <option value="city">🌆 都市部</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ステップ2: 世界観 -->
+          <div id="step-2" class="step hidden">
+            <div class="step-header">
+              <h3 class="text-gradient">🌟 世界観とトーン</h3>
+              <p>シナリオの雰囲気と世界観を決定します</p>
+            </div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="worldview" class="form-label">🌍 世界観</label>
+                <select id="worldview" name="worldview" class="form-select">
+                  <option value="realistic" selected>📱 リアル志向 (現実的)</option>
+                  <option value="occult">👻 オカルト要素あり</option>
+                  <option value="sci-fi">🛸 SF要素あり</option>
+                  <option value="mystery">🔍 純粋ミステリー</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="tone" class="form-label">🎭 トーン・雰囲気</label>
+                <select id="tone" name="tone" class="form-select">
+                  <option value="serious" selected>😐 シリアス (重厚)</option>
+                  <option value="comedy">😄 コメディ (軽快)</option>
+                  <option value="horror">😱 ホラー (恐怖)</option>
+                  <option value="adventure">🗺️ 冒険活劇</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ステップ3: 事件設定 -->
+          <div id="step-3" class="step hidden">
+            <div class="step-header">
+              <h3 class="text-gradient">🔍 事件設定</h3>
+              <p>発生する事件の種類と詳細を設定します</p>
+            </div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="incident_type" class="form-label">⚡ 事件の種類</label>
+                <select id="incident_type" name="incident_type" class="form-select">
+                  <option value="murder" selected>💀 殺人事件</option>
+                  <option value="disappearance">👤 失踪事件</option>
+                  <option value="theft">💎 盗難事件</option>
+                  <option value="blackmail">📧 恐喝事件</option>
+                  <option value="fraud">💰 詐欺事件</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ステップ4: 詳細オプション -->
+          <div id="step-4" class="step hidden">
+            <div class="step-header">
+              <h3 class="text-gradient">⚙️ 詳細オプション</h3>
+              <p>シナリオの複雑さと特殊要素を調整します</p>
+            </div>
+            
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="complexity" class="form-label">🧩 複雑さレベル</label>
+                <select id="complexity" name="complexity" class="form-select">
+                  <option value="simple">🟢 シンプル (初心者向け)</option>
+                  <option value="standard" selected>🟡 標準 (推奨)</option>
+                  <option value="complex">🔴 複雑 (上級者向け)</option>
+                </select>
+              </div>
+              
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="red_herring" name="red_herring" class="checkbox-input">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text">🎯 レッドヘリング (偽の手がかり)</span>
+                </label>
+                
+                <label class="checkbox-label">
+                  <input type="checkbox" id="twist_ending" name="twist_ending" class="checkbox-input">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text">🌪️ どんでん返し</span>
+                </label>
+                
+                <label class="checkbox-label">
+                  <input type="checkbox" id="secret_roles" name="secret_roles" class="checkbox-input">
+                  <span class="checkbox-custom"></span>
+                  <span class="checkbox-text">🎭 秘密の役割</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <!-- ステップ5: 確認・生成 -->
+          <div id="step-5" class="step hidden">
+            <div class="step-header">
+              <h3 class="text-gradient">🚀 最終確認</h3>
+              <p>設定を確認して、超高速生成を開始します</p>
+            </div>
+            
+            <div id="summary-container" class="summary-container">
+              <div class="summary-card">
+                <h4>📋 設定サマリー</h4>
+                <div id="settings-summary" class="settings-summary">
+                  <!-- 動的に生成される設定サマリー -->
+                </div>
+              </div>
+              
+              <div class="generation-info">
+                <div class="info-item">
+                  <span class="info-icon">⚡</span>
+                  <span class="info-text">予想生成時間: <strong>45秒以内</strong></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">🛡️</span>
+                  <span class="info-text">フェイルセーフ: <strong>Groq → OpenAI</strong></span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">🎯</span>
+                  <span class="info-text">成功率: <strong>99.9%保証</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- ナビゲーションボタン - 完全固定位置 -->
+        <div class="button-container">
+          <button type="button" id="prev-btn" class="btn btn-secondary" disabled>
+            <span>←</span> 前へ
+          </button>
+          <div class="btn-spacer"></div>
+          <button type="button" id="next-btn" class="btn btn-primary">
+            次へ <span>→</span>
+          </button>
+          <button type="button" id="stepwise-generation-btn" class="btn btn-success" style="display: none;">
+            <span>🚀</span> 生成開始
+          </button>
+        </div>
+      </form>
+    </div>
+    
+    <!-- ローディング表示 -->
+    <div id="loading-indicator" class="card hidden">
+      <div class="loading-container">
+        <div class="loading-header">
+          <h3>🚀 AIシナリオ生成中...</h3>
+          <div class="progress-percentage" id="progress-percentage">0%</div>
+        </div>
+        
+        <div class="progress-bar-container">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            <div class="progress-text" id="progress-text">準備中...</div>
+          </div>
+        </div>
+        
+        <div class="phase-info">
+          <div class="current-phase" id="current-phase">🚀 システム初期化中...</div>
+          <div class="phase-details" id="phase-details">AI エンジン起動中...</div>
+        </div>
+        
+        <div class="loading-stats">
+          <div class="stat-item">
+            <span class="stat-label">処理フェーズ</span>
+            <span class="stat-value" id="current-phase-number">1/8</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">推定残り時間</span>
+            <span class="stat-value" id="estimated-time">計算中...</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">生成方式</span>
+            <span class="stat-value" id="generation-method">AI並列処理</span>
+          </div>
+        </div>
+        
+        <!-- ARIA Live Region for Progress Updates -->
+        <div id="progress-announcements" aria-live="polite" aria-atomic="true" class="sr-only">
+          進行状況の更新がここに表示されます
+        </div>
+        
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+    
+    <!-- 結果表示 -->
+    <div id="result-container" class="card hidden">
+      <div class="result-header">
+        <h2>🎉 生成完了</h2>
+        <p>マーダーミステリーシナリオが完成しました</p>
+      </div>
+      
+      <div class="result-content">
+        <div class="scenario-content" id="scenario-content">
+          <!-- 生成されたシナリオがここに表示される -->
+        </div>
+      </div>
+      
+      <div class="result-actions">
+        <button id="download-pdf-btn" class="btn btn-success" disabled>
+          <span>📄</span> PDFダウンロード
+        </button>
+        <button id="generate-new-btn" class="btn btn-secondary">
+          <span>🔄</span> 新規生成
+        </button>
+        <button id="share-btn" class="btn btn-primary">
+          <span>📤</span> シェア
+        </button>
+      </div>
+    </div>
+    
+    <!-- エラー表示 -->
+    <div id="error-container" class="error-container hidden">
+      <div class="error-message" id="error-message">
+        <!-- エラーメッセージがここに表示される -->
+      </div>
+      <button id="retry-btn" class="btn btn-primary" style="margin-top: 1rem;">
+        <span>🔄</span> 再試行
+      </button>
+    </div>
+  </main>
+
+  <footer style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem;">
+    <p>🕵️ Murder Mystery Generator v2.0 | 次世代モジュラーシステム</p>
+  </footer>
+
+  <!-- 初期化インジケーター -->
+  <div id="init-overlay" style="
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.8); 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 10000;
+    color: white;
+    font-family: 'Inter', sans-serif;
+  ">
+    <div style="text-align: center;">
+      <div style="font-size: 4rem; margin-bottom: 1rem;">🕵️</div>
+      <h2 style="margin-bottom: 1rem;">Murder Mystery Generator v2.0</h2>
+      <p style="margin-bottom: 2rem;">モジュラーシステムを初期化中...</p>
+      <div style="width: 300px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+        <div id="init-progress-bar" style="
+          width: 0%;
+          height: 100%;
+          background: linear-gradient(90deg, #667eea, #764ba2);
+          border-radius: 2px;
+          transition: width 0.3s ease;
+        "></div>
+      </div>
+      <div id="init-status" style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+        システム準備中...
+      </div>
+    </div>
+  </div>
+
+  <!-- 新しいモジュラーシステム - ONLY THIS -->
+  <script type="module">
+    // キャッシュクリア
+    const timestamp = Date.now();
+    console.log(`🚀 Murder Mystery Generator v2.0 starting... [${timestamp}]`);
+    
+    // 初期化プログレス更新
+    function updateInitProgress(percentage, message) {
+      const progressBar = document.getElementById('init-progress-bar');
+      const statusText = document.getElementById('init-status');
+      
+      if (progressBar) progressBar.style.width = `${percentage}%`;
+      if (statusText) statusText.textContent = message;
+    }
+    
+    // 初期化オーバーレイを隠す
+    function hideInitOverlay() {
+      const overlay = document.getElementById('init-overlay');
+      if (overlay) {
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.5s ease';
+        setTimeout(() => overlay.remove(), 500);
+      }
+    }
+    
+    try {
+      updateInitProgress(10, 'モジュールローダーを初期化中...');
+      
+      // ModuleLoader の動的インポート
+      const { default: ModuleLoader } = await import('./js/core/ModuleLoader.js?v=' + timestamp);
+      
+      updateInitProgress(30, 'モジュールローダーを設定中...');
+      
+      const moduleLoader = new ModuleLoader({
+        baseUrl: './js',
+        timeout: 15000,
+        retryCount: 3
+      });
+      
+      updateInitProgress(50, 'アプリケーション設定中...');
+      
+      // アプリケーション設定
+      const APP_CONFIG = {
+        environment: 'production',
+        api: {
+          baseURL: '/api',
+          timeout: 30000,
+          maxRetries: 3,
+          rateLimitDelay: 100
+        },
+        ui: {
+          animationDuration: 300,
+          debounceDelay: 300,
+          autoSave: true,
+          autoSaveInterval: 30000
+        },
+        steps: {
+          totalSteps: 5,
+          validateOnChange: true,
+          allowStepSkipping: false
+        },
+        generation: {
+          defaultStrategy: 'ultra_phases',
+          maxGenerationTime: 300000,
+          enableFallback: true,
+          qualityThreshold: 80
+        },
+        logging: {
+          level: 'INFO',
+          enableColors: true,
+          enableTimestamp: true,
+          maxLogSize: 1000
+        }
+      };
+      
+      updateInitProgress(70, 'アプリケーションモジュールを読み込み中...');
+      
+      // メインアプリケーション初期化
+      const app = await moduleLoader.initializeApp(APP_CONFIG);
+      
+      updateInitProgress(90, 'UI システムを準備中...');
+      
+      // グローバル参照設定
+      window.app = app;
+      window.moduleLoader = moduleLoader;
+      
+      updateInitProgress(100, '初期化完了！');
+      
+      // 初期化完了イベント
+      document.dispatchEvent(new CustomEvent('app:ready', {
+        detail: { app, moduleLoader, config: APP_CONFIG }
+      }));
+      
+      console.log('✅ Murder Mystery Generator v2.0 initialized successfully!');
+      console.log('📊 System info:', {
+        version: '2.0.0',
+        modules: moduleLoader.getModuleStats(),
+        memory: moduleLoader.checkMemoryUsage()
+      });
+      
+      // 初期化オーバーレイを隠す
+      setTimeout(hideInitOverlay, 300);
+      
+    } catch (error) {
+      console.error('❌ Initialization failed:', error);
+      updateInitProgress(0, `初期化エラー: ${error.message}`);
+      
+      // エラー表示
+      const overlay = document.getElementById('init-overlay');
+      if (overlay) {
+        overlay.innerHTML = `
+          <div style="text-align: center; color: #ef4444;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h2 style="margin-bottom: 1rem;">初期化エラー</h2>
+            <p style="margin-bottom: 1rem;">${error.message}</p>
+            <button onclick="location.reload()" style="
+              background: #3b82f6;
+              color: white;
+              border: none;
+              padding: 0.75rem 1.5rem;
+              border-radius: 6px;
+              cursor: pointer;
+            ">再読み込み</button>
+          </div>
+        `;
+      }
+    }
+  </script>
+
+  <!-- エラーハンドリング -->
+  <script>
+    // グローバルエラー処理
+    window.addEventListener('error', (e) => {
+      if (e.message && (
+        e.message.includes('runtime.lastError') ||
+        e.message.includes('Extension context') ||
+        e.message.includes('message port closed')
+      )) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('Unhandled promise rejection:', e.reason);
+    });
+  </script>
+</body>
+</html>

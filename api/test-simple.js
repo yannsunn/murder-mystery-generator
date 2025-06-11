@@ -1,68 +1,47 @@
-// シンプルテスト API - 基本動作確認用
-// Vercel Pro環境での基本的なAPI動作を検証
+// 最もシンプルなテスト用エンドポイント
 
-export const config = {
-  maxDuration: 10,
-};
-
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+export default async function handler(req, res) {
+  // CORS設定
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const startTime = Date.now();
-
   try {
-    // 短いシナリオ生成のテスト
-    const testScenario = {
-      title: "🆘 テストシナリオ",
-      concept: "テスト用の簡単なマーダーミステリー",
-      characters: [
-        { name: "田中", role: "探偵", secret: "実は元警察官" },
-        { name: "佐藤", role: "容疑者", secret: "アリバイがない" },
-        { name: "鈴木", role: "証人", secret: "重要な情報を隠している" }
-      ],
-      incident: "書斎で発見された謎の事件",
-      clues: [
-        "破られた日記のページ",
-        "血痕の付いたペン",
-        "開いたままの窓"
-      ],
-      solution: "真犯人は意外な人物でした"
-    };
-
-    const executionTime = Date.now() - startTime;
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "API動作正常",
-        scenario: testScenario,
-        execution_time_ms: executionTime,
-        timestamp: new Date().toISOString(),
-        vercel_info: {
-          region: process.env.VERCEL_REGION || 'unknown',
-          node_env: process.env.NODE_ENV || 'unknown',
-        }
-      }, null, 2),
-      { status: 200, headers }
-    );
-
+    const timestamp = new Date().toISOString();
+    const groqKeyExists = !!process.env.GROQ_API_KEY;
+    const openaiKeyExists = !!process.env.OPENAI_API_KEY;
+    
+    return res.status(200).json({
+      status: 'SUCCESS',
+      message: 'API endpoint is working perfectly!',
+      timestamp,
+      method: req.method,
+      environment: {
+        groq_key_configured: groqKeyExists,
+        openai_key_configured: openaiKeyExists,
+        node_version: process.version,
+        platform: process.platform
+      },
+      test_data: {
+        participants: '5',
+        era: 'modern',
+        setting: 'closed-space',
+        incident_type: 'murder',
+        worldview: 'realistic',
+        tone: 'serious'
+      }
+    });
+    
   } catch (error) {
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message,
-        execution_time_ms: Date.now() - startTime,
-      }),
-      { status: 500, headers }
-    );
+    console.error('Test endpoint error:', error);
+    return res.status(500).json({
+      status: 'ERROR',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 }
