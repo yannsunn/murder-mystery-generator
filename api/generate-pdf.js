@@ -2,7 +2,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export const config = {
-  runtime: 'nodejs',
   maxDuration: 60,
 };
 
