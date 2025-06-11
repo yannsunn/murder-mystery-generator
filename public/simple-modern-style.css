@@ -211,10 +211,16 @@ header p {
 }
 
 .step-indicator-item.active {
-  background: var(--accent);
+  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
   color: white;
   border-color: var(--accent-light);
-  box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+}
+
+.step-indicator-item.active span {
+  color: white;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .step-indicator-item.active .step-title {
@@ -223,10 +229,16 @@ header p {
 }
 
 .step-indicator-item.completed {
-  background: var(--success);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
   color: white;
   border-color: #059669;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.step-indicator-item.completed span {
+  color: white;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .step-indicator-item.completed .step-title {
