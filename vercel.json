@@ -13,7 +13,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/((?!api).*)", "destination": "/public/$1" }
   ],
   "buildCommand": "echo 'No build needed'",
   "outputDirectory": "public"
