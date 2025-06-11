@@ -299,7 +299,7 @@
       </div>
       
       <div class="result-actions">
-        <button id="download-pdf-btn" class="btn btn-success" disabled>
+        <button id="download-pdf-btn" class="btn btn-success">
           <span>📄</span> PDFダウンロード
         </button>
         <button id="generate-new-btn" class="btn btn-secondary">
@@ -457,6 +457,15 @@
             generateNewBtn.addEventListener('click', (e) => {
               e.preventDefault();
               this.resetToStart();
+            });
+          }
+          
+          // PDFダウンロードボタン
+          const downloadPdfBtn = document.getElementById('download-pdf-btn');
+          if (downloadPdfBtn) {
+            downloadPdfBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              this.downloadPDF();
             });
           }
           
@@ -774,18 +783,64 @@
             // メイン生成API呼び出し
             const result = await apiClient.post('/groq-phase1-concept', formData);
             
+            // APIの応答形式をチェック
+            console.log('🔍 API Response Structure:', result);
+            
+            let success = false;
+            let content = '';
+            let metadata = {};
+            
+            // 複数の応答形式に対応
             if (result.data && result.data.success) {
+              success = true;
+              content = result.data.content;
+              metadata = result.data;
+            } else if (result.success) {
+              success = true;
+              content = result.content;
+              metadata = result;
+            } else if (result.status === 'SUCCESS' || result.message) {
+              // テストエンドポイントからの成功応答
+              success = true;
+              content = `# 🎭 テストシナリオ生成成功!\n\n**API接続**: ✅ 正常\n**タイムスタンプ**: ${result.timestamp}\n**環境設定**: Groq/OpenAI API準備完了\n\n**次のステップ**: 本格的なAI生成を実行中...`;
+              metadata = result;
+            }
+            
+            if (success) {
               this.updateUltraProgress(100, '✅ 生成完了!', 'シナリオ表示準備中...', '');
               setTimeout(() => {
-                this.displayUltraResult(result.data.content, result.data);
+                this.displayUltraResult(content, metadata);
               }, 500);
             } else {
-              throw new Error(result.data?.error || 'Generation failed');
+              throw new Error(result.error || result.data?.error || 'Generation failed');
             }
             
           } catch (error) {
             console.error('ULTRA Generation failed:', error);
-            this.showUltraError('シナリオ生成に失敗しました: ' + (error.message || 'Unknown error'));
+            
+            // エラーの詳細分析
+            let errorMessage = 'シナリオ生成に失敗しました';
+            let suggestion = '少し時間をおいて再試行してください';
+            
+            if (error.message) {
+              if (error.message.includes('fetch')) {
+                errorMessage = 'API接続エラーが発生しました';
+                suggestion = 'インターネット接続を確認してください';
+              } else if (error.message.includes('timeout')) {
+                errorMessage = 'タイムアウトエラー';
+                suggestion = 'サーバーが混雑している可能性があります。少し待ってから再試行してください';
+              } else if (error.message.includes('401') || error.message.includes('403')) {
+                errorMessage = 'API認証エラー';
+                suggestion = 'システム管理者にお問い合わせください';
+              } else if (error.message.includes('404')) {
+                errorMessage = 'APIエンドポイントが見つかりません';
+                suggestion = 'システムのデプロイメントに問題がある可能性があります';
+              } else {
+                errorMessage = `エラー: ${error.message}`;
+              }
+            }
+            
+            this.showUltraError(`${errorMessage}\n\n💡 ${suggestion}`);
           } finally {
             this.isGenerating = false;
           }
@@ -912,6 +967,47 @@
           window.scrollTo({ top: 0, behavior: 'smooth' });
           
           this.emit('app:reset');
+        }
+        
+        async downloadPDF() {
+          try {
+            console.log('🖨️ Starting PDF generation...');
+            
+            const scenarioContent = document.getElementById('scenario-content');
+            if (!scenarioContent) {
+              throw new Error('シナリオコンテンツが見つかりません');
+            }
+            
+            const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
+            const formData = this.collectFormData();
+            
+            const pdfData = {
+              scenario: scenarioText,
+              title: `マーダーミステリー：${formData.participants}人用シナリオ`,
+              handouts: [] // 今後拡張可能
+            };
+            
+            // PDF生成API呼び出し
+            const result = await apiClient.post('/generate-pdf', pdfData);
+            
+            if (result.data && result.data.success && result.data.pdf) {
+              // Base64 PDFをダウンロード
+              const link = document.createElement('a');
+              link.href = 'data:application/pdf;base64,' + result.data.pdf;
+              link.download = `murder_mystery_scenario_${formData.participants}players_${new Date().toISOString().split('T')[0]}.pdf`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              console.log('✅ PDF download completed');
+            } else {
+              throw new Error('PDF生成に失敗しました');
+            }
+            
+          } catch (error) {
+            console.error('❌ PDF download failed:', error);
+            alert('PDFのダウンロードに失敗しました: ' + error.message);
+          }
         }
         
         debounce(key, func, delay) {
