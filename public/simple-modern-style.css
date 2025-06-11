@@ -19,16 +19,18 @@
 
 .content-section {
   background: var(--bg-tertiary);
-  border-radius: var(--border-radius);
+  border-radius: var(--radius);
   padding: var(--space-lg);
   margin-bottom: var(--space-md);
   border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow);
   transition: all 0.3s ease;
 }
 
 .content-section:hover {
   background: var(--bg-card);
   transform: translateX(5px);
+  box-shadow: var(--shadow-lg);
 }
 
 .content-section h4 {
@@ -59,28 +61,28 @@
 }
 
 :root {
-  /* Ultra Color Palette - Quantum Enhanced */
-  --bg-primary: #0f1419;
-  --bg-secondary: #1a202c;
-  --bg-tertiary: #2d3748;
-  --bg-card: #4a5568;
-  --bg-card-hover: #5a6578;
+  /* Ultra Color Palette - Enhanced Visibility */
+  --bg-primary: #1a1d23;
+  --bg-secondary: #242830;
+  --bg-tertiary: #2f3349;
+  --bg-card: #3a3f54;
+  --bg-card-hover: #434965;
   --text-primary: #ffffff;
-  --text-secondary: #e2e8f0;
-  --text-muted: #a0aec0;
-  --accent: #667eea;
-  --accent-hover: #5a6fd8;
-  --accent-light: #764ba2;
-  --success: #38d9a9;
-  --warning: #fbb040;
-  --danger: #fc5c7d;
-  --info: #4299e1;
+  --text-secondary: #f1f5f9;
+  --text-muted: #cbd5e1;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-light: #6366f1;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
   
   /* Gradient Combinations */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-success: linear-gradient(135deg, #38d9a9 0%, #20bf6b 100%);
-  --gradient-text: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+  --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-text: linear-gradient(45deg, #4f46e5, #6366f1, #ec4899);
   
   /* Ultra Spacing System */
   --space-xs: 0.25rem;
@@ -96,8 +98,8 @@
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --border: 1px solid rgba(255, 255, 255, 0.1);
-  --border-hover: 1px solid rgba(255, 255, 255, 0.2);
+  --border: 1px solid rgba(255, 255, 255, 0.15);
+  --border-hover: 1px solid rgba(255, 255, 255, 0.3);
   
   /* Shadows - Ultra Enhanced */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -163,6 +165,13 @@ header p {
   border-radius: var(--radius);
   padding: var(--space-xl);
   margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
 }
 
 .card-header h2 {
@@ -222,7 +231,7 @@ header p {
 .step-line {
   width: 40px;
   height: 2px;
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
 }
 
 /* フォーム */
@@ -246,13 +255,15 @@ header p {
   background: var(--bg-secondary);
   color: var(--text-primary);
   font-size: 1rem;
-  transition: border-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: var(--bg-tertiary);
 }
 
 .form-checkbox {
@@ -345,6 +356,7 @@ header p {
   background: var(--gradient-primary);
   color: white;
   border: 2px solid transparent;
+  font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -374,6 +386,8 @@ header p {
   color: var(--text-primary);
   border-color: var(--accent);
   transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
 }
 
 /* ローディング */
