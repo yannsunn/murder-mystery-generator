@@ -1,6 +1,5 @@
 export default function handler(req, res) {
-  return new Response('API is working!', {
-    status: 200,
-    headers: { 'Content-Type': 'text/plain' }
-  });
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'text/plain');
+  res.status(200).send('API is working!');
 }
