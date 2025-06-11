@@ -199,11 +199,12 @@ header p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-sm);
-  border-radius: var(--radius);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-tertiary);
   color: var(--text-muted);
-  min-width: 80px;
+  min-width: 90px;
+  min-height: 70px;
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent;
@@ -216,6 +217,11 @@ header p {
   box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
 }
 
+.step-indicator-item.active .step-title {
+  color: white;
+  font-weight: 600;
+}
+
 .step-indicator-item.completed {
   background: var(--success);
   color: white;
@@ -223,15 +229,23 @@ header p {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
-.step-indicator-item span {
+.step-indicator-item.completed .step-title {
+  color: white;
   font-weight: 600;
-  font-size: 1rem;
+}
+
+.step-indicator-item span {
+  font-weight: 700;
+  font-size: 1.1rem;
 }
 
 .step-title {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 500;
   margin-top: 0.25rem;
   text-align: center;
+  line-height: 1.2;
+  color: var(--text-secondary);
 }
 
 .step-line {
