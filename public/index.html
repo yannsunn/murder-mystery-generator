@@ -297,6 +297,11 @@
         <div class="scenario-content" id="scenario-content">
           <!-- 生成されたシナリオがここに表示される -->
         </div>
+        
+        <!-- 追加コンテンツ表示エリア -->
+        <div id="additional-content" class="additional-content hidden">
+          <!-- 追加コンテンツがここに動的に表示される -->
+        </div>
       </div>
       
       <div class="result-actions">
@@ -820,10 +825,22 @@
             }
             
             if (success) {
-              this.updateUltraProgress(100, '✅ 生成完了!', 'シナリオ表示準備中...', '');
-              setTimeout(() => {
-                this.displayUltraResult(content, metadata);
-              }, 500);
+              this.updateUltraProgress(70, '✅ メインシナリオ生成完了!', '追加コンテンツ生成中...', '残り15秒');
+              
+              // メインシナリオ表示
+              this.displayUltraResult(content, metadata);
+              
+              // 追加コンテンツを並列生成
+              setTimeout(async () => {
+                try {
+                  this.updateUltraProgress(80, '🎭 キャラクター・手がかり生成中...', '高品質コンテンツ作成中', '残り10秒');
+                  await this.generateAdditionalContent();
+                  this.updateUltraProgress(100, '🎉 全コンテンツ生成完了!', '準備完了 - PDFダウンロード可能', '');
+                } catch (error) {
+                  console.warn('Additional content generation failed, but main scenario is available:', error);
+                  this.updateUltraProgress(100, '✅ メインシナリオ完了!', 'PDFダウンロード可能', '');
+                }
+              }, 1000);
             } else {
               throw new Error(result.error || result.data?.error || 'Generation failed');
             }
@@ -982,9 +999,9 @@
           this.emit('app:reset');
         }
         
-        async downloadPDF() {
+        async generateAdditionalContent() {
           try {
-            console.log('🖨️ Starting PDF generation...');
+            console.log('🚀 ULTRA: Starting complete content generation...');
             
             const scenarioContent = document.getElementById('scenario-content');
             if (!scenarioContent) {
@@ -994,11 +1011,125 @@
             const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
             const formData = this.collectFormData();
             
+            // 並列で追加コンテンツを生成
+            const promises = [
+              apiClient.post('/groq-phase2-characters', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              }),
+              apiClient.post('/groq-phase3-relationships', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              }),
+              apiClient.post('/groq-phase5-clues', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              }),
+              apiClient.post('/groq-phase6-timeline', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              }),
+              apiClient.post('/groq-phase8-gamemaster', { 
+                concept: scenarioText, 
+                participants: formData.participants 
+              })
+            ];
+            
+            console.log('⚡ Generating characters, relationships, clues, timeline, GM guide...');
+            const results = await Promise.all(promises);
+            
+            this.additionalContent = {
+              characters: results[0].data?.data || [],
+              relationships: results[1].data?.data || [],
+              clues: results[2].data?.data || [],
+              timeline: results[3].data?.data || [],
+              gamemaster: results[4].data?.data || []
+            };
+            
+            console.log('✅ Additional content generated:', this.additionalContent);
+            this.displayAdditionalContent();
+            
+          } catch (error) {
+            console.error('❌ Additional content generation failed:', error);
+            this.showError('追加コンテンツの生成に失敗しました: ' + error.message);
+          }
+        }
+        
+        displayAdditionalContent() {
+          const container = document.getElementById('additional-content');
+          if (!container) return;
+          
+          container.innerHTML = `
+            <div class="additional-sections">
+              <h3>🎭 追加コンテンツ</h3>
+              
+              <div class="content-section">
+                <h4>👥 キャラクター</h4>
+                <div class="content-text">${Array.isArray(this.additionalContent.characters) ? 
+                  this.additionalContent.characters.join('\n\n') : 
+                  this.additionalContent.characters || '生成中...'}</div>
+              </div>
+              
+              <div class="content-section">
+                <h4>🔗 人間関係</h4>
+                <div class="content-text">${Array.isArray(this.additionalContent.relationships) ? 
+                  this.additionalContent.relationships.join('\n\n') : 
+                  this.additionalContent.relationships || '生成中...'}</div>
+              </div>
+              
+              <div class="content-section">
+                <h4>🔍 手がかり</h4>
+                <div class="content-text">${Array.isArray(this.additionalContent.clues) ? 
+                  this.additionalContent.clues.join('\n\n') : 
+                  this.additionalContent.clues || '生成中...'}</div>
+              </div>
+              
+              <div class="content-section">
+                <h4>⏰ タイムライン</h4>
+                <div class="content-text">${Array.isArray(this.additionalContent.timeline) ? 
+                  this.additionalContent.timeline.join('\n\n') : 
+                  this.additionalContent.timeline || '生成中...'}</div>
+              </div>
+              
+              <div class="content-section">
+                <h4>🎮 ゲームマスターガイド</h4>
+                <div class="content-text">${Array.isArray(this.additionalContent.gamemaster) ? 
+                  this.additionalContent.gamemaster.join('\n\n') : 
+                  this.additionalContent.gamemaster || '生成中...'}</div>
+              </div>
+            </div>
+          `;
+          
+          container.classList.remove('hidden');
+        }
+
+        async downloadPDF() {
+          try {
+            console.log('🖨️ Starting enhanced PDF generation...');
+            
+            const scenarioContent = document.getElementById('scenario-content');
+            if (!scenarioContent) {
+              throw new Error('シナリオコンテンツが見つかりません');
+            }
+            
+            const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
+            const formData = this.collectFormData();
+            
+            // 追加コンテンツがない場合は生成
+            if (!this.additionalContent) {
+              console.log('🔄 Generating additional content for PDF...');
+              await this.generateAdditionalContent();
+            }
+            
             const pdfData = {
               scenario: scenarioText,
-              title: `マーダーミステリー：${formData.participants}人用シナリオ`,
-              handouts: [] // 今後拡張可能
+              title: `🕵️ マーダーミステリー：${formData.participants}人用シナリオ`,
+              characters: this.additionalContent?.characters || [],
+              timeline: this.additionalContent?.timeline || [],
+              handouts: this.additionalContent?.clues || []
             };
+            
+            console.log('📄 PDF data prepared:', pdfData);
             
             // PDF生成API呼び出し
             const result = await apiClient.post('/generate-pdf', pdfData);
@@ -1012,7 +1143,8 @@
               link.click();
               document.body.removeChild(link);
               
-              console.log('✅ PDF download completed');
+              console.log('✅ Enhanced PDF download completed');
+              alert('🎉 高品質PDFのダウンロードが完了しました！');
             } else {
               throw new Error('PDF生成に失敗しました');
             }

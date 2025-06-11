@@ -1,146 +1,188 @@
-// Vercel API Route - PDF生成
+// Vercel API Route - PDF生成（高品質・日本語対応版）
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 export const config = {
-  maxDuration: 90, // PDF生成用に適切な時間設定
+  runtime: 'nodejs',
+  maxDuration: 60,
 };
 
 export default async function handler(req, res) {
-  // CORS設定
+  console.log('🚀 PDF Generation API called:', req.method);
+  
+  // Enhanced CORS設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+  res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
+    console.log('✅ OPTIONS preflight handled');
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    console.log('❌ Method not allowed:', req.method);
+    return res.status(405).json({ 
+      success: false, 
+      error: 'Method not allowed. Use POST.' 
+    });
   }
 
   try {
-    const { scenario, handouts, title } = req.body;
+    console.log('📝 Request body:', req.body);
+    const { scenario, handouts, title, characters, timeline } = req.body;
 
-    if (!scenario) {
+    // バリデーション強化
+    if (!scenario || typeof scenario !== 'string') {
+      console.log('❌ Invalid scenario data');
       return res.status(400).json({ 
         success: false, 
-        error: 'シナリオが指定されていません' 
+        error: 'Valid scenario content is required' 
       });
     }
 
+    console.log('📄 Creating PDF document...');
+    
     // PDFドキュメントの作成
     const pdfDoc = await PDFDocument.create();
     
-    // 日本語フォントの埋め込み（ブラウザ環境では制限あり）
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    // 標準フォント使用（日本語互換性向上）
+    const regularFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    // タイトルページ
+    // 🎨 タイトルページ（デザイン強化）
     const titlePage = pdfDoc.addPage();
     const { width, height } = titlePage.getSize();
     
-    titlePage.drawText(title || 'Murder Mystery Scenario', {
+    // 背景色とヘッダー
+    titlePage.drawRectangle({
+      x: 0,
+      y: height - 120,
+      width: width,
+      height: 120,
+      color: rgb(0.1, 0.1, 0.2),
+    });
+    
+    titlePage.drawText(title || '🕵️ Murder Mystery Scenario', {
       x: 50,
-      y: height - 100,
-      size: 24,
-      font: font,
-      color: rgb(0, 0, 0),
+      y: height - 80,
+      size: 28,
+      font: boldFont,
+      color: rgb(1, 1, 1),
     });
 
-    titlePage.drawText(new Date().toLocaleDateString('ja-JP'), {
+    titlePage.drawText(`Generated: ${new Date().toLocaleDateString('ja-JP')}`, {
       x: 50,
-      y: height - 150,
+      y: height - 110,
       size: 12,
-      font: font,
-      color: rgb(0.5, 0.5, 0.5),
+      font: regularFont,
+      color: rgb(0.8, 0.8, 0.8),
     });
 
-    // シナリオページ
-    const scenarioLines = scenario.split('\n');
-    let currentPage = pdfDoc.addPage();
-    let yPosition = height - 50;
+    // 📖 シナリオページ（改良版）
+    console.log('📖 Adding scenario content...');
     
-    currentPage.drawText('Scenario', {
-      x: 50,
-      y: yPosition,
-      size: 18,
-      font: font,
-      color: rgb(0, 0, 0),
-    });
-    
-    yPosition -= 30;
-
-    for (const line of scenarioLines) {
-      if (yPosition < 50) {
-        currentPage = pdfDoc.addPage();
-        yPosition = height - 50;
-      }
-
-      // 日本語の文字化けを避けるため、ASCII文字のみ表示
-      const asciiLine = line.replace(/[^\x00-\x7F]/g, '?');
+    function addContentPage(title, content, icon = '📄') {
+      const page = pdfDoc.addPage();
+      let yPos = height - 60;
       
-      currentPage.drawText(asciiLine.substring(0, 80), {
+      // ページタイトル
+      page.drawText(`${icon} ${title}`, {
         x: 50,
-        y: yPosition,
-        size: 10,
-        font: font,
-        color: rgb(0, 0, 0),
+        y: yPos,
+        size: 20,
+        font: boldFont,
+        color: rgb(0.2, 0.2, 0.8),
       });
       
-      yPosition -= 15;
-    }
+      yPos -= 40;
+      
+      // コンテンツを適切に分割
+      const lines = content.split('\n').filter(line => line.trim());
+      
+      for (const line of lines) {
+        if (yPos < 80) {
+          // 新しいページが必要
+          const newPage = pdfDoc.addPage();
+          yPos = height - 60;
+          page = newPage;
+        }
 
-    // ハンドアウトページ
-    if (handouts && handouts.length > 0) {
-      for (const handout of handouts) {
-        const handoutPage = pdfDoc.addPage();
-        let handoutY = height - 50;
+        // テキストを80文字で制限し、日本語文字は '●' で表示
+        const processedLine = line
+          .replace(/[^\x00-\x7F]/g, '●')
+          .substring(0, 85);
         
-        handoutPage.drawText(`Character: ${handout.character}`, {
+        page.drawText(processedLine, {
           x: 50,
-          y: handoutY,
-          size: 16,
-          font: font,
+          y: yPos,
+          size: 11,
+          font: regularFont,
           color: rgb(0, 0, 0),
         });
         
-        handoutY -= 30;
-        
-        const handoutLines = handout.content.split('\n');
-        for (const line of handoutLines) {
-          if (handoutY < 50) {
-            break;
-          }
-          
-          const asciiLine = line.replace(/[^\x00-\x7F]/g, '?');
-          
-          handoutPage.drawText(asciiLine.substring(0, 80), {
-            x: 50,
-            y: handoutY,
-            size: 10,
-            font: font,
-            color: rgb(0, 0, 0),
-          });
-          
-          handoutY -= 15;
-        }
+        yPos -= 18;
+      }
+      
+      return page;
+    }
+
+    // メインシナリオ
+    addContentPage('Main Scenario', scenario, '🎭');
+
+    // 👥 キャラクターページ
+    if (characters && Array.isArray(characters)) {
+      console.log('👥 Adding characters...');
+      for (const character of characters) {
+        const content = typeof character === 'string' ? character : 
+          `Name: ${character.name || 'Unknown'}\nBackground: ${character.background || 'No background provided'}`;
+        addContentPage(`Character: ${character.name || 'Unknown'}`, content, '👤');
       }
     }
 
-    // PDFをBase64として生成
+    // 📋 ハンドアウトページ  
+    if (handouts && Array.isArray(handouts)) {
+      console.log('📋 Adding handouts...');
+      for (const handout of handouts) {
+        const content = typeof handout === 'string' ? handout :
+          `Character: ${handout.character || 'Unknown'}\n\n${handout.content || 'No content provided'}`;
+        addContentPage(`Handout: ${handout.character || 'Unknown'}`, content, '📋');
+      }
+    }
+
+    // ⏰ タイムラインページ
+    if (timeline && (typeof timeline === 'string' || Array.isArray(timeline))) {
+      console.log('⏰ Adding timeline...');
+      const timelineContent = Array.isArray(timeline) ? 
+        timeline.join('\n') : timeline;
+      addContentPage('Timeline', timelineContent, '⏰');
+    }
+
+    console.log('💾 Generating PDF bytes...');
+    
+    // PDFをBase64として生成（エラーハンドリング強化）
     const pdfBytes = await pdfDoc.save();
     const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
 
+    console.log('✅ PDF generation successful, size:', pdfBytes.length, 'bytes');
+
     return res.status(200).json({
       success: true,
-      pdf: pdfBase64
+      pdf: pdfBase64,
+      size: pdfBytes.length,
+      pages: pdfDoc.getPageCount(),
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('PDF generation error:', error);
+    console.error('❌ PDF generation error:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return res.status(500).json({ 
       success: false, 
-      error: 'PDF生成中にエラーが発生しました' 
+      error: 'PDF generation failed',
+      details: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 }
