@@ -201,20 +201,26 @@ header p {
   align-items: center;
   padding: var(--space-sm);
   border-radius: var(--radius);
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
+  color: var(--text-muted);
   min-width: 80px;
   cursor: pointer;
   transition: all 0.2s ease;
+  border: 2px solid transparent;
 }
 
 .step-indicator-item.active {
   background: var(--accent);
   color: white;
+  border-color: var(--accent-light);
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
 }
 
 .step-indicator-item.completed {
   background: var(--success);
   color: white;
+  border-color: #059669;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
 }
 
 .step-indicator-item span {
@@ -232,6 +238,15 @@ header p {
   width: 40px;
   height: 2px;
   background: var(--bg-tertiary);
+  position: relative;
+}
+
+.step-line.active {
+  background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+}
+
+.step-line.completed {
+  background: var(--success);
 }
 
 /* フォーム */
@@ -258,6 +273,18 @@ header p {
   transition: all 0.2s ease;
 }
 
+.form-select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: var(--space-sm);
+}
+
+.form-select option:checked,
+.form-select option:hover {
+  background: var(--accent);
+  color: white;
+}
+
 .form-input:focus,
 .form-select:focus {
   outline: none;
@@ -271,12 +298,29 @@ header p {
   align-items: center;
   gap: var(--space-sm);
   margin-bottom: var(--space-sm);
+  padding: var(--space-xs);
+  border-radius: var(--radius-sm);
+  transition: background-color 0.2s ease;
+}
+
+.form-checkbox:hover {
+  background: var(--bg-tertiary);
 }
 
 .form-checkbox input {
   width: 18px;
   height: 18px;
   accent-color: var(--accent);
+}
+
+.checkbox-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.form-checkbox:hover .checkbox-text {
+  color: var(--text-primary);
 }
 
 /* ULTRA NAVIGATION SYSTEM - PERFECT POSITIONING */
