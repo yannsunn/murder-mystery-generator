@@ -258,32 +258,111 @@ async function generateConcept(params) {
 }
 
 async function generateCharacters(params) {
-  // 同様の実装パターン
-  return `${params.participants}人のキャラクター生成結果（実装省略）`;
+  const prompt = `${params.participants}人用の詳細なキャラクター設定を生成してください。
+
+各キャラクターについて以下を含めてください：
+- 名前・年齢・職業
+- 外見的特徴・性格
+- 背景・経歴
+- 秘密・動機
+- 他キャラクターとの関係性
+
+形式：各キャラクター200-300文字の詳細設定`;
+
+  return await callGroqAPI(prompt, params, 'キャラクター生成');
 }
 
 async function generateRelationships(params) {
-  return '関係性生成結果（実装省略）';
+  const prompt = `${params.participants}人のキャラクター間の複雑な人間関係を生成してください。
+
+以下を含めてください：
+- 恋愛関係・家族関係
+- 仕事・利益関係
+- 対立・敵対関係
+- 隠された関係性
+- 事件に関わる重要な関係
+
+形式：関係図とそれぞれの詳細説明`;
+
+  return await callGroqAPI(prompt, params, '人間関係生成');
 }
 
 async function generateIncident(params) {
-  return '事件生成結果（実装省略）';
+  const prompt = `マーダーミステリー事件の詳細を生成してください。
+
+以下を含めてください：
+- 被害者の詳細情報
+- 殺害方法と状況
+- 発見時の現場状況
+- 第一発見者
+- 現場に残された証拠
+- 初期の混乱状況
+
+形式：500-700文字の詳細な事件描写`;
+
+  return await callGroqAPI(prompt, params, '事件詳細生成');
 }
 
 async function generateClues(params) {
-  return '手がかり生成結果（実装省略）';
+  const prompt = `推理に必要な手がかり・証拠を生成してください。
+
+以下の種類を含めてください：
+- 物理的証拠（7-8個）
+- 証言・アリバイ情報（5-6個）
+- 隠された手がかり（3-4個）
+- ミスリード要素（2-3個）
+
+各手がかりに重要度レベルと発見タイミングを設定してください。`;
+
+  return await callGroqAPI(prompt, params, '手がかり生成');
 }
 
 async function generateTimeline(params) {
-  return 'タイムライン生成結果（実装省略）';
+  const prompt = `事件の詳細なタイムラインを生成してください。
+
+以下の時間軸で詳細に：
+- 事件前日：重要な準備・出来事
+- 事件当日朝：各キャラクターの行動
+- 事件発生前2時間：決定的な動き
+- 事件発生：犯行の瞬間
+- 事件発生後：発見・混乱
+
+各時間帯で全キャラクターの位置と行動を明記してください。`;
+
+  return await callGroqAPI(prompt, params, 'タイムライン生成');
 }
 
 async function generateSolution(params) {
-  return '解決生成結果（実装省略）';
+  const prompt = `事件の完全な解決・真相を生成してください。
+
+以下を詳細に：
+- 真犯人とその動機
+- 犯行の詳細手順
+- 使用されたトリック
+- アリバイ工作の方法
+- 決定的な証拠
+- 推理のポイント
+- 論理的な解明過程
+
+形式：800-1000文字の完全な真相解明`;
+
+  return await callGroqAPI(prompt, params, '真相・解決生成');
 }
 
 async function generateGamemaster(params) {
-  return 'ゲームマスター生成結果（実装省略）';
+  const prompt = `ゲームマスター向けの進行ガイドを生成してください。
+
+以下を含めてください：
+- セッション開始から終了までの流れ
+- 各段階での重要な演出ポイント
+- プレイヤーが詰まった時のヒント出し方法
+- 盛り上がりを作るタイミング
+- 感動的な真相発表の演出方法
+- トラブル対応方法
+
+形式：実用的な進行マニュアル`;
+
+  return await callGroqAPI(prompt, params, 'ゲームマスター指南生成');
 }
 
 // タイムアウト対応のfetch
