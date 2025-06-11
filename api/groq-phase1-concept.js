@@ -7,39 +7,30 @@ export const config = {
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-export default async function handler(request) {
+export default async function handler(req, res) {
   const startTime = Date.now();
   
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
-    );
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const body = await request.json();
-    const { participants, era, setting, incident_type, worldview, tone } = body;
+    const { participants, era, setting, incident_type, worldview, tone } = req.body;
 
     if (!GROQ_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Groq APIキーが設定されていません' 
-        }),
-        { status: 500, headers }
-      );
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Groq APIキーが設定されていません' 
+      });
     }
 
     console.log('Groq Phase 1: Starting ultra-fast concept generation...');
@@ -85,16 +76,13 @@ export default async function handler(request) {
 
       console.log('Groq Phase 1: Ultra-fast concept generated successfully');
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          content: concept,
-          provider: 'groq',
-          model: 'llama-3.1-8b-instant',
-          processing_time: `${Date.now() - startTime}ms`
-        }),
-        { status: 200, headers }
-      );
+      return res.status(200).json({
+        success: true,
+        content: concept,
+        provider: 'groq',
+        model: 'llama-3.1-8b-instant',
+        processing_time: `${Date.now() - startTime}ms`
+      });
 
     } catch (fetchError) {
       clearTimeout(timeout);
@@ -107,14 +95,11 @@ export default async function handler(request) {
 
   } catch (error) {
     console.error('Groq concept generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `Groq生成エラー: ${error.message}`,
-        processing_time: `${Date.now() - startTime}ms`
-      }),
-      { status: 500, headers }
-    );
+    return res.status(500).json({ 
+      success: false, 
+      error: `Groq生成エラー: ${error.message}`,
+      processing_time: `${Date.now() - startTime}ms`
+    });
   }
 }
 
