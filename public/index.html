@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="simple-modern-style.css">
   <link rel="stylesheet" href="ultra-enhanced-animations.css">
+  <link rel="stylesheet" href="ultra-smooth-navigation.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕵️</text></svg>">
 </head>
 <body>
@@ -60,7 +61,7 @@
         <div id="step-container">
           
           <!-- ステップ1: 基本設定 -->
-          <div id="step-1" class="step fade-in">
+          <div id="step-1" class="step active">
             <div class="step-header">
               <h3 class="text-gradient">🎮 基本設定</h3>
               <p>マーダーミステリーの基本パラメータを設定します</p>
@@ -103,7 +104,7 @@
           </div>
           
           <!-- ステップ2: 世界観 -->
-          <div id="step-2" class="step hidden">
+          <div id="step-2" class="step next">
             <div class="step-header">
               <h3 class="text-gradient">🌟 世界観とトーン</h3>
               <p>シナリオの雰囲気と世界観を決定します</p>
@@ -133,7 +134,7 @@
           </div>
           
           <!-- ステップ3: 事件設定 -->
-          <div id="step-3" class="step hidden">
+          <div id="step-3" class="step next">
             <div class="step-header">
               <h3 class="text-gradient">🔍 事件設定</h3>
               <p>発生する事件の種類と詳細を設定します</p>
@@ -154,7 +155,7 @@
           </div>
           
           <!-- ステップ4: 詳細オプション -->
-          <div id="step-4" class="step hidden">
+          <div id="step-4" class="step next">
             <div class="step-header">
               <h3 class="text-gradient">⚙️ 詳細オプション</h3>
               <p>シナリオの複雑さと特殊要素を調整します</p>
@@ -193,7 +194,7 @@
           </div>
           
           <!-- ステップ5: 確認・生成 -->
-          <div id="step-5" class="step hidden">
+          <div id="step-5" class="step next">
             <div class="step-header">
               <h3 class="text-gradient">🚀 最終確認</h3>
               <p>設定を確認して、超高速生成を開始します</p>
@@ -407,6 +408,7 @@
         constructor() {
           super();
           this.currentStep = 1;
+          this.lastStep = null;
           this.totalSteps = 5;
           this.isGenerating = false;
           this.stepCache = new Map();
@@ -601,23 +603,34 @@
         }
         
         updateStepDisplay() {
-          // Hide all steps with animation
+          // ULTRA SMOOTH STEP TRANSITION - NO VERTICAL MOVEMENT
           for (let i = 1; i <= this.totalSteps; i++) {
             const stepEl = document.getElementById('step-' + i);
             if (stepEl) {
-              stepEl.classList.add('hidden');
-              stepEl.style.opacity = '0';
+              stepEl.classList.remove('active', 'previous', 'next', 'entering-from-right', 'entering-from-left');
+              
+              if (i < this.currentStep) {
+                stepEl.classList.add('previous');
+              } else if (i > this.currentStep) {
+                stepEl.classList.add('next');
+              }
             }
           }
           
-          // Show current step with animation
-          setTimeout(() => {
-            const currentStepEl = document.getElementById('step-' + this.currentStep);
-            if (currentStepEl) {
-              currentStepEl.classList.remove('hidden');
-              currentStepEl.style.opacity = '1';
+          // 現在のステップをアクティブに
+          const currentStepEl = document.getElementById('step-' + this.currentStep);
+          if (currentStepEl) {
+            currentStepEl.classList.add('active');
+            
+            // 進行方向に応じたアニメーション
+            if (this.lastStep && this.currentStep > this.lastStep) {
+              currentStepEl.classList.add('entering-from-right');
+            } else if (this.lastStep && this.currentStep < this.lastStep) {
+              currentStepEl.classList.add('entering-from-left');
             }
-          }, 150);
+          }
+          
+          this.lastStep = this.currentStep;
           
           // Update step indicators
           this.updateStepIndicators();

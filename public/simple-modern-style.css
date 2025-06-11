@@ -210,88 +210,112 @@ header p {
   accent-color: var(--accent);
 }
 
-/* ボタン - 完全固定位置 */
+/* ULTRA NAVIGATION SYSTEM - PERFECT POSITIONING */
 .button-container {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-card);
-  border: var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-md);
-  display: grid;
-  grid-template-columns: 120px 40px 120px;
-  gap: var(--space-md);
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  width: 400px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: var(--space-xl) 0;
+  margin-top: var(--space-xl);
+  border-top: var(--border);
+  background: var(--bg-card);
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .btn {
-  padding: var(--space-sm) var(--space-md);
+  padding: var(--space-md) var(--space-lg);
   border: none;
-  border-radius: var(--radius);
-  font-size: 0.9rem;
-  font-weight: 500;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
+  transition: all var(--transition-normal);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
   text-decoration: none;
-  height: 44px;
-  width: 120px;
+  min-height: 48px;
+  min-width: 140px;
   white-space: nowrap;
-  grid-column: auto;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
 }
 
+/* ULTRA BUTTON LAYOUT - NO OVERLAPPING */
 .btn-spacer {
-  width: 40px;
-  height: 44px;
-  grid-column: 2;
+  flex: 1;
+  min-width: var(--space-lg);
 }
 
-/* 前へボタンは最初の列 */
 #prev-btn {
-  grid-column: 1;
+  flex-shrink: 0;
 }
 
-/* 次へ/生成ボタンは最後の列に固定 */
 #next-btn,
 #stepwise-generation-btn {
-  grid-column: 3;
+  flex-shrink: 0;
+}
+
+/* GENERATION BUTTON SPECIAL POSITIONING */
+#stepwise-generation-btn {
+  background: var(--gradient-primary);
+  color: white;
+  font-weight: 700;
+  min-width: 160px;
+  animation: pulse 2s infinite;
+}
+
+#stepwise-generation-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl), var(--shadow-glow);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: var(--shadow) !important;
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--gradient-primary);
   color: white;
+  border: 2px solid transparent;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(102, 126, 234, 0.4);
 }
 
 .btn-success {
-  background: var(--success);
+  background: var(--gradient-success);
   color: white;
+  border: 2px solid transparent;
+}
+
+.btn-success:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(56, 217, 169, 0.4);
 }
 
 .btn-secondary {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: var(--border);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 2px solid var(--border);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-primary);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 /* ローディング */
