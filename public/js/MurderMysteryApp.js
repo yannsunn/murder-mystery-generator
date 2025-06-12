@@ -44,7 +44,7 @@ class MurderMysteryApp {
           🚀 新規作成
         </button>
         <button id="download-zip-btn" class="btn btn-success btn-large" ${!this.isPhaseComplete ? 'disabled' : ''}>
-          📦 完全ZIP出力
+          📦 フェーズ2-8完了後に自動出力
         </button>
       </div>
       <div id="phase-progress" class="phase-progress" style="display: none;">
@@ -122,8 +122,26 @@ class MurderMysteryApp {
     document.addEventListener('generation:complete', (event) => {
       this.currentResult = event.detail;
       this.isPhaseComplete = false; // Reset phase completion status
+      
+      // 🎯 フェーズ1完了時: ZIPボタン無効化とフェーズ2-8開始通知
+      this.disableZipButtonWithMessage();
+      
       setTimeout(() => this.generateAdditionalContent(), 1000);
     });
+  }
+
+  /**
+   * 🚀 フェーズ1完了時: ZIPボタン無効化メッセージ表示
+   */
+  disableZipButtonWithMessage() {
+    const zipBtn = document.getElementById('download-zip-btn');
+    if (zipBtn) {
+      zipBtn.disabled = true;
+      zipBtn.classList.add('disabled');
+      zipBtn.innerHTML = '📦 フェーズ2-8完了後に自動出力';
+    }
+    
+    this.showNotification('🚀 フェーズ1完了！フェーズ2-8生成開始中...', 'info');
   }
 
   /**
@@ -134,6 +152,7 @@ class MurderMysteryApp {
     if (zipBtn) {
       zipBtn.disabled = false;
       zipBtn.classList.remove('disabled');
+      zipBtn.innerHTML = '📦 完全ZIP出力';
     }
     
     const phaseStatus = document.querySelector('.phase-status');
@@ -317,9 +336,15 @@ class MurderMysteryApp {
         
         console.log('✅ Phase 2-8 + ハンドアウト generation completed successfully!');
         
-        // Mark phase generation as complete and enable ZIP button
+        // 🚀 ULTRA SYNC: フェーズ8完了後に自動ZIP出力
         this.isPhaseComplete = true;
         this.enableZipButton();
+        
+        // 🎯 限界突破: 全フェーズ完了後に自動的にZIPダウンロード開始
+        console.log('🚀 ULTRA SYNC: All phases completed! Auto-starting ZIP download...');
+        setTimeout(() => {
+          this.autoDownloadZIP();
+        }, 2000); // 2秒後に自動ダウンロード開始
 
       } catch (error) {
         console.warn('⚠️ Some phases failed, but continuing:', error);
@@ -329,6 +354,12 @@ class MurderMysteryApp {
         // Even with partial failure, allow ZIP generation
         this.isPhaseComplete = true;
         this.enableZipButton();
+        
+        // 🎯 部分完了でも自動ZIP出力
+        console.log('⚠️ Partial completion - Auto-starting ZIP download...');
+        setTimeout(() => {
+          this.autoDownloadZIP();
+        }, 2000);
       }
 
     } catch (error) {
@@ -478,6 +509,19 @@ class MurderMysteryApp {
     
     container.classList.remove('hidden');
     console.log('✅ Additional content displayed successfully');
+  }
+
+  /**
+   * 🚀 ULTRA SYNC: フェーズ8完了後の自動ZIP出力
+   */
+  async autoDownloadZIP() {
+    console.log('🎯 Auto ZIP download triggered after all phases completed');
+    
+    // 通知表示
+    this.showNotification('🚀 全フェーズ完了！自動的にZIPパッケージをダウンロード中...', 'success');
+    
+    // 自動ダウンロード実行
+    await this.generateAndDownloadZIP();
   }
 
   /**
