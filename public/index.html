@@ -312,19 +312,9 @@
         </div>
       </div>
       
-      <div class="result-actions">
-        <button id="pdf-download-btn" class="btn btn-primary" style="display: none;">
-          📄 PDFダウンロード
-        </button>
-        <button id="download-pdf-btn" class="btn btn-success">
-          <span>📄</span> PDFダウンロード
-        </button>
-        <button id="generate-new-btn" class="btn btn-secondary">
-          <span>🔄</span> 新規生成
-        </button>
-        <button id="share-btn" class="btn btn-primary">
-          <span>📤</span> シェア
-        </button>
+      <!-- 動的アクションボタンはJavaScriptで生成されます -->
+      <div id="dynamic-actions" class="result-actions">
+        <!-- アクションボタンはMurderMysteryApp.jsのaddActionButtons()で動的に生成 -->
       </div>
     </div>
     
@@ -478,14 +468,7 @@
             });
           }
           
-          // PDFダウンロードボタン
-          const downloadPdfBtn = document.getElementById('download-pdf-btn');
-          if (downloadPdfBtn) {
-            downloadPdfBtn.addEventListener('click', (e) => {
-              e.preventDefault();
-              this.downloadPDF();
-            });
-          }
+          // アクションボタンは MurderMysteryApp.js で処理されます
           
           // FORM CHANGE DETECTION
           const form = document.getElementById('scenario-form');
@@ -1300,6 +1283,24 @@
     document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; backdrop-filter: blur(10px);"><div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div><h2 style="margin-bottom: 1rem; font-size: 1.8rem;">ブラウザが対応していません</h2><p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">このULTRA EDITIONアプリケーションには<br>モダンなブラウザが必要です。</p><div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><strong>推奨ブラウザ:</strong><br>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</div><button onclick="location.reload()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s;">再読み込み</button></div></div>';
   </script>
   
+  <!-- 新しいモジュラーアプリケーションの読み込み -->
+  <script type="module">
+    // 新しいMurderMysteryApp.jsの読み込みと初期化
+    import { default as MurderMysteryApp } from './js/MurderMysteryApp.js';
+    
+    // アプリケーション初期化
+    window.addEventListener('DOMContentLoaded', () => {
+      try {
+        console.log('🚀 Initializing new MurderMysteryApp...');
+        const app = new MurderMysteryApp();
+        window.murderMysteryApp = app; // デバッグ用のグローバル参照
+        console.log('✅ New MurderMysteryApp initialized successfully!');
+      } catch (error) {
+        console.error('❌ Failed to initialize MurderMysteryApp:', error);
+      }
+    });
+  </script>
+
   <!-- エラーハンドリング - 最小限 -->
   <script>
     // グローバルエラー処理 - ブラウザ拡張の警告を無視
