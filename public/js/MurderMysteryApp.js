@@ -43,39 +43,21 @@ class MurderMysteryApp {
     actionPanel.id = 'action-panel';
     actionPanel.className = 'action-panel';
     actionPanel.innerHTML = `
-      <div class="action-buttons">
-        <button id="download-pdf-btn" class="btn btn-primary">
-          📄 PDF出力
+      <div class="action-buttons-simple">
+        <button id="new-scenario-btn" class="btn btn-primary btn-large">
+          🚀 新規作成
         </button>
-        <button id="download-zip-btn" class="btn btn-success">
-          📦 ZIP出力
-        </button>
-        <button id="generate-handouts-btn" class="btn btn-secondary">
-          📋 ハンドアウト
-        </button>
-        <button id="enhance-scenario-btn" class="btn btn-secondary">
-          ⚡ 拡張生成
-        </button>
-        <button id="new-scenario-btn" class="btn btn-secondary">
-          🔄 新規作成
-        </button>
-        <button id="debug-info-btn" class="btn btn-secondary">
-          🔧 デバッグ情報
+        <button id="download-zip-btn" class="btn btn-success btn-large">
+          📦 完全ZIP出力
         </button>
       </div>
-      <div class="internal-info">
-        <h4>🔧 内部情報</h4>
-        <div class="debug-info">
-          <span class="status-indicator success"></span>
-          システム: 正常動作中 | 
-          生成時間: ${this.currentResult?.metadata?.generationTime || 'Unknown'}ms | 
-          戦略: Ultra Enhanced |\n          品質: ${this.currentResult?.metadata?.quality || 'PREMIUM'}
-        </div>
-        <div class="debug-info">
-          バージョン: ${this.version} | 
-          API: Groq + OpenAI | 
-          生成完了: ${new Date().toLocaleTimeString()} |
-          フェーズ: 1-8 完全実装
+      <div class="zip-info">
+        <h4>📦 ZIP パッケージ内容</h4>
+        <div class="package-contents">
+          ✅ Phase 1-8 全シナリオ<br>
+          ✅ キャラクターハンドアウト<br>
+          ✅ PDF + テキストファイル<br>
+          ✅ ゲームマスターガイド
         </div>
       </div>
     `;
@@ -88,40 +70,16 @@ class MurderMysteryApp {
    * アクションボタンのイベントリスナーを設定
    */
   setupActionButtonEvents() {
-    const pdfBtn = document.getElementById('download-pdf-btn');
-    if (pdfBtn && !pdfBtn.hasAttribute('data-listener')) {
-      pdfBtn.addEventListener('click', () => this.generateAndShowPDF());
-      pdfBtn.setAttribute('data-listener', 'true');
-    }
-
     const zipBtn = document.getElementById('download-zip-btn');
     if (zipBtn && !zipBtn.hasAttribute('data-listener')) {
       zipBtn.addEventListener('click', () => this.generateAndDownloadZIP());
       zipBtn.setAttribute('data-listener', 'true');
     }
 
-    const handoutsBtn = document.getElementById('generate-handouts-btn');
-    if (handoutsBtn && !handoutsBtn.hasAttribute('data-listener')) {
-      handoutsBtn.addEventListener('click', () => this.generateHandoutsManually());
-      handoutsBtn.setAttribute('data-listener', 'true');
-    }
-
-    const enhanceBtn = document.getElementById('enhance-scenario-btn');
-    if (enhanceBtn && !enhanceBtn.hasAttribute('data-listener')) {
-      enhanceBtn.addEventListener('click', () => this.enhanceScenario());
-      enhanceBtn.setAttribute('data-listener', 'true');
-    }
-
     const newBtn = document.getElementById('new-scenario-btn');
     if (newBtn && !newBtn.hasAttribute('data-listener')) {
       newBtn.addEventListener('click', () => this.resetForNewScenario());
       newBtn.setAttribute('data-listener', 'true');
-    }
-
-    const debugBtn = document.getElementById('debug-info-btn');
-    if (debugBtn && !debugBtn.hasAttribute('data-listener')) {
-      debugBtn.addEventListener('click', () => this.showDebugInfo());
-      debugBtn.setAttribute('data-listener', 'true');
     }
   }
 
@@ -370,64 +328,7 @@ class MurderMysteryApp {
     console.log('✅ Additional content displayed successfully');
   }
 
-  /**
-   * PDF生成とダウンロード
-   */
-  async generateAndShowPDF() {
-    if (this._pdfGenerating) {
-      console.log('⚠️ PDF generation already in progress');
-      return;
-    }
-    
-    this._pdfGenerating = true;
-    
-    try {
-      console.log('🖨️ Starting PDF generation...');
-      
-      const scenarioContent = document.getElementById('scenario-content');
-      if (!scenarioContent) {
-        throw new Error('シナリオコンテンツが見つかりません');
-      }
-      
-      const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
-      const formData = this.collectFormData();
-      
-      const pdfData = {
-        scenario: scenarioText,
-        title: this.extractTitle(scenarioText),
-        characters: this.additionalContent?.characters || [],
-        timeline: this.additionalContent?.timeline || 'タイムライン生成中...',
-        handouts: [],
-        quality: 'PREMIUM'
-      };
-      
-      console.log('📄 PDF data prepared:', pdfData);
-      
-      const apiClient = this.createApiClient();
-      const result = await apiClient.post('/api/generate-pdf', pdfData);
-      
-      if (result.success && result.pdf) {
-        const link = document.createElement('a');
-        link.href = 'data:application/pdf;base64,' + result.pdf;
-        link.download = `murder_mystery_scenario_${formData.participants}players_${new Date().toISOString().split('T')[0]}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        this.lastGeneratedPDF = result.pdf;
-        console.log('✅ PDF download completed');
-        this.showNotification('PDFダウンロード完了！', 'success');
-      } else {
-        throw new Error('PDF生成に失敗しました');
-      }
-      
-    } catch (error) {
-      console.error('❌ PDF generation failed:', error);
-      this.showNotification('PDF生成エラー: ' + error.message, 'error');
-    } finally {
-      this._pdfGenerating = false;
-    }
-  }
+  // 削除: 個別PDF生成機能 - ZIPに統合済み
 
   /**
    * ZIP生成とダウンロード
@@ -549,83 +450,11 @@ class MurderMysteryApp {
     }, 5000);
   }
 
-  /**
-   * ハンドアウト生成
-   */
-  async generateHandoutsManually() {
-    try {
-      console.log('📋 Generating handouts manually...');
-      
-      const scenarioContent = document.getElementById('scenario-content');
-      if (!scenarioContent) {
-        throw new Error('シナリオコンテンツが見つかりません');
-      }
-      
-      const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
-      const formData = this.collectFormData();
-      
-      const apiClient = this.createApiClient();
-      const handouts = await this.callAPI(apiClient, '/api/generate-handouts', {
-        scenario: scenarioText,
-        characters: this.additionalContent?.characters || scenarioText,
-        participants: formData.participants
-      });
-      
-      if (this.additionalContent) {
-        this.additionalContent.handouts = handouts;
-        this.displayAdditionalContent();
-      }
-      
-      this.showNotification('ハンドアウト生成完了！', 'success');
-    } catch (error) {
-      console.error('❌ Handout generation failed:', error);
-      this.showNotification('ハンドアウト生成エラー: ' + error.message, 'error');
-    }
-  }
+  // 削除: 個別ハンドアウト生成機能 - ZIPに統合済み
 
-  /**
-   * ハンドアウトダウンロード
-   */
-  async downloadHandouts() {
-    try {
-      console.log('📋 Downloading individual handouts...');
-      
-      if (!this.additionalContent?.handouts) {
-        throw new Error('ハンドアウトが生成されていません');
-      }
-      
-      const apiClient = this.createApiClient();
-      const result = await apiClient.post('/api/generate-individual-handout', {
-        handouts: this.additionalContent.handouts,
-        title: this.extractTitle(document.getElementById('scenario-content').textContent),
-        quality: 'PREMIUM'
-      });
-      
-      if (result.success && result.pdf) {
-        const link = document.createElement('a');
-        link.href = 'data:application/pdf;base64,' + result.pdf;
-        link.download = `murder_mystery_handouts_${Date.now()}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        this.showNotification('ハンドアウトPDFダウンロード完了！', 'success');
-      } else {
-        throw new Error('ハンドアウトPDF生成に失敗しました');
-      }
-      
-    } catch (error) {
-      console.error('❌ Handout download failed:', error);
-      this.showNotification('ハンドアウトダウンロードエラー: ' + error.message, 'error');
-    }
-  }
+  // 削除: 個別ハンドアウトダウンロード機能 - ZIPに統合済み
 
-  /**
-   * シナリオ拡張
-   */
-  async enhanceScenario() {
-    this.showNotification('シナリオ拡張機能は開発中です', 'info');
-  }
+  // 削除: 未実装の拡張機能
 
   /**
    * 新しいシナリオ用リセット
@@ -650,48 +479,7 @@ class MurderMysteryApp {
     console.log('🔄 Reset for new scenario');
   }
 
-  /**
-   * デバッグ情報表示
-   */
-  showDebugInfo() {
-    const debugData = {
-      app: {
-        version: this.version,
-        currentResult: !!this.currentResult,
-        additionalContent: !!this.additionalContent,
-        hasLastPDF: !!this.lastGeneratedPDF
-      },
-      system: {
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        screenSize: `${screen.width}x${screen.height}`,
-        memory: performance.memory ? {
-          used: `${Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)}MB`,
-          limit: `${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)}MB`
-        } : 'Not available'
-      }
-    };
-
-    console.group('🔧 Debug Information');
-    console.log('📊 App Data:', debugData);
-    console.log('📈 Current Result:', this.currentResult);
-    console.log('🎭 Additional Content:', this.additionalContent);
-    console.groupEnd();
-
-    const debugJson = JSON.stringify(debugData, null, 2);
-    const blob = new Blob([debugJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `debug_info_${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    this.showNotification('デバッグ情報をダウンロードしました', 'info');
-  }
+  // 削除: デバッグ情報機能 - 本番環境では不要
 }
 
 // グローバル利用可能にする

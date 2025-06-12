@@ -1,4 +1,60 @@
-/* 🚀 ULTRA-SYNCHRONIZED DESIGN SYSTEM V3.0 */
+/* 🚀 ULTRA-SYNCHRONIZED DESIGN SYSTEM V3.0 - SIMPLIFIED EDITION */
+
+/* 📦 Simple 2-Button System Styles */
+.action-buttons-simple {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.btn-large:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.zip-info {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 2px solid #cbd5e0;
+  margin-top: 1rem;
+}
+
+.zip-info h4 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.package-contents {
+  color: #4a5568;
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+/* Remove old complex button styles */
+.action-buttons {
+  display: none;
+}
+
+.internal-info {
+  display: none;
+}
+
+.debug-info {
+  display: none;
+}
 
 /* 📋 Additional Content Styles */
 .additional-content {
