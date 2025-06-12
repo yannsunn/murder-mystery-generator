@@ -9,6 +9,7 @@ class MurderMysteryApp {
     this.currentResult = null;
     this.additionalContent = null;
     this._zipGenerating = false;
+    this.isPhaseComplete = false;
     
     this.init();
   }
@@ -42,10 +43,11 @@ class MurderMysteryApp {
         <button id="new-scenario-btn" class="btn btn-primary btn-large">
           🚀 新規作成
         </button>
-        <button id="download-zip-btn" class="btn btn-success btn-large">
+        <button id="download-zip-btn" class="btn btn-success btn-large" ${!this.isPhaseComplete ? 'disabled' : ''}>
           📦 完全ZIP出力
         </button>
       </div>
+      ${!this.isPhaseComplete ? '<div class="phase-status">⏳ Phase 2-8生成中... 完了までお待ちください</div>' : ''}
       <div class="zip-info">
         <h4>📦 ZIP パッケージ内容</h4>
         <div class="package-contents">
@@ -101,8 +103,25 @@ class MurderMysteryApp {
 
     document.addEventListener('generation:complete', (event) => {
       this.currentResult = event.detail;
+      this.isPhaseComplete = false; // Reset phase completion status
       setTimeout(() => this.generateAdditionalContent(), 1000);
     });
+  }
+
+  /**
+   * Enable ZIP button after phase completion
+   */
+  enableZipButton() {
+    const zipBtn = document.getElementById('download-zip-btn');
+    if (zipBtn) {
+      zipBtn.disabled = false;
+      zipBtn.classList.remove('disabled');
+    }
+    
+    const phaseStatus = document.querySelector('.phase-status');
+    if (phaseStatus) {
+      phaseStatus.remove();
+    }
   }
 
   /**
@@ -196,11 +215,19 @@ class MurderMysteryApp {
         this.displayAdditionalContent();
         
         console.log('✅ Phase 2-8 + ハンドアウト generation completed successfully!');
+        
+        // Mark phase generation as complete and enable ZIP button
+        this.isPhaseComplete = true;
+        this.enableZipButton();
 
       } catch (error) {
         console.warn('⚠️ Some phases failed, but continuing:', error);
         additionalContent.error = error.message;
         this.additionalContent = additionalContent;
+        
+        // Even with partial failure, allow ZIP generation
+        this.isPhaseComplete = true;
+        this.enableZipButton();
       }
 
     } catch (error) {
@@ -374,24 +401,54 @@ class MurderMysteryApp {
       const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
       const formData = this.collectFormData();
 
+      // Check if Phase 2-8 content is ready
+      if (!this.additionalContent || Object.keys(this.additionalContent).length < 8) {
+        console.log('📋 Phase 2-8 content not ready, generating now...');
+        this.showNotification('Phase 2-8コンテンツを生成中... しばらくお待ちください', 'info');
+        
+        // Generate Phase 2-8 content first
+        await this.generateAdditionalContent();
+        
+        // Wait a bit to ensure content is ready
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // Ensure all content is properly generated
       const zipData = {
         scenario: scenarioText,
-        characters: this.additionalContent?.characters || '生成中...',
-        relationships: this.additionalContent?.relationships || '生成中...',
-        incident: this.additionalContent?.incident || '生成中...',
-        clues: this.additionalContent?.clues || '生成中...',
-        timeline: this.additionalContent?.timeline || '生成中...',
-        solution: this.additionalContent?.solution || '生成中...',
-        gamemaster: this.additionalContent?.gamemaster || '生成中...',
-        handouts: this.additionalContent?.handouts || [],
+        characters: this.additionalContent?.characters || 'Error: Characters not generated',
+        relationships: this.additionalContent?.relationships || 'Error: Relationships not generated',
+        incident: this.additionalContent?.incident || 'Error: Incident not generated',
+        clues: this.additionalContent?.clues || 'Error: Clues not generated',
+        timeline: this.additionalContent?.timeline || 'Error: Timeline not generated',
+        solution: this.additionalContent?.solution || 'Error: Solution not generated',
+        gamemaster: this.additionalContent?.gamemaster || 'Error: GM Guide not generated',
+        handouts: this.additionalContent?.handouts || 'Error: Handouts not generated',
         title: this.extractTitle(scenarioText),
         quality: 'PREMIUM',
         generationStats: {
           totalTokens: 22800,
           phases: 'Phase 1-8 Complete (Full Implementation)',
-          qualityLevel: 'Commercial Grade - All Phases'
+          qualityLevel: 'Commercial Grade - All Phases',
+          generationTime: new Date().toISOString()
         }
       };
+
+      // Validate content before ZIP generation
+      const missingContent = [];
+      if (!this.additionalContent?.characters) missingContent.push('Characters');
+      if (!this.additionalContent?.relationships) missingContent.push('Relationships');
+      if (!this.additionalContent?.incident) missingContent.push('Incident');
+      if (!this.additionalContent?.clues) missingContent.push('Clues');
+      if (!this.additionalContent?.timeline) missingContent.push('Timeline');
+      if (!this.additionalContent?.solution) missingContent.push('Solution');
+      if (!this.additionalContent?.gamemaster) missingContent.push('GameMaster');
+      if (!this.additionalContent?.handouts) missingContent.push('Handouts');
+
+      if (missingContent.length > 0) {
+        console.warn('⚠️ Missing content:', missingContent);
+        this.showNotification(`警告: ${missingContent.join(', ')} が生成されていません。再度Phase生成を実行してください。`, 'warning');
+      }
 
       console.log('📦 Complete ZIP data prepared');
 
