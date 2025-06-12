@@ -47,7 +47,25 @@ class MurderMysteryApp {
           📦 完全ZIP出力
         </button>
       </div>
-      ${!this.isPhaseComplete ? '<div class="phase-status">⏳ Phase 2-8生成中... 完了までお待ちください</div>' : ''}
+      <div id="phase-progress" class="phase-progress" style="display: none;">
+        <div class="progress-header">📊 フェーズ生成進行状況</div>
+        <div class="progress-list">
+          <div class="progress-item" data-phase="2">Phase 2: キャラクター設定 <span class="status">⏳ 準備中</span></div>
+          <div class="progress-item" data-phase="3">Phase 3: 人物関係 <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="4">Phase 4: 事件詳細 <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="5">Phase 5: 証拠・手がかり <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="6">Phase 6: タイムライン <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="7">Phase 7: 真相解決 <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="8">Phase 8: GMガイド <span class="status">⏳ 待機中</span></div>
+          <div class="progress-item" data-phase="handouts">ハンドアウト生成 <span class="status">⏳ 待機中</span></div>
+        </div>
+        <div class="overall-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="overall-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">0/8 フェーズ完了</div>
+        </div>
+      </div>
       <div class="zip-info">
         <h4>📦 ZIP パッケージ内容</h4>
         <div class="package-contents">
@@ -125,6 +143,47 @@ class MurderMysteryApp {
   }
 
   /**
+   * Show phase progress display
+   */
+  showPhaseProgress() {
+    const progressDiv = document.getElementById('phase-progress');
+    if (progressDiv) {
+      progressDiv.style.display = 'block';
+    }
+  }
+
+  /**
+   * Update individual phase status
+   */
+  updatePhaseStatus(phase, status, className) {
+    const phaseItem = document.querySelector(`[data-phase="${phase}"]`);
+    if (phaseItem) {
+      const statusSpan = phaseItem.querySelector('.status');
+      if (statusSpan) {
+        statusSpan.textContent = status;
+        statusSpan.className = `status ${className}`;
+      }
+    }
+  }
+
+  /**
+   * Update overall progress bar
+   */
+  updateOverallProgress(completed, total) {
+    const progressFill = document.getElementById('overall-progress-fill');
+    const progressText = document.querySelector('.progress-text');
+    
+    if (progressFill) {
+      const percentage = (completed / total) * 100;
+      progressFill.style.width = `${percentage}%`;
+    }
+    
+    if (progressText) {
+      progressText.textContent = `${completed}/${total} フェーズ完了`;
+    }
+  }
+
+  /**
    * Phase 2-8 + ハンドアウト生成
    */
   async generateAdditionalContent() {
@@ -134,7 +193,10 @@ class MurderMysteryApp {
     }
 
     try {
-      console.log('🚀 Starting Phase 2-8 + ハンドアウト generation...');
+      console.log('🚀 Starting Phase 2-8 + ハンドアウト with detailed progress tracking...');
+      
+      // Show progress display
+      this.showPhaseProgress();
       
       const scenarioContent = document.getElementById('scenario-content');
       if (!scenarioContent) {
@@ -148,68 +210,107 @@ class MurderMysteryApp {
 
       const apiClient = this.createApiClient();
       const additionalContent = {};
+      let completedPhases = 0;
 
       try {
-        console.log('👥 Generating Phase 2-8 + ハンドアウト with optimized batching...');
+        console.log('👥 Starting individual phase generation with progress tracking...');
         
-        // Sequential batching for better reliability
-        console.log('📊 Batch 1: Characters & Relationships...');
-        const [characters, relationships] = await Promise.all([
-          this.callAPI(apiClient, '/api/groq-phase2-characters', { 
-            concept: scenarioText, 
-            participants: formData.participants,
-            era: formData.era,
-            setting: formData.setting
-          }),
-          this.callAPI(apiClient, '/api/groq-phase3-relationships', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          })
-        ]);
+        // Phase 2: Characters
+        this.updatePhaseStatus(2, '🔄 生成中', 'generating');
+        console.log('📊 Phase 2: Characters...');
+        const characters = await this.callAPI(apiClient, '/api/groq-phase2-characters', { 
+          concept: scenarioText, 
+          participants: formData.participants,
+          era: formData.era,
+          setting: formData.setting
+        });
+        additionalContent.characters = characters;
+        completedPhases++;
+        this.updatePhaseStatus(2, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
 
-        console.log('📊 Batch 2: Incident & Investigation...');
-        const [incident, clues] = await Promise.all([
-          this.callAPI(apiClient, '/api/groq-phase4-incident', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          }),
-          this.callAPI(apiClient, '/api/groq-phase5-clues', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          })
-        ]);
+        // Phase 3: Relationships
+        this.updatePhaseStatus(3, '🔄 生成中', 'generating');
+        console.log('📊 Phase 3: Relationships...');
+        const relationships = await this.callAPI(apiClient, '/api/groq-phase3-relationships', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.relationships = relationships;
+        completedPhases++;
+        this.updatePhaseStatus(3, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
 
-        console.log('📊 Batch 3: Timeline & Game Management...');
-        const [timeline, solution, gamemaster] = await Promise.all([
-          this.callAPI(apiClient, '/api/groq-phase6-timeline', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          }),
-          this.callAPI(apiClient, '/api/groq-phase7-solution', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          }),
-          this.callAPI(apiClient, '/api/groq-phase8-gamemaster', { 
-            concept: scenarioText, 
-            participants: formData.participants 
-          })
-        ]);
+        // Phase 4: Incident
+        this.updatePhaseStatus(4, '🔄 生成中', 'generating');
+        console.log('📊 Phase 4: Incident...');
+        const incident = await this.callAPI(apiClient, '/api/groq-phase4-incident', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.incident = incident;
+        completedPhases++;
+        this.updatePhaseStatus(4, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
 
+        // Phase 5: Clues
+        this.updatePhaseStatus(5, '🔄 生成中', 'generating');
+        console.log('📊 Phase 5: Clues...');
+        const clues = await this.callAPI(apiClient, '/api/groq-phase5-clues', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.clues = clues;
+        completedPhases++;
+        this.updatePhaseStatus(5, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
+
+        // Phase 6: Timeline
+        this.updatePhaseStatus(6, '🔄 生成中', 'generating');
+        console.log('📊 Phase 6: Timeline...');
+        const timeline = await this.callAPI(apiClient, '/api/groq-phase6-timeline', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.timeline = timeline;
+        completedPhases++;
+        this.updatePhaseStatus(6, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
+
+        // Phase 7: Solution
+        this.updatePhaseStatus(7, '🔄 生成中', 'generating');
+        console.log('📊 Phase 7: Solution...');
+        const solution = await this.callAPI(apiClient, '/api/groq-phase7-solution', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.solution = solution;
+        completedPhases++;
+        this.updatePhaseStatus(7, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
+
+        // Phase 8: Game Master
+        this.updatePhaseStatus(8, '🔄 生成中', 'generating');
+        console.log('📊 Phase 8: Game Master...');
+        const gamemaster = await this.callAPI(apiClient, '/api/groq-phase8-gamemaster', { 
+          concept: scenarioText, 
+          participants: formData.participants 
+        });
+        additionalContent.gamemaster = gamemaster;
+        completedPhases++;
+        this.updatePhaseStatus(8, '✅ 完了', 'completed');
+        this.updateOverallProgress(completedPhases, 8);
+
+        // Handouts Generation
+        this.updatePhaseStatus('handouts', '🔄 生成中', 'generating');
         console.log('📊 Final: Handouts Generation...');
         const handouts = await this.callAPI(apiClient, '/api/generate-handouts', { 
           scenario: scenarioText,
           characters: characters,
           participants: formData.participants
         });
-
-        additionalContent.characters = characters;
-        additionalContent.relationships = relationships;
-        additionalContent.incident = incident;
-        additionalContent.clues = clues;
-        additionalContent.timeline = timeline;
-        additionalContent.solution = solution;
-        additionalContent.gamemaster = gamemaster;
         additionalContent.handouts = handouts;
+        this.updatePhaseStatus('handouts', '✅ 完了', 'completed');
 
         this.additionalContent = additionalContent;
         this.displayAdditionalContent();
