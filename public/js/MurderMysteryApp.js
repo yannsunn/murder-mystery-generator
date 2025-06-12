@@ -668,8 +668,8 @@ class MurderMysteryApp extends EventEmitter {
         this.uiController.displayHandouts(result.handouts);
       }
       
-      // PDF生成ボタン表示
-      this.generateAndShowPDF(result);
+      // アクションボタンを追加
+      this.addActionButtons(result);
       
       resultContainer.classList.remove('hidden');
       resultContainer.style.display = 'block';
@@ -682,6 +682,125 @@ class MurderMysteryApp extends EventEmitter {
       type: 'VIEW_CHANGED',
       view: 'result'
     });
+  }
+
+  /**
+   * アクションボタン追加
+   */
+  addActionButtons(result) {
+    const resultContainer = document.getElementById('result-container');
+    if (!resultContainer) return;
+
+    // アクションパネルを作成
+    let actionPanel = document.getElementById('action-panel');
+    if (!actionPanel) {
+      actionPanel = document.createElement('div');
+      actionPanel.id = 'action-panel';
+      actionPanel.className = 'action-panel';
+      actionPanel.innerHTML = `
+        <div class="action-buttons">
+          <button id="download-pdf-btn" class="btn btn-primary">
+            📄 PDFダウンロード
+          </button>
+          <button id="generate-handouts-btn" class="btn btn-secondary">
+            📅 ハンドアウト生成
+          </button>
+          <button id="enhance-scenario-btn" class="btn btn-accent">
+            ✨ シナリオ拡張
+          </button>
+          <button id="new-scenario-btn" class="btn btn-outline">
+            🔄 新しいシナリオ
+          </button>
+        </div>
+        <div class="quality-info">
+          <span class="quality-badge">品質: ${result.metadata?.quality || 'B級'}</span>
+          <span class="time-badge">生成時間: ${result.metadata?.generationTime || '0'}ms</span>
+        </div>
+      `;
+      resultContainer.appendChild(actionPanel);
+    }
+
+    // イベントリスナー追加
+    this.setupActionButtonEvents(result);
+  }
+
+  /**
+   * アクションボタンイベント設定
+   */
+  setupActionButtonEvents(result) {
+    // PDFダウンロード
+    const pdfBtn = document.getElementById('download-pdf-btn');
+    if (pdfBtn) {
+      pdfBtn.onclick = () => this.generateAndShowPDF(result);
+    }
+
+    // ハンドアウト生成
+    const handoutsBtn = document.getElementById('generate-handouts-btn');
+    if (handoutsBtn) {
+      handoutsBtn.onclick = () => this.generateHandoutsManually(result);
+    }
+
+    // シナリオ拡張
+    const enhanceBtn = document.getElementById('enhance-scenario-btn');
+    if (enhanceBtn) {
+      enhanceBtn.onclick = () => this.enhanceScenario(result);
+    }
+
+    // 新しいシナリオ
+    const newBtn = document.getElementById('new-scenario-btn');
+    if (newBtn) {
+      newBtn.onclick = () => this.resetForNewScenario();
+    }
+  }
+
+  /**
+   * 手動ハンドアウト生成
+   */
+  async generateHandoutsManually(result) {
+    try {
+      this.logger.info('Manual handout generation started');
+      const handouts = await this.scenarioGenerator.generateHandouts(result.scenario, result.characters);
+      if (handouts && handouts.length > 0) {
+        this.uiController.displayHandouts(handouts);
+        this.uiController.showSuccess('ハンドアウトを生成しました！');
+      }
+    } catch (error) {
+      this.logger.error('Manual handout generation failed:', error);
+      this.uiController.showError('ハンドアウト生成に失敗しました');
+    }
+  }
+
+  /**
+   * シナリオ拡張
+   */
+  async enhanceScenario(result) {
+    try {
+      this.logger.info('Scenario enhancement started');
+      // 将来的に追加生成機能を実装
+      this.uiController.showInfo('シナリオ拡張機能は開発中です');
+    } catch (error) {
+      this.logger.error('Scenario enhancement failed:', error);
+    }
+  }
+
+  /**
+   * 新しいシナリオ用リセット
+   */
+  resetForNewScenario() {
+    // 結果を非表示
+    const resultContainer = document.getElementById('result-container');
+    if (resultContainer) {
+      resultContainer.classList.add('hidden');
+    }
+
+    // ステップをリセット
+    this.stepManager.resetToStep(1);
+    
+    // 状態をリセット
+    this.currentScenario = null;
+    this.isGenerating = false;
+    
+    this.logger.info('Reset for new scenario');
   }
 
   /**

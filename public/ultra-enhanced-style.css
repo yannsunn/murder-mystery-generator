@@ -50,6 +50,100 @@
   --radius-2xl: 1.5rem;
 }
 
+/* 🎯 アクションパネル - 新機能UI */
+.action-panel {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: rgba(15, 15, 35, 0.8);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.btn {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--animation-normal);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+}
+
+.btn-secondary {
+  background: rgba(139, 92, 246, 0.8);
+  color: white;
+}
+
+.btn-accent {
+  background: var(--gradient-success);
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.quality-info {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quality-badge, .time-badge {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.quality-badge {
+  background: var(--gradient-success);
+  color: white;
+}
+
+.time-badge {
+  background: rgba(148, 163, 184, 0.2);
+  color: var(--primary-400);
+}
+
 /* 🌟 ベーススタイル - 限界突破 */
 * {
   box-sizing: border-box;
