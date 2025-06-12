@@ -114,7 +114,7 @@ async function callGroq(prompt) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: 3000,
     })
   });
 
@@ -144,7 +144,7 @@ async function callOpenAI(prompt) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 1500,
+      max_tokens: 3000,
     })
   });
 

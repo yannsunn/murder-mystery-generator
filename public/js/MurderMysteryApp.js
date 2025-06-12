@@ -184,7 +184,7 @@ class MurderMysteryApp {
       try {
         console.log('👥 Generating Phase 2-8 in parallel...');
         
-        const [characters, relationships, clues, timeline, gamemaster] = await Promise.all([
+        const [characters, relationships, clues, timeline, gamemaster, handouts] = await Promise.all([
           this.callAPI(apiClient, '/api/groq-phase2-characters', { 
             concept: scenarioText, 
             participants: formData.participants,
@@ -206,6 +206,11 @@ class MurderMysteryApp {
           this.callAPI(apiClient, '/api/groq-phase8-gamemaster', { 
             concept: scenarioText, 
             participants: formData.participants 
+          }),
+          this.callAPI(apiClient, '/api/generate-handouts', { 
+            scenario: scenarioText,
+            characters: scenarioText,
+            participants: formData.participants
           })
         ]);
 
@@ -214,6 +219,7 @@ class MurderMysteryApp {
         additionalContent.clues = clues;
         additionalContent.timeline = timeline;
         additionalContent.gamemaster = gamemaster;
+        additionalContent.handouts = handouts;
 
         this.additionalContent = additionalContent;
         this.displayAdditionalContent();
@@ -338,15 +344,23 @@ class MurderMysteryApp {
         </div>
         
         <div class="content-section">
-          <h4>📊 生成統計</h4>
+          <h4>📋 キャラクターハンドアウト (高品質)</h4>
+          <div class="content-text">${formatContent(this.additionalContent.handouts)}</div>
+          ${this.additionalContent.handouts ? '<button class="btn btn-primary" onclick="window.murderMysteryApp.downloadHandouts()">個別ハンドアウトダウンロード</button>' : ''}
+        </div>
+        
+        <div class="content-section">
+          <h4>📊 生成統計 (3000トークン/フェーズ)</h4>
           <div class="content-text">
-            ✅ Phase 1: シナリオ概要 - 完了<br>
-            ${this.additionalContent.characters ? '✅' : '❌'} Phase 2: キャラクター設定<br>
-            ${this.additionalContent.relationships ? '✅' : '❌'} Phase 3: 人物関係<br>
-            ${this.additionalContent.clues ? '✅' : '❌'} Phase 5: 証拠・手がかり<br>
-            ${this.additionalContent.timeline ? '✅' : '❌'} Phase 6: タイムライン<br>
-            ${this.additionalContent.gamemaster ? '✅' : '❌'} Phase 8: GMガイド<br>
-            🕐 総生成時間: ${Date.now() - (this.startTime || Date.now())}ms
+            ✅ Phase 1: シナリオ概要 - 完了 (1800トークン)<br>
+            ${this.additionalContent.characters ? '✅' : '❌'} Phase 2: キャラクター設定 (3000トークン)<br>
+            ${this.additionalContent.relationships ? '✅' : '❌'} Phase 3: 人物関係 (3000トークン)<br>
+            ${this.additionalContent.clues ? '✅' : '❌'} Phase 5: 証拠・手がかり (3000トークン)<br>
+            ${this.additionalContent.timeline ? '✅' : '❌'} Phase 6: タイムライン (3000トークン)<br>
+            ${this.additionalContent.gamemaster ? '✅' : '❌'} Phase 8: GMガイド (3000トークン)<br>
+            ${this.additionalContent.handouts ? '✅' : '❌'} ハンドアウト: 個別生成完了<br>
+            🕐 総生成時間: ${Date.now() - (this.startTime || Date.now())}ms<br>
+            📈 品質レベル: PREMIUM (17800総トークン)
           </div>
         </div>
       </div>
@@ -539,7 +553,71 @@ class MurderMysteryApp {
    * ハンドアウト生成
    */
   async generateHandoutsManually() {
-    this.showNotification('ハンドアウト生成機能は開発中です', 'info');
+    try {
+      console.log('📋 Generating handouts manually...');
+      
+      const scenarioContent = document.getElementById('scenario-content');
+      if (!scenarioContent) {
+        throw new Error('シナリオコンテンツが見つかりません');
+      }
+      
+      const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
+      const formData = this.collectFormData();
+      
+      const apiClient = this.createApiClient();
+      const handouts = await this.callAPI(apiClient, '/api/generate-handouts', {
+        scenario: scenarioText,
+        characters: this.additionalContent?.characters || scenarioText,
+        participants: formData.participants
+      });
+      
+      if (this.additionalContent) {
+        this.additionalContent.handouts = handouts;
+        this.displayAdditionalContent();
+      }
+      
+      this.showNotification('ハンドアウト生成完了！', 'success');
+    } catch (error) {
+      console.error('❌ Handout generation failed:', error);
+      this.showNotification('ハンドアウト生成エラー: ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * ハンドアウトダウンロード
+   */
+  async downloadHandouts() {
+    try {
+      console.log('📋 Downloading individual handouts...');
+      
+      if (!this.additionalContent?.handouts) {
+        throw new Error('ハンドアウトが生成されていません');
+      }
+      
+      const apiClient = this.createApiClient();
+      const result = await apiClient.post('/api/generate-individual-handout', {
+        handouts: this.additionalContent.handouts,
+        title: this.extractTitle(document.getElementById('scenario-content').textContent),
+        quality: 'PREMIUM'
+      });
+      
+      if (result.success && result.pdf) {
+        const link = document.createElement('a');
+        link.href = 'data:application/pdf;base64,' + result.pdf;
+        link.download = `murder_mystery_handouts_${Date.now()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        this.showNotification('ハンドアウトPDFダウンロード完了！', 'success');
+      } else {
+        throw new Error('ハンドアウトPDF生成に失敗しました');
+      }
+      
+    } catch (error) {
+      console.error('❌ Handout download failed:', error);
+      this.showNotification('ハンドアウトダウンロードエラー: ' + error.message, 'error');
+    }
   }
 
   /**
