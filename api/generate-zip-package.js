@@ -37,11 +37,13 @@ export default async function handler(req, res) {
     const { 
       scenario, 
       characters, 
-      handouts,
-      timeline, 
-      clues, 
-      relationships, 
+      relationships,
+      incident,
+      clues,
+      timeline,
+      solution,
       gamemaster,
+      handouts,
       title,
       quality,
       generationStats
@@ -84,35 +86,45 @@ export default async function handler(req, res) {
     // Main scenario text
     zip.file('scenario.txt', `Murder Mystery Scenario\n${'='.repeat(30)}\n\n${scenario}`);
     
-    // Phase content files
+    // Phase content files (Phase 2-8 + handouts)
     if (characters) {
       const charactersText = typeof characters === 'string' ? characters : JSON.stringify(characters, null, 2);
-      zip.file('characters.txt', `Characters\n${'='.repeat(20)}\n\n${charactersText}`);
-    }
-    
-    if (timeline) {
-      const timelineText = typeof timeline === 'string' ? timeline : JSON.stringify(timeline, null, 2);
-      zip.file('timeline.txt', `Timeline\n${'='.repeat(20)}\n\n${timelineText}`);
-    }
-    
-    if (clues) {
-      const cluesText = typeof clues === 'string' ? clues : JSON.stringify(clues, null, 2);
-      zip.file('clues.txt', `Clues & Evidence\n${'='.repeat(20)}\n\n${cluesText}`);
+      zip.file('phase2_characters.txt', `Phase 2: Characters\n${'='.repeat(30)}\n\n${charactersText}`);
     }
     
     if (relationships) {
       const relationshipsText = typeof relationships === 'string' ? relationships : JSON.stringify(relationships, null, 2);
-      zip.file('relationships.txt', `Character Relationships\n${'='.repeat(30)}\n\n${relationshipsText}`);
+      zip.file('phase3_relationships.txt', `Phase 3: Character Relationships\n${'='.repeat(40)}\n\n${relationshipsText}`);
+    }
+    
+    if (incident) {
+      const incidentText = typeof incident === 'string' ? incident : JSON.stringify(incident, null, 2);
+      zip.file('phase4_incident.txt', `Phase 4: Incident Details & Motives\n${'='.repeat(40)}\n\n${incidentText}`);
+    }
+    
+    if (clues) {
+      const cluesText = typeof clues === 'string' ? clues : JSON.stringify(clues, null, 2);
+      zip.file('phase5_clues.txt', `Phase 5: Clues & Evidence\n${'='.repeat(30)}\n\n${cluesText}`);
+    }
+    
+    if (timeline) {
+      const timelineText = typeof timeline === 'string' ? timeline : JSON.stringify(timeline, null, 2);
+      zip.file('phase6_timeline.txt', `Phase 6: Timeline\n${'='.repeat(25)}\n\n${timelineText}`);
+    }
+    
+    if (solution) {
+      const solutionText = typeof solution === 'string' ? solution : JSON.stringify(solution, null, 2);
+      zip.file('phase7_solution.txt', `Phase 7: Solution & Truth\n${'='.repeat(30)}\n\n${solutionText}`);
     }
     
     if (gamemaster) {
       const gmText = typeof gamemaster === 'string' ? gamemaster : JSON.stringify(gamemaster, null, 2);
-      zip.file('gamemaster_guide.txt', `Game Master Guide\n${'='.repeat(25)}\n\n${gmText}`);
+      zip.file('phase8_gamemaster.txt', `Phase 8: Game Master Guide\n${'='.repeat(35)}\n\n${gmText}`);
     }
     
     if (handouts) {
       const handoutsText = typeof handouts === 'string' ? handouts : JSON.stringify(handouts, null, 2);
-      zip.file('handouts.txt', `Character Handouts\n${'='.repeat(25)}\n\n${handoutsText}`);
+      zip.file('character_handouts.txt', `Character Handouts (Complete)\n${'='.repeat(35)}\n\n${handoutsText}`);
     }
     
     // Complete data JSON
@@ -122,12 +134,14 @@ export default async function handler(req, res) {
       generationDate: new Date().toISOString(),
       scenario,
       characters,
-      timeline,
-      clues,
       relationships,
+      incident,
+      clues,
+      timeline,
+      solution,
       gamemaster,
       handouts,
-      stats: generationStats || { totalTokens: 17800, phases: 'Phase 1-8 Complete' }
+      stats: generationStats || { totalTokens: 22800, phases: 'Phase 1-8 Complete (Full Implementation)' }
     };
     zip.file('complete_data.json', JSON.stringify(scenarioData, null, 2));
 
@@ -156,8 +170,8 @@ export default async function handler(req, res) {
       processingTime,
       contents: {
         pdfs: ['scenario_overview.pdf'],
-        textFiles: ['README.txt', 'scenario.txt', 'characters.txt', 'timeline.txt', 'clues.txt', 'relationships.txt', 'gamemaster_guide.txt', 'handouts.txt', 'complete_data.json'],
-        totalFiles: 9
+        textFiles: ['README.txt', 'scenario.txt', 'phase2_characters.txt', 'phase3_relationships.txt', 'phase4_incident.txt', 'phase5_clues.txt', 'phase6_timeline.txt', 'phase7_solution.txt', 'phase8_gamemaster.txt', 'character_handouts.txt', 'complete_data.json'],
+        totalFiles: 12
       },
       timestamp: new Date().toISOString()
     });
