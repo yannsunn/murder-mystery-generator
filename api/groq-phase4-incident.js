@@ -98,13 +98,13 @@ async function callGroq(prompt) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.1-70b-versatile',
       messages: [
         { role: 'system', content: '事件構築専門家として効率的で意外性ある事件を設計。' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_tokens: 1200,
+      max_tokens: 3500,
     })
   });
 
@@ -134,7 +134,7 @@ async function callOpenAI(prompt) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_tokens: 1200,
+      max_tokens: 3500,
     })
   });
 

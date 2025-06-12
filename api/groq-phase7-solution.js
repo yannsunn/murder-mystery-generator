@@ -98,13 +98,13 @@ async function callGroq(prompt) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.1-70b-versatile',
       messages: [
-        { role: 'system', content: '推理小説専門家として効率的で感動的な解決編を作成。' },
+        { role: 'system', content: '世界クラスの推理小説専門家として、読者を感動させる完璧な解決編を創造してください。論理的整合性、意外性、感動的なカタルシス、キャラクターの成長を含む、商業出版レベルの圧倒的な真相解明シーンを構築してください。' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 1200,
+      max_tokens: 3500,
     })
   });
 
@@ -134,7 +134,7 @@ async function callOpenAI(prompt) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.7,
-      max_tokens: 1200,
+      max_tokens: 3500,
     })
   });
 

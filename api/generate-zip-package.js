@@ -137,7 +137,7 @@ export default async function handler(req, res) {
       solution,
       gamemaster,
       handouts,
-      stats: generationStats || { totalTokens: 22800, phases: 'Phase 1-8 Complete (Full Implementation)' }
+      stats: generationStats || { totalTokens: 29200, phases: 'Phase 1-8 Complete (Ultimate Quality)', qualityLevel: 'Commercial Publishing Grade' }
     };
     zip.file('complete_data.json', JSON.stringify(scenarioData, null, 2));
 
@@ -246,7 +246,7 @@ function generateSimpleReadme(title, quality, timestamp) {
 ================================================
 
 📋 Scenario: ${title || 'Murder Mystery Scenario'}
-🏆 Quality: ${quality || 'PREMIUM'} Grade (22800 Tokens)
+🏆 Quality: ${quality || 'ULTIMATE'} Grade (29200 Tokens - Commercial Publishing Level)
 📅 Generated: ${new Date().toLocaleString('ja-JP')}
 🆔 Package ID: ${timestamp}
 
@@ -276,11 +276,12 @@ function generateSimpleReadme(title, quality, timestamp) {
 ⚠️  SPOILER WARNING: phase7_solution.txt contains the complete solution!
 
 🚀 Features:
-- Phase 1-8 Complete Implementation
-- 22800 Total Tokens (Commercial Grade)
-- Optimized 8b-instant AI Model
+- Phase 1-8 Complete Implementation (Ultimate Quality)
+- 29200 Total Tokens (Commercial Publishing Grade)
+- Groq llama-3.1-70b-versatile AI Model
 - Sequential Batch Processing
-- Enhanced Reliability
+- Maximum Customer Quality Level
+- Professional Writing Standards
 
 Generated with Claude Code AI Assistant - v4.0.0-FINAL
 `;

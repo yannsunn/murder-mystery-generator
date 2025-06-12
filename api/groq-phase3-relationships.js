@@ -98,13 +98,13 @@ async function callGroq(prompt) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.1-70b-versatile',
       messages: [
-        { role: 'system', content: '人間関係設計専門家として効率的で複雑な関係網を作成。' },
+        { role: 'system', content: '商業出版レベルの人間関係設計専門家として、心理学的に深く、複雑で現実的な人物間の関係網を構築してください。各関係には歴史的背景、感情の機微、利害関係の複雑さを含め、読者が納得できるリアルな人間ドラマを創造してください。' },
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_tokens: 1000,
+      max_tokens: 3500,
     })
   });
 
@@ -134,7 +134,7 @@ async function callOpenAI(prompt) {
         { role: 'user', content: prompt }
       ],
       temperature: 0.8,
-      max_tokens: 1000,
+      max_tokens: 3500,
     })
   });
 
