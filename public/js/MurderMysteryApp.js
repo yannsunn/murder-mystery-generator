@@ -123,13 +123,16 @@ class MurderMysteryApp {
       this.currentResult = event.detail;
       this.isPhaseComplete = false; // Reset phase completion status
       
-      // 🎯 フェーズ1完了時: 結果表示を強制的に非表示
+      console.log('🎯 generation:complete イベント受信 - フェーズ1完了処理開始');
+      
+      // 🚨 即座に結果表示を強制的に非表示（最優先）
       this.hideResultsUntilPhase8Complete();
       
       // 🎯 フェーズ1完了時: ZIPボタン無効化とフェーズ2-8開始通知
       this.disableZipButtonWithMessage();
       
-      setTimeout(() => this.generateAdditionalContent(), 1000);
+      // フェーズ2-8生成を即座に開始（タイムアウト削除）
+      this.generateAdditionalContent();
     });
   }
 
@@ -139,22 +142,36 @@ class MurderMysteryApp {
   hideResultsUntilPhase8Complete() {
     console.log('🔒 フェーズ1完了: 結果表示をフェーズ8まで非表示にします');
     
-    // メインの結果表示エリアを非表示
+    // 🚨 強制的に結果表示を即座に非表示
     const resultContainer = document.getElementById('result-container');
     if (resultContainer) {
-      resultContainer.style.display = 'none';
+      resultContainer.style.display = 'none !important';
+      resultContainer.classList.add('hidden');
+      resultContainer.style.visibility = 'hidden';
+      console.log('✅ result-container を強制非表示しました');
     }
     
-    // シナリオ内容も非表示
+    // シナリオ内容も強制非表示
     const scenarioContent = document.getElementById('scenario-content');
     if (scenarioContent) {
-      scenarioContent.style.display = 'none';
+      scenarioContent.style.display = 'none !important';
+      scenarioContent.style.visibility = 'hidden';
+      console.log('✅ scenario-content を強制非表示しました');
     }
     
     // 追加コンテンツエリアも非表示
     const additionalContent = document.getElementById('additional-content');
     if (additionalContent) {
-      additionalContent.style.display = 'none';
+      additionalContent.style.display = 'none !important';
+      additionalContent.style.visibility = 'hidden';
+    }
+    
+    // メインカードも非表示
+    const mainCard = document.getElementById('main-card');
+    if (mainCard) {
+      mainCard.classList.add('hidden');
+      mainCard.style.display = 'none';
+      console.log('✅ main-card を非表示しました');
     }
     
     // 進捗表示のみを表示するため、専用コンテナを作成

@@ -819,22 +819,23 @@
             }
             
             if (success) {
-              this.updateUltraProgress(70, '✅ メインシナリオ生成完了!', '追加コンテンツ生成中...', '残り15秒');
+              this.updateUltraProgress(70, '✅ フェーズ1完了!', 'フェーズ2-8生成開始中...', '残り30秒');
               
-              // メインシナリオ表示
-              this.displayUltraResult(content, metadata);
+              // 🔒 フェーズ1完了時は結果を表示せず、MurderMysteryAppに制御移譲
+              console.log('🔒 フェーズ1完了: 結果表示をスキップしてフェーズ2-8生成開始');
               
-              // 追加コンテンツを並列生成
-              setTimeout(async () => {
-                try {
-                  this.updateUltraProgress(80, '🎭 キャラクター・手がかり生成中...', '高品質コンテンツ作成中', '残り10秒');
-                  await this.generateAdditionalContent();
-                  this.updateUltraProgress(100, '🎉 全コンテンツ生成完了!', '準備完了 - PDFダウンロード可能', '');
-                } catch (error) {
-                  console.warn('Additional content generation failed, but main scenario is available:', error);
-                  this.updateUltraProgress(100, '✅ メインシナリオ完了!', 'PDFダウンロード可能', '');
-                }
-              }, 1000);
+              // generation:completeイベント発火（結果表示なし）
+              if (window.app && typeof window.app.emit === 'function') {
+                window.app.emit('generation:complete', { content, metadata });
+              } else {
+                // 従来のイベント発火方式
+                const event = new CustomEvent('generation:complete', {
+                  detail: { content, metadata }
+                });
+                document.dispatchEvent(event);
+              }
+              
+              // 🎯 旧方式の追加コンテンツ生成は削除（MurderMysteryAppで処理）
             } else {
               throw new Error(result.error || result.data?.error || 'Generation failed');
             }
