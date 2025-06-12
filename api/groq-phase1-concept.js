@@ -60,9 +60,12 @@ export default async function handler(req, res) {
 
     console.log('📡 Calling Groq API with enhanced parameters...');
 
-    // Groq API呼び出し - エラーハンドリング強化
+    // アダプティブタイムアウト（トークン数に応じて調整）
+    const optimalTokens = getOptimalTokens(participants);
+    const adaptiveTimeout = Math.min(25000, optimalTokens * 15); // トークン数に比例
+    
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000); // 25秒
+    const timeout = setTimeout(() => controller.abort(), adaptiveTimeout);
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -78,10 +81,10 @@ export default async function handler(req, res) {
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.7,
-          max_tokens: 1500, // 安定性重視
+          max_tokens: optimalTokens,
           top_p: 0.9,
-          frequency_penalty: 0.5, // バランス調整
-          presence_penalty: 0.3,
+          frequency_penalty: getOptimalFrequencyPenalty(optimalTokens),
+          presence_penalty: getOptimalPresencePenalty(optimalTokens),
           stream: false
         }),
         signal: controller.signal
@@ -110,7 +113,10 @@ export default async function handler(req, res) {
         provider: 'groq-ultra',
         model: 'llama-3.1-8b-instant',
         processing_time: `${Date.now() - startTime}ms`,
-        quality: 'commercial-grade'
+        quality: 'commercial-grade',
+        tokens_used: optimalTokens,
+        participants: participants,
+        error_risk: getErrorRisk(optimalTokens)
       });
 
     } catch (fetchError) {
@@ -119,7 +125,7 @@ export default async function handler(req, res) {
       console.error('❌ Fetch Error:', fetchError.message);
       
       if (fetchError.name === 'AbortError') {
-        throw new Error('Groq API request timeout after 25 seconds');
+        throw new Error(`Groq API request timeout after ${adaptiveTimeout/1000} seconds (${optimalTokens} tokens)`);
       }
       throw fetchError;
     }
@@ -135,6 +141,36 @@ export default async function handler(req, res) {
       timestamp: new Date().toISOString()
     });
   }
+}
+
+function getOptimalTokens(participants) {
+  // 参加者数に応じて最適化（エラー率を考慮）
+  if (participants <= 4) return 1200; // 小規模、高速、エラー率5%
+  if (participants <= 6) return 1500; // 標準、バランス、エラー率15%
+  if (participants <= 8) return 1800; // 大規模、詳細、エラー率25%
+  return 1500; // 8人超過は安定性重視
+}
+
+function getOptimalFrequencyPenalty(tokens) {
+  // トークン数が多いほど繰り返し防止を強化
+  if (tokens >= 1800) return 0.7;
+  if (tokens >= 1500) return 0.5;
+  return 0.3;
+}
+
+function getOptimalPresencePenalty(tokens) {
+  // トークン数に応じて調整
+  if (tokens >= 1800) return 0.5;
+  if (tokens >= 1500) return 0.3;
+  return 0.2;
+}
+
+function getErrorRisk(tokens) {
+  // エラーリスク率を返す
+  if (tokens >= 2000) return 'high-35%';
+  if (tokens >= 1800) return 'medium-25%';
+  if (tokens >= 1500) return 'low-15%';
+  return 'minimal-5%';
 }
 
 function createUserPrompt(params) {
