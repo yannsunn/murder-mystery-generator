@@ -123,11 +123,42 @@ class MurderMysteryApp {
       this.currentResult = event.detail;
       this.isPhaseComplete = false; // Reset phase completion status
       
+      // 🎯 フェーズ1完了時: 結果表示を強制的に非表示
+      this.hideResultsUntilPhase8Complete();
+      
       // 🎯 フェーズ1完了時: ZIPボタン無効化とフェーズ2-8開始通知
       this.disableZipButtonWithMessage();
       
       setTimeout(() => this.generateAdditionalContent(), 1000);
     });
+  }
+
+  /**
+   * 🎯 フェーズ1完了時: 結果を非表示にしてフェーズ8まで待機
+   */
+  hideResultsUntilPhase8Complete() {
+    console.log('🔒 フェーズ1完了: 結果表示をフェーズ8まで非表示にします');
+    
+    // メインの結果表示エリアを非表示
+    const resultContainer = document.getElementById('result-container');
+    if (resultContainer) {
+      resultContainer.style.display = 'none';
+    }
+    
+    // シナリオ内容も非表示
+    const scenarioContent = document.getElementById('scenario-content');
+    if (scenarioContent) {
+      scenarioContent.style.display = 'none';
+    }
+    
+    // 追加コンテンツエリアも非表示
+    const additionalContent = document.getElementById('additional-content');
+    if (additionalContent) {
+      additionalContent.style.display = 'none';
+    }
+    
+    // 進捗表示のみを表示するため、専用コンテナを作成
+    this.createProgressOnlyDisplay();
   }
 
   /**
@@ -142,6 +173,110 @@ class MurderMysteryApp {
     }
     
     this.showNotification('🚀 フェーズ1完了！フェーズ2-8生成開始中...', 'info');
+  }
+
+  /**
+   * 🎯 進捗表示のみのコンテナ作成
+   */
+  createProgressOnlyDisplay() {
+    // 既存の進捗専用コンテナがあれば削除
+    const existingProgress = document.getElementById('progress-only-container');
+    if (existingProgress) {
+      existingProgress.remove();
+    }
+    
+    // 進捗専用コンテナ作成
+    const progressContainer = document.createElement('div');
+    progressContainer.id = 'progress-only-container';
+    progressContainer.className = 'main-container';
+    progressContainer.innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <h2>🚀 マーダーミステリー生成中</h2>
+          <p>フェーズ2-8を順次生成しています。完了まで少々お待ちください...</p>
+        </div>
+        <div id="phase-progress-only" class="phase-progress">
+          <div class="progress-header">📊 フェーズ生成進行状況</div>
+          <div class="progress-list">
+            <div class="progress-item" data-phase="2">Phase 2: キャラクター設定 <span class="status waiting">⏳ 準備中</span></div>
+            <div class="progress-item" data-phase="3">Phase 3: 人物関係 <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="4">Phase 4: 事件詳細 <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="5">Phase 5: 証拠・手がかり <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="6">Phase 6: タイムライン <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="7">Phase 7: 真相解決 <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="8">Phase 8: GMガイド <span class="status waiting">⏳ 待機中</span></div>
+            <div class="progress-item" data-phase="handouts">ハンドアウト生成 <span class="status waiting">⏳ 待機中</span></div>
+          </div>
+          <div class="overall-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" id="overall-progress-fill-only" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">0/8 フェーズ完了</div>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // メインコンテナの後に挿入
+    const mainCard = document.getElementById('main-card');
+    if (mainCard && mainCard.parentNode) {
+      mainCard.parentNode.insertBefore(progressContainer, mainCard.nextSibling);
+    } else {
+      document.body.appendChild(progressContainer);
+    }
+    
+    console.log('✅ 進捗専用表示コンテナを作成しました');
+  }
+
+  /**
+   * 🎯 フェーズ8完了時: 結果表示を復元
+   */
+  showResultsAfterPhase8Complete() {
+    console.log('🔓 フェーズ8+ハンドアウト完了: 結果表示を復元します');
+    
+    // 進捗専用コンテナを削除
+    const progressOnlyContainer = document.getElementById('progress-only-container');
+    if (progressOnlyContainer) {
+      progressOnlyContainer.remove();
+      console.log('✅ 進捗専用コンテナを削除しました');
+    }
+    
+    // メインの結果表示エリアを再表示
+    const resultContainer = document.getElementById('result-container');
+    if (resultContainer) {
+      resultContainer.style.display = 'block';
+      resultContainer.classList.remove('hidden');
+      console.log('✅ 結果コンテナを再表示しました');
+    }
+    
+    // シナリオ内容を再表示
+    const scenarioContent = document.getElementById('scenario-content');
+    if (scenarioContent) {
+      scenarioContent.style.display = 'block';
+      console.log('✅ シナリオコンテンツを再表示しました');
+    }
+    
+    // 追加コンテンツエリアを再表示
+    const additionalContent = document.getElementById('additional-content');
+    if (additionalContent) {
+      additionalContent.style.display = 'block';
+      console.log('✅ 追加コンテンツエリアを再表示しました');
+    }
+    
+    // メインカードを非表示（結果が表示されているため）
+    const mainCard = document.getElementById('main-card');
+    if (mainCard) {
+      mainCard.classList.add('hidden');
+      console.log('✅ メインカードを非表示にしました');
+    }
+    
+    // アクションパネルを設定
+    setTimeout(() => {
+      this.setupActionButtons();
+      console.log('✅ アクションボタンを再設定しました');
+    }, 500);
+    
+    this.showNotification('🎉 フェーズ8+ハンドアウト完了！結果を表示中...', 'success');
   }
 
   /**
@@ -172,9 +307,10 @@ class MurderMysteryApp {
   }
 
   /**
-   * Update individual phase status
+   * Update individual phase status (進捗専用表示対応)
    */
   updatePhaseStatus(phase, status, className) {
+    // 通常の進捗表示を更新
     const phaseItem = document.querySelector(`[data-phase="${phase}"]`);
     if (phaseItem) {
       const statusSpan = phaseItem.querySelector('.status');
@@ -183,12 +319,26 @@ class MurderMysteryApp {
         statusSpan.className = `status ${className}`;
       }
     }
+    
+    // 進捗専用表示も更新（フェーズ1完了後の表示用）
+    const progressOnlyContainer = document.getElementById('phase-progress-only');
+    if (progressOnlyContainer) {
+      const progressOnlyItem = progressOnlyContainer.querySelector(`[data-phase="${phase}"]`);
+      if (progressOnlyItem) {
+        const progressOnlyStatus = progressOnlyItem.querySelector('.status');
+        if (progressOnlyStatus) {
+          progressOnlyStatus.textContent = status;
+          progressOnlyStatus.className = `status ${className}`;
+        }
+      }
+    }
   }
 
   /**
-   * Update overall progress bar
+   * Update overall progress bar (進捗専用表示対応)
    */
   updateOverallProgress(completed, total) {
+    // 通常の進捗バー更新
     const progressFill = document.getElementById('overall-progress-fill');
     const progressText = document.querySelector('.progress-text');
     
@@ -199,6 +349,21 @@ class MurderMysteryApp {
     
     if (progressText) {
       progressText.textContent = `${completed}/${total} フェーズ完了`;
+    }
+    
+    // 進捗専用表示も更新
+    const progressFillOnly = document.getElementById('overall-progress-fill-only');
+    const progressOnlyContainer = document.getElementById('phase-progress-only');
+    if (progressFillOnly) {
+      const percentage = (completed / total) * 100;
+      progressFillOnly.style.width = `${percentage}%`;
+    }
+    
+    if (progressOnlyContainer) {
+      const progressTextOnly = progressOnlyContainer.querySelector('.progress-text');
+      if (progressTextOnly) {
+        progressTextOnly.textContent = `${completed}/${total} フェーズ完了`;
+      }
     }
   }
 
@@ -317,6 +482,10 @@ class MurderMysteryApp {
       }
 
         this.additionalContent = additionalContent;
+        
+        // 🎯 フェーズ8+ハンドアウト完了: 結果表示を復元
+        this.showResultsAfterPhase8Complete();
+        
         this.displayAdditionalContent();
         
         console.log('✅ Phase 2-8 + ハンドアウト generation completed successfully!');
