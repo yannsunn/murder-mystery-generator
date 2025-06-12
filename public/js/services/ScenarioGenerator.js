@@ -350,7 +350,7 @@ class ScenarioGenerator extends EventEmitter {
     try {
       // Phase 1: 高品質コンセプト生成
       this.updateProgress(10, '💡 商業コンセプト生成中', '高品質シナリオの核心を構築中...', '約50秒');
-      results.concept = await this.callGroqAPI('/groq-phase1-concept', formData);
+      results.concept = await this.callGroqAPI('/api/groq-phase1-concept', formData);
       
       // 品質チェック（簡易版）
       const conceptQuality = this.assessConceptQuality(results.concept);
@@ -362,11 +362,11 @@ class ScenarioGenerator extends EventEmitter {
       // Phase 2&3: 並列実行
       this.updateProgress(25, '👥 キャラクター&関係性構築', '魅力的なキャラクターと複雑な人間関係を並列生成中...', '約30秒');
       const [characters, relationships] = await Promise.all([
-        this.callGroqAPI('/groq-phase2-characters', {
+        this.callGroqAPI('/api/groq-phase2-characters', {
           concept: results.concept,
           participants: formData.participants
         }),
-        this.callGroqAPI('/groq-phase3-relationships', {
+        this.callGroqAPI('/api/groq-phase3-relationships', {
           concept: results.concept,
           participants: formData.participants
         })
@@ -378,12 +378,12 @@ class ScenarioGenerator extends EventEmitter {
       // Phase 4&5: 並列実行
       this.updateProgress(50, '🕵️ 事件&手がかり生成', '謎に満ちた事件と巧妙な手がかりを同時生成中...', '約20秒');
       const [incident, clues] = await Promise.all([
-        this.callGroqAPI('/groq-phase4-incident', {
+        this.callGroqAPI('/api/groq-phase4-incident', {
           concept: results.concept,
           characters: results.characters,
           relationships: results.relationships
         }),
-        this.callGroqAPI('/groq-phase5-clues', {
+        this.callGroqAPI('/api/groq-phase5-clues', {
           concept: results.concept,
           characters: results.characters,
           relationships: results.relationships
@@ -396,18 +396,18 @@ class ScenarioGenerator extends EventEmitter {
       // Phase 6&7&8: 三重並列実行
       this.updateProgress(75, '⚡ 最終統合処理', 'タイムライン・真相・ガイドを三重並列生成中...', '約10秒');
       const [timeline, solution, gamemaster] = await Promise.all([
-        this.callGroqAPI('/groq-phase6-timeline', {
+        this.callGroqAPI('/api/groq-phase6-timeline', {
           characters: results.characters,
           incident: results.incident,
           clues: results.clues
         }),
-        this.callGroqAPI('/groq-phase7-solution', {
+        this.callGroqAPI('/api/groq-phase7-solution', {
           characters: results.characters,
           relationships: results.relationships,
           incident: results.incident,
           clues: results.clues
         }),
-        this.callGroqAPI('/groq-phase8-gamemaster', {
+        this.callGroqAPI('/api/groq-phase8-gamemaster', {
           concept: results.concept,
           characters: results.characters,
           clues: results.clues
@@ -470,29 +470,29 @@ class ScenarioGenerator extends EventEmitter {
     try {
       // 順次実行（OpenAIはレート制限が厳しいため）
       this.updateProgress(20, '💡 コンセプト生成', 'OpenAI APIでシナリオ基盤を構築中...', '約90秒');
-      results.concept = await this.callOpenAIAPI('/phase1-concept', formData);
+      results.concept = await this.callOpenAIAPI('/api/phase1-concept', formData);
 
       this.updateProgress(35, '👥 キャラクター生成', '魅力的なキャラクター設定中...', '約75秒');
-      results.characters = await this.callOpenAIAPI('/phase2-characters', {
+      results.characters = await this.callOpenAIAPI('/api/phase2-characters', {
         concept: results.concept,
         participants: formData.participants
       });
 
       this.updateProgress(50, '🤝 関係性構築', '複雑な人間関係を設計中...', '約60秒');
-      results.relationships = await this.callOpenAIAPI('/phase3-relationships', {
+      results.relationships = await this.callOpenAIAPI('/api/phase3-relationships', {
         concept: results.concept,
         characters: results.characters
       });
 
       this.updateProgress(65, '🕵️ 事件構築', '謎に満ちた事件を設計中...', '約45秒');
-      results.incident = await this.callOpenAIAPI('/phase4-incident', {
+      results.incident = await this.callOpenAIAPI('/api/phase4-incident', {
         concept: results.concept,
         characters: results.characters,
         relationships: results.relationships
       });
 
       this.updateProgress(80, '🔍 手がかり配置', '巧妙な手がかりシステムを構築中...', '約30秒');
-      results.clues = await this.callOpenAIAPI('/phase5-clues', {
+      results.clues = await this.callOpenAIAPI('/api/phase5-clues', {
         concept: results.concept,
         characters: results.characters,
         incident: results.incident
@@ -502,12 +502,12 @@ class ScenarioGenerator extends EventEmitter {
       
       // 最終段階は並列実行
       const [timeline, solution] = await Promise.all([
-        this.callOpenAIAPI('/phase6-timeline', {
+        this.callOpenAIAPI('/api/phase6-timeline', {
           characters: results.characters,
           incident: results.incident,
           clues: results.clues
         }),
-        this.callOpenAIAPI('/phase7-solution', {
+        this.callOpenAIAPI('/api/phase7-solution', {
           characters: results.characters,
           relationships: results.relationships,
           incident: results.incident,
@@ -666,11 +666,14 @@ ${this.getEraName(era)}の${this.getSettingName(setting)}。外部との連絡�
     try {
       const response = await this.apiClient.post(endpoint, data);
       
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Groq API call failed');
+      // レスポンス構造の柔軟な処理
+      const responseData = response.data || response;
+      
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'Groq API call failed');
       }
 
-      return response.data.content;
+      return responseData.content || responseData.data;
     } catch (error) {
       Logger.error(`Groq API call failed: ${endpoint}`, error);
       throw error;
@@ -681,11 +684,14 @@ ${this.getEraName(era)}の${this.getSettingName(setting)}。外部との連絡�
     try {
       const response = await this.apiClient.post(endpoint, data);
       
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'OpenAI API call failed');
+      // レスポンス構造の柔軟な処理
+      const responseData = response.data || response;
+      
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'OpenAI API call failed');
       }
 
-      return response.data.content;
+      return responseData.content || responseData.data;
     } catch (error) {
       Logger.error(`OpenAI API call failed: ${endpoint}`, error);
       throw error;
