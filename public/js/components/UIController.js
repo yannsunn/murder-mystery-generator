@@ -2,6 +2,9 @@
  * UIController - UI操作の統一管理
  * DOM操作、アニメーション、ユーザーインタラクションを統制
  */
+import EventEmitter from '../core/EventEmitter.js';
+import Logger from '../core/Logger.js';
+
 class UIController extends EventEmitter {
   constructor(options = {}) {
     super();
@@ -44,7 +47,14 @@ class UIController extends EventEmitter {
       progressAnnouncements: '#progress-announcements',
       
       // 設定サマリー
-      settingsSummary: '#settings-summary'
+      settingsSummary: '#settings-summary',
+      
+      // ハンドアウト表示
+      handoutsContainer: '#handouts-container',
+      handoutsList: '#handouts-list',
+      
+      // PDFダウンロード
+      pdfDownloadBtn: '#pdf-download-btn'
     };
 
     this.cacheElements(elementMap);
@@ -799,6 +809,82 @@ class UIController extends EventEmitter {
     this.debouncedFunctions.clear();
     this.elements.clear();
     this.removeAllListeners();
+  }
+
+  /**
+   * ハンドアウト表示
+   */
+  displayHandouts(handouts) {
+    const container = this.getElement('handoutsContainer');
+    const list = this.getElement('handoutsList');
+    
+    if (!container || !list) {
+      Logger.warn('Handouts container not found');
+      return;
+    }
+
+    list.innerHTML = '';
+    
+    handouts.forEach((handout, index) => {
+      const handoutElement = document.createElement('div');
+      handoutElement.className = 'handout-item';
+      handoutElement.innerHTML = `
+        <h3>📄 ${handout.character}</h3>
+        <div class="handout-content">
+          ${this.formatHandoutContent(handout.content)}
+        </div>
+        <button class="copy-handout-btn" data-character="${handout.character}">
+          📋 コピー
+        </button>
+      `;
+      list.appendChild(handoutElement);
+    });
+
+    this.showElement(container);
+    this.emit('handouts:displayed', { count: handouts.length });
+  }
+
+  /**
+   * ハンドアウト内容のフォーマット
+   */
+  formatHandoutContent(content) {
+    return content
+      .replace(/##\s(.+)/g, '<h4>$1</h4>')
+      .replace(/\n/g, '<br>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  }
+
+  /**
+   * PDFダウンロードボタンの表示
+   */
+  showPDFDownloadButton(pdfData) {
+    const btn = this.getElement('pdfDownloadBtn');
+    if (!btn) {
+      Logger.warn('PDF download button not found');
+      return;
+    }
+
+    btn.style.display = 'inline-block';
+    btn.onclick = () => this.downloadPDF(pdfData);
+    this.emit('pdf:button:shown');
+  }
+
+  /**
+   * PDFダウンロード
+   */
+  downloadPDF(pdfBase64) {
+    try {
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${pdfBase64}`;
+      link.download = `murder_mystery_${Date.now()}.pdf`;
+      link.click();
+      
+      this.emit('pdf:downloaded');
+    } catch (error) {
+      Logger.error('PDF download failed:', error);
+      this.showError('PDFダウンロードに失敗しました');
+    }
   }
 }
 

@@ -693,3 +693,82 @@ select:focus {
     flex-direction: column;
   }
 }
+
+/* ハンドアウト表示エリア */
+.handouts-container {
+  margin-top: var(--space-xl);
+  padding: var(--space-lg);
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: var(--border);
+}
+
+.handouts-container h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-lg);
+  font-size: 1.3rem;
+}
+
+.handouts-list {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.handout-item {
+  background: white;
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.handout-item h3 {
+  color: var(--primary);
+  margin-bottom: var(--space-md);
+  font-size: 1.2rem;
+}
+
+.handout-content {
+  line-height: 1.8;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.handout-content h4 {
+  color: var(--primary);
+  margin: var(--space-md) 0 var(--space-sm) 0;
+  font-size: 1.1rem;
+}
+
+.handout-content strong {
+  color: var(--accent);
+}
+
+.copy-handout-btn {
+  background: var(--secondary);
+  color: white;
+  border: none;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.copy-handout-btn:hover {
+  background: var(--secondary-dark);
+}
+
+/* PDFダウンロードボタン */
+#pdf-download-btn {
+  background: var(--accent);
+  color: white;
+  padding: var(--space-sm) var(--space-lg);
+  margin: var(--space-md) var(--space-sm);
+  font-weight: 600;
+}
+
+#pdf-download-btn:hover {
+  background: var(--accent-dark);
+  transform: translateY(-1px);
+}

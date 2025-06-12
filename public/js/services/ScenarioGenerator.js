@@ -1,5 +1,5 @@
 import EventEmitter from '../core/EventEmitter.js';
-import Logger from '../utils/Logger.js';
+import Logger from '../core/Logger.js';
 
 /**
  * ScenarioGenerator - シナリオ生成のビジネスロジック
@@ -306,6 +306,38 @@ class ScenarioGenerator extends EventEmitter {
   }
 
   /**
+   * Groq API呼び出し
+   */
+  async callGroqAPI(endpoint, data) {
+    try {
+      const response = await this.apiClient.post(endpoint, data);
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.error || 'Groq API call failed');
+      }
+      return response.data.data || response.data.result;
+    } catch (error) {
+      Logger.error(`Groq API call failed for ${endpoint}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * OpenAI API呼び出し
+   */
+  async callOpenAIAPI(endpoint, data) {
+    try {
+      const response = await this.apiClient.post(endpoint, data);
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.error || 'OpenAI API call failed');
+      }
+      return response.data.data || response.data.result;
+    } catch (error) {
+      Logger.error(`OpenAI API call failed for ${endpoint}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Groq超高速8段階並列処理
    */
   async generateWithUltraPhases(formData, options) {
@@ -381,10 +413,17 @@ class ScenarioGenerator extends EventEmitter {
       this.updateProgress(95, '🎯 品質統合', '完璧なシナリオに仕上げています...', '約3秒');
       const finalScenario = this.integrateResults(results);
 
+      // ハンドアウト生成
+      const handouts = await this.generateHandouts(finalScenario, results.characters);
+
       this.updateProgress(100, '🎉 生成完了！', 'あなた専用のマーダーミステリーシナリオが完成しました！', '完了');
 
       return {
         scenario: finalScenario,
+        handouts,
+        characters: results.characters,
+        timeline: results.timeline,
+        solution: results.solution,
         metadata: {
           strategy: 'ultra_phases',
           phases: Object.keys(results),
@@ -460,10 +499,17 @@ class ScenarioGenerator extends EventEmitter {
 
       const finalScenario = this.integrateResults(results);
 
+      // ハンドアウト生成
+      const handouts = await this.generateHandouts(finalScenario, results.characters);
+
       this.updateProgress(100, '✅ OpenAI生成完了', 'フォールバックシナリオが完成しました', '完了');
 
       return {
         scenario: finalScenario,
+        handouts,
+        characters: results.characters,
+        timeline: results.timeline,
+        solution: results.solution,
         metadata: {
           strategy: 'openai_phases',
           phases: Object.keys(results),
@@ -615,6 +661,63 @@ ${this.getEraName(era)}の${this.getSettingName(setting)}。外部との連絡�
       return response.data.content;
     } catch (error) {
       Logger.error(`OpenAI API call failed: ${endpoint}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * ハンドアウト生成
+   */
+  async generateHandouts(scenario, characters) {
+    try {
+      this.emit('handouts:generation:start');
+      
+      const response = await this.apiClient.post('/generate-handouts', {
+        scenario,
+        characters
+      });
+      
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.error || 'Handout generation failed');
+      }
+      
+      this.emit('handouts:generation:complete', response.data.handouts);
+      return response.data.handouts;
+    } catch (error) {
+      Logger.error('Handout generation failed:', error);
+      this.emit('handouts:generation:error', error);
+      return this.generateLocalHandouts(characters);
+    }
+  }
+
+  /**
+   * ローカルハンドアウト生成（フォールバック）
+   */
+  generateLocalHandouts(characters) {
+    return characters.map(character => ({
+      character: character.name,
+      content: `## ${character.name}のハンドアウト\n\n### あなたの役割\n${character.role || 'マーダーミステリーの参加者'}\n\n### 背景\n${character.background || '詳細は後ほど提供されます'}\n\n### 秘密\n${character.secret || 'あなたには重要な秘密があります'}\n\n### 目標\n1. 真相を解明する\n2. 自分の秘密を守る\n3. 他の参加者の動機を探る`
+    }));
+  }
+
+  /**
+   * PDF生成
+   */
+  async generatePDF(scenarioData) {
+    try {
+      this.emit('pdf:generation:start');
+      
+      const response = await this.apiClient.post('/generate-pdf', scenarioData);
+      
+      if (!response.data || !response.data.success) {
+        throw new Error(response.data?.error || 'PDF generation failed');
+      }
+      
+      this.emit('pdf:generation:complete', response.data.pdf);
+      return response.data.pdf;
+    } catch (error) {
+      Logger.error('PDF generation failed:', error);
+      this.emit('pdf:generation:error', error);
       throw error;
     }
   }

@@ -663,6 +663,14 @@ class MurderMysteryApp extends EventEmitter {
       
       scenarioContent.appendChild(contentDiv);
       
+      // ハンドアウト表示
+      if (result.handouts && result.handouts.length > 0) {
+        this.uiController.displayHandouts(result.handouts);
+      }
+      
+      // PDF生成ボタン表示
+      this.generateAndShowPDF(result);
+      
       resultContainer.classList.remove('hidden');
       resultContainer.style.display = 'block';
       
@@ -674,6 +682,31 @@ class MurderMysteryApp extends EventEmitter {
       type: 'VIEW_CHANGED',
       view: 'result'
     });
+  }
+
+  /**
+   * PDF生成と表示
+   */
+  async generateAndShowPDF(result) {
+    try {
+      const pdfData = await this.scenarioGenerator.generatePDF({
+        scenario: result.scenario,
+        handouts: result.handouts,
+        title: this.extractTitle(result.scenario),
+        characters: result.characters,
+        timeline: result.timeline
+      });
+      
+      this.uiController.showPDFDownloadButton(pdfData);
+    } catch (error) {
+      this.logger.error('PDF generation failed:', error);
+      // PDF生成に失敗してもシナリオ表示には影響しない
+    }
+  }
+
+  extractTitle(scenario) {
+    const titleMatch = scenario.match(/^#\s*🎭\s*(.+)/m);
+    return titleMatch ? titleMatch[1] : 'マーダーミステリーシナリオ';
   }
 
   /**
