@@ -583,105 +583,146 @@ header p {
   100% { transform: rotate(360deg); }
 }
 
-/* 📦 ZIP パッケージボタンのスタイル強化 */
+/* 🔧 内部利用向けボタンスタイル - 実用重視 */
 .btn-success {
-  background: var(--gradient-success);
+  background: #10b981;
   color: white;
-  border: none;
-  position: relative;
-  overflow: hidden;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #059669;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
 }
 
 .btn-success:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+  background: #059669;
+  border-color: #047857;
 }
 
 .btn-success:active {
-  transform: translateY(0);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+  background: #047857;
 }
 
-/* ZIP ボタンアニメーション効果 */
-.btn-success::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.15), transparent);
-  transform: rotate(45deg);
-  transition: all 0.6s ease;
-  opacity: 0;
-}
-
-.btn-success:hover::before {
-  animation: zipShimmer 0.8s ease-out;
-  opacity: 1;
-}
-
-@keyframes zipShimmer {
-  0% { 
-    transform: translateX(-100%) translateY(-100%) rotate(45deg); 
-    opacity: 0;
-  }
-  50% { 
-    opacity: 1; 
-  }
-  100% { 
-    transform: translateX(100%) translateY(100%) rotate(45deg); 
-    opacity: 0;
-  }
-}
-
-/* アクションボタンレイアウト強化 */
+/* アクションボタンレイアウト - 実用的配置 */
 .action-buttons {
-  display: flex;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-sm);
   margin-bottom: var(--space-lg);
-  align-items: center;
-  justify-content: center;
+  max-width: 800px;
 }
 
 .action-buttons .btn {
-  min-width: 140px;
-  height: 48px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
-  font-size: 0.95rem;
-  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
 }
 
-/* ZIP ボタン特別エフェクト */
-.btn-success {
+/* 内部利用向け情報表示エリア */
+.internal-info {
+  background: var(--bg-secondary);
+  border: 1px solid var(--bg-tertiary);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin: var(--space-md) 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+.internal-info h4 {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+.debug-info {
+  background: var(--bg-tertiary);
+  border-left: 3px solid var(--info);
+  padding: var(--space-sm) var(--space-md);
+  margin: var(--space-sm) 0;
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: var(--space-sm);
+}
+
+.status-indicator.success { background: var(--success); }
+.status-indicator.warning { background: var(--warning); }
+.status-indicator.error { background: var(--danger); }
+.status-indicator.info { background: var(--info); }
+
+/* 内部利用向けワークフロー改善 */
+.workflow-shortcuts {
+  display: flex;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+  padding: var(--space-sm);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius);
+  border: 1px dashed var(--text-muted);
+}
+
+.workflow-shortcuts .shortcut-btn {
+  background: transparent;
+  border: 1px solid var(--text-muted);
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.workflow-shortcuts .shortcut-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+/* プログレスバー - 内部用シンプル化 */
+.progress-container {
+  margin: var(--space-md) 0;
+}
+
+.progress-bar {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  height: 20px;
+  border: 1px solid var(--bg-card);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+  transition: width 0.3s ease;
   position: relative;
-  z-index: 1;
 }
 
-.btn-success::after {
-  content: '📦';
+.progress-text {
   position: absolute;
-  right: -5px;
-  top: -5px;
-  font-size: 1.2em;
-  opacity: 0;
-  transform: scale(0) rotate(-45deg);
-  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-.btn-success:hover::after {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-  right: 8px;
-  top: 8px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: 500;
+  font-size: 0.75rem;
+  z-index: 10;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* 結果表示 */

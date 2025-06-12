@@ -700,24 +700,39 @@ class MurderMysteryApp extends EventEmitter {
       actionPanel.innerHTML = `
         <div class="action-buttons">
           <button id="download-pdf-btn" class="btn btn-primary">
-            📄 PDFダウンロード
+            PDF出力
           </button>
           <button id="download-zip-btn" class="btn btn-success">
-            📦 ZIPパッケージ
+            ZIP出力
           </button>
           <button id="generate-handouts-btn" class="btn btn-secondary">
-            📅 ハンドアウト生成
+            ハンドアウト
           </button>
           <button id="enhance-scenario-btn" class="btn btn-accent">
-            ✨ シナリオ拡張
+            拡張生成
           </button>
           <button id="new-scenario-btn" class="btn btn-outline">
-            🔄 新しいシナリオ
+            新規作成
+          </button>
+          <button id="debug-info-btn" class="btn btn-outline">
+            デバッグ情報
           </button>
         </div>
-        <div class="quality-info">
-          <span class="quality-badge">品質: ${result.metadata?.quality || 'B級'}</span>
-          <span class="time-badge">生成時間: ${result.metadata?.generationTime || '0'}ms</span>
+        <div class="internal-info">
+          <h4>内部情報</h4>
+          <div class="debug-info">
+            <span class="status-indicator ${this.getQualityStatus(result.metadata?.quality)}"></span>
+            品質: ${result.metadata?.quality || 'STANDARD'} | 
+            生成時間: ${result.metadata?.generationTime || 'Unknown'}ms | 
+            戦略: ${result.metadata?.strategy || 'Unknown'} |
+            文字数: ${result.scenario?.length || 0}文字
+          </div>
+          <div class="debug-info">
+            キャラクター数: ${result.characters?.length || 0} | 
+            ハンドアウト: ${result.handouts?.length || 0} | 
+            生成API: ${result.metadata?.apiUsed || 'Unknown'} |
+            タイムスタンプ: ${new Date().toLocaleTimeString()}
+          </div>
         </div>
       `;
       resultContainer.appendChild(actionPanel);
@@ -759,6 +774,12 @@ class MurderMysteryApp extends EventEmitter {
     const newBtn = document.getElementById('new-scenario-btn');
     if (newBtn) {
       newBtn.onclick = () => this.resetForNewScenario();
+    }
+
+    // デバッグ情報表示
+    const debugBtn = document.getElementById('debug-info-btn');
+    if (debugBtn) {
+      debugBtn.onclick = () => this.showDebugInfo(result);
     }
   }
 
@@ -861,16 +882,16 @@ class MurderMysteryApp extends EventEmitter {
     try {
       this.logger.info('🚀 Starting ZIP package generation...');
       
-      // プログレス表示
-      this.uiController.showProgress('📦 ZIPパッケージを生成中...', 0);
+      // プログレス表示（内部用シンプル表示）
+      this.uiController.showProgress('ZIP生成中...', 0);
       
       // 既存のPDFがある場合は使用、なければ生成
       let completePdf = null;
       if (this.lastGeneratedPDF) {
         completePdf = this.lastGeneratedPDF;
-        this.uiController.updateProgress('📄 既存PDFを使用...', 20);
+        this.uiController.updateProgress('PDFキャッシュ使用', 20);
       } else {
-        this.uiController.updateProgress('📄 PDFを生成中...', 10);
+        this.uiController.updateProgress('PDF生成中...', 10);
         const pdfResponse = await this.apiClient.post('/api/generate-pdf', {
           scenario: result.scenario,
           handouts: result.handouts,
@@ -883,11 +904,11 @@ class MurderMysteryApp extends EventEmitter {
           completePdf = pdfResponse.pdf;
           this.lastGeneratedPDF = completePdf;
         }
-        this.uiController.updateProgress('📄 PDF生成完了', 30);
+        this.uiController.updateProgress('PDF生成完了', 30);
       }
 
       // ZIP パッケージデータの準備
-      this.uiController.updateProgress('📦 パッケージデータを準備中...', 40);
+      this.uiController.updateProgress('データ準備中...', 40);
       
       const zipData = {
         scenario: result.scenario,
@@ -909,7 +930,7 @@ class MurderMysteryApp extends EventEmitter {
         completePdf: completePdf
       };
 
-      this.uiController.updateProgress('🔄 ZIP生成API呼び出し中...', 60);
+      this.uiController.updateProgress('ZIP生成API処理中...', 60);
 
       // ZIP生成API呼び出し
       const zipResponse = await this.apiClient.post('/api/generate-zip-package', zipData);
@@ -918,7 +939,7 @@ class MurderMysteryApp extends EventEmitter {
         throw new Error(zipResponse.error || 'ZIP生成に失敗しました');
       }
 
-      this.uiController.updateProgress('💾 ZIPファイルをダウンロード中...', 80);
+      this.uiController.updateProgress('ダウンロード準備中...', 80);
 
       // ZIPファイルのダウンロード
       const zipBlob = this.base64ToBlob(zipResponse.zipPackage, 'application/zip');
@@ -934,7 +955,7 @@ class MurderMysteryApp extends EventEmitter {
       // URLオブジェクトをクリーンアップ
       URL.revokeObjectURL(downloadUrl);
 
-      this.uiController.updateProgress('✅ ZIPパッケージダウンロード完了！', 100);
+      this.uiController.updateProgress('完了', 100);
       
       this.logger.info('✅ ZIP package generation and download successful');
       this.logger.info(`📊 Package info:`, {
@@ -948,9 +969,9 @@ class MurderMysteryApp extends EventEmitter {
       setTimeout(() => {
         this.uiController.hideProgress();
         this.uiController.showNotification(
-          '📦 ZIPパッケージのダウンロードが完了しました！', 
+          'ZIPパッケージダウンロード完了', 
           'success', 
-          5000
+          3000
         );
       }, 1000);
 
@@ -958,9 +979,9 @@ class MurderMysteryApp extends EventEmitter {
       this.logger.error('❌ ZIP package generation failed:', error);
       this.uiController.hideProgress();
       this.uiController.showNotification(
-        '❌ ZIPパッケージの生成に失敗しました: ' + error.message, 
+        'ZIP生成エラー: ' + error.message, 
         'error', 
-        7000
+        5000
       );
     } finally {
       this._zipGenerating = false;
@@ -980,6 +1001,80 @@ class MurderMysteryApp extends EventEmitter {
     
     const byteArray = new Uint8Array(byteNumbers);
     return new Blob([byteArray], { type: mimeType });
+  }
+
+  /**
+   * 品質ステータス判定
+   */
+  getQualityStatus(quality) {
+    const qualityMap = {
+      'PLATINUM': 'success',
+      'GOLD': 'success', 
+      'PREMIUM': 'success',
+      'SILVER': 'warning',
+      'STANDARD': 'info',
+      'BASIC': 'warning',
+      'BRONZE': 'error'
+    };
+    return qualityMap[quality] || 'info';
+  }
+
+  /**
+   * デバッグ情報表示
+   */
+  showDebugInfo(result) {
+    const debugData = {
+      metadata: result.metadata || {},
+      scenario: {
+        length: result.scenario?.length || 0,
+        hasTimeline: !!result.timeline,
+        hasClues: !!result.clues,
+        hasRelationships: !!result.relationships,
+        hasSolution: !!result.solution,
+        hasGamemaster: !!result.gamemaster
+      },
+      characters: {
+        count: result.characters?.length || 0,
+        list: result.characters?.map((char, i) => 
+          typeof char === 'string' ? char : char.name || `Character ${i + 1}`
+        ) || []
+      },
+      handouts: {
+        count: result.handouts?.length || 0,
+        generated: result.handouts?.length > 0
+      },
+      system: {
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        screenSize: `${screen.width}x${screen.height}`,
+        memory: performance.memory ? {
+          used: `${Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)}MB`,
+          limit: `${Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)}MB`
+        } : 'Not available'
+      }
+    };
+
+    // デバッグ情報をコンソールに出力
+    console.group('🔧 Internal Debug Information');
+    console.log('📊 Generation Result:', result);
+    console.log('📈 Debug Data:', debugData);
+    console.log('🚀 Performance:', performance.getEntriesByType('navigation'));
+    console.groupEnd();
+
+    // デバッグ情報をJSONファイルとしてダウンロード
+    const debugJson = JSON.stringify(debugData, null, 2);
+    const blob = new Blob([debugJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `debug_info_${new Date().getTime()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    this.uiController.showNotification('デバッグ情報をダウンロードしました', 'info', 3000);
   }
 
   /**
