@@ -58,22 +58,24 @@
 }
 
 :root {
-  /* Bright Theme - Clear and Professional */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
+  /* Soft Professional Theme with Purple Accents */
+  --bg-primary: #fafafc;
+  --bg-secondary: #f8f7fc;
+  --bg-tertiary: #f3f2f8;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --accent: #1d4ed8;
-  --accent-hover: #1e40af;
-  --accent-light: #3b82f6;
+  --bg-card-hover: #f8f7fc;
+  --bg-accent: #f5f3ff;
+  --text-primary: #1a1523;
+  --text-secondary: #4a4458;
+  --text-muted: #6b6478;
+  --accent: #6d28d9;
+  --accent-hover: #5b21b6;
+  --accent-light: #8b5cf6;
+  --accent-soft: #ddd6fe;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
-  --info: #0284c7;
+  --info: #2563eb;
   
   /* Ultra Spacing System */
   --space-xs: 0.25rem;
@@ -118,64 +120,124 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  bottom: -150px;
+  left: -150px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 60%);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ヘッダー */
 header {
-  background: var(--bg-secondary);
-  border-bottom: var(--border);
+  background: linear-gradient(to right, var(--bg-card), var(--bg-accent));
+  border-bottom: 2px solid var(--accent-soft);
   padding: var(--space-lg) var(--space-xl);
   position: sticky;
   top: 0;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(109, 40, 217, 0.1);
   z-index: 1000;
 }
 
 header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.3rem;
 }
 
 header p {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 400;
   margin-top: var(--space-sm);
 }
 
 /* メインコンテナ */
 .main-container {
-  max-width: 800px;
+  max-width: 820px;
   margin: 0 auto;
-  padding: var(--space-xl);
+  padding: var(--space-2xl) var(--space-xl);
+  position: relative;
+}
+
+.main-container::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+  opacity: 0.2;
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* カード */
 .card {
   background: var(--bg-card);
-  border: var(--border);
-  border-radius: var(--radius);
+  border: 1px solid rgba(109, 40, 217, 0.1);
+  border-radius: var(--radius-lg);
   padding: var(--space-xl);
   margin-bottom: var(--space-lg);
-  box-shadow: var(--shadow-lg);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, var(--accent-soft), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-xl);
+  box-shadow: 0 6px 20px rgba(109, 40, 217, 0.15);
+  border-color: rgba(109, 40, 217, 0.3);
   transform: translateY(-2px);
 }
 
+.card:hover::before {
+  opacity: 0.3;
+}
+
 .card-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.card-header h2::before {
+  content: '▸';
+  color: var(--accent);
+  font-size: 1.2rem;
 }
 
 .card-header p {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  padding-left: 1.8rem;
 }
 
 /* ステップインジケーター */
@@ -185,6 +247,10 @@ header p {
   justify-content: center;
   margin: var(--space-xl) 0;
   gap: var(--space-sm);
+  padding: var(--space-lg);
+  background: var(--bg-accent);
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 2px 4px rgba(109, 40, 217, 0.05);
 }
 
 .step-indicator-item {
@@ -270,6 +336,7 @@ header p {
 /* フォーム */
 .form-group {
   margin-bottom: var(--space-lg);
+  position: relative;
 }
 
 .form-label {
@@ -277,6 +344,19 @@ header p {
   font-weight: 500;
   margin-bottom: var(--space-sm);
   color: var(--text-primary);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+.form-label::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: var(--accent-light);
+  opacity: 0.5;
 }
 
 .form-input,
@@ -307,8 +387,9 @@ header p {
 .form-select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  background: var(--bg-tertiary);
+  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.15);
+  background: var(--bg-card);
+  transform: translateY(-1px);
 }
 
 .form-checkbox {
@@ -368,6 +449,7 @@ header p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-primary);
   gap: var(--space-sm);
   text-decoration: none;
   min-height: 48px;
@@ -416,19 +498,21 @@ header p {
 
 .btn-primary {
   background: var(--accent);
-  color: white;
-  border: 2px solid transparent;
+  color: white !important;
+  border: 2px solid var(--accent);
   font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(109, 40, 217, 0.4);
+  background: var(--accent-hover);
 }
 
 .btn-success {
   background: var(--success);
-  color: white;
+  color: white !important;
   border: 2px solid transparent;
 }
 
