@@ -702,6 +702,9 @@ class MurderMysteryApp extends EventEmitter {
           <button id="download-pdf-btn" class="btn btn-primary">
             📄 PDFダウンロード
           </button>
+          <button id="download-zip-btn" class="btn btn-success">
+            📦 ZIPパッケージ
+          </button>
           <button id="generate-handouts-btn" class="btn btn-secondary">
             📅 ハンドアウト生成
           </button>
@@ -732,6 +735,12 @@ class MurderMysteryApp extends EventEmitter {
     const pdfBtn = document.getElementById('download-pdf-btn');
     if (pdfBtn) {
       pdfBtn.onclick = () => this.generateAndShowPDF(result);
+    }
+
+    // ZIPパッケージダウンロード
+    const zipBtn = document.getElementById('download-zip-btn');
+    if (zipBtn) {
+      zipBtn.onclick = () => this.generateAndDownloadZIP(result);
     }
 
     // ハンドアウト生成
@@ -836,6 +845,141 @@ class MurderMysteryApp extends EventEmitter {
   extractTitle(scenario) {
     const titleMatch = scenario.match(/^#\s*🎭\s*(.+)/m);
     return titleMatch ? titleMatch[1] : 'マーダーミステリーシナリオ';
+  }
+
+  /**
+   * 📦 ZIP パッケージ生成とダウンロード (Ultra Enhanced)
+   */
+  async generateAndDownloadZIP(result) {
+    if (this._zipGenerating) {
+      this.logger.warn('ZIP generation already in progress');
+      return;
+    }
+
+    this._zipGenerating = true;
+    
+    try {
+      this.logger.info('🚀 Starting ZIP package generation...');
+      
+      // プログレス表示
+      this.uiController.showProgress('📦 ZIPパッケージを生成中...', 0);
+      
+      // 既存のPDFがある場合は使用、なければ生成
+      let completePdf = null;
+      if (this.lastGeneratedPDF) {
+        completePdf = this.lastGeneratedPDF;
+        this.uiController.updateProgress('📄 既存PDFを使用...', 20);
+      } else {
+        this.uiController.updateProgress('📄 PDFを生成中...', 10);
+        const pdfResponse = await this.apiClient.post('/api/generate-pdf', {
+          scenario: result.scenario,
+          handouts: result.handouts,
+          title: this.extractTitle(result.scenario),
+          characters: result.characters,
+          timeline: result.timeline
+        });
+        
+        if (pdfResponse.success) {
+          completePdf = pdfResponse.pdf;
+          this.lastGeneratedPDF = completePdf;
+        }
+        this.uiController.updateProgress('📄 PDF生成完了', 30);
+      }
+
+      // ZIP パッケージデータの準備
+      this.uiController.updateProgress('📦 パッケージデータを準備中...', 40);
+      
+      const zipData = {
+        scenario: result.scenario,
+        characters: result.characters || [],
+        handouts: result.handouts || [],
+        timeline: result.timeline || 'タイムライン情報が生成されませんでした',
+        clues: result.clues || 'クルー情報が生成されませんでした',
+        relationships: result.relationships || '人物関係情報が生成されませんでした',
+        solution: result.solution || '解決情報が生成されませんでした',
+        gamemaster: result.gamemaster || 'ゲームマスターガイドが生成されませんでした',
+        title: this.extractTitle(result.scenario),
+        quality: result.metadata?.quality || 'STANDARD',
+        generationStats: {
+          processingTime: result.metadata?.generationTime || 'Unknown',
+          strategy: result.metadata?.strategy || 'Unknown',
+          characterCount: result.characters?.length || 'Unknown',
+          qualityScore: result.metadata?.qualityScore || 'Unknown'
+        },
+        completePdf: completePdf
+      };
+
+      this.uiController.updateProgress('🔄 ZIP生成API呼び出し中...', 60);
+
+      // ZIP生成API呼び出し
+      const zipResponse = await this.apiClient.post('/api/generate-zip-package', zipData);
+      
+      if (!zipResponse.success) {
+        throw new Error(zipResponse.error || 'ZIP生成に失敗しました');
+      }
+
+      this.uiController.updateProgress('💾 ZIPファイルをダウンロード中...', 80);
+
+      // ZIPファイルのダウンロード
+      const zipBlob = this.base64ToBlob(zipResponse.zipPackage, 'application/zip');
+      const downloadUrl = URL.createObjectURL(zipBlob);
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = downloadUrl;
+      downloadLink.download = zipResponse.packageName || `murder_mystery_package_${new Date().getTime()}.zip`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      
+      // URLオブジェクトをクリーンアップ
+      URL.revokeObjectURL(downloadUrl);
+
+      this.uiController.updateProgress('✅ ZIPパッケージダウンロード完了！', 100);
+      
+      this.logger.info('✅ ZIP package generation and download successful');
+      this.logger.info(`📊 Package info:`, {
+        name: zipResponse.packageName,
+        size: `${(zipResponse.size / 1024 / 1024).toFixed(2)} MB`,
+        processingTime: `${zipResponse.processingTime}ms`,
+        contents: zipResponse.contents
+      });
+
+      // 成功通知を表示
+      setTimeout(() => {
+        this.uiController.hideProgress();
+        this.uiController.showNotification(
+          '📦 ZIPパッケージのダウンロードが完了しました！', 
+          'success', 
+          5000
+        );
+      }, 1000);
+
+    } catch (error) {
+      this.logger.error('❌ ZIP package generation failed:', error);
+      this.uiController.hideProgress();
+      this.uiController.showNotification(
+        '❌ ZIPパッケージの生成に失敗しました: ' + error.message, 
+        'error', 
+        7000
+      );
+    } finally {
+      this._zipGenerating = false;
+    }
+  }
+
+  /**
+   * Base64をBlobに変換
+   */
+  base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
   }
 
   /**
