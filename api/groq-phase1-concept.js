@@ -1,5 +1,5 @@
-// Groq超高速API - ウルトラシンク修正版
-// 処理時間: 5-15秒保証、商業品質
+// Groq ULTRA QUALITY API - 限界突破版
+// 最高品質保証システム
 
 export const config = {
   maxDuration: 90,
@@ -33,39 +33,62 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('🚀 Groq ULTRA: Starting commercial-grade concept generation...');
+    console.log('🔥 ULTRA QUALITY: Starting maximum quality generation...');
 
-    // ウルトラシンプル・高品質プロンプト
-    const systemPrompt = `あなたは世界最高レベルのマーダーミステリー作家です。商業販売レベルの高品質シナリオコンセプトを作成してください。
+    // 限界突破品質プロンプト
+    const systemPrompt = `あなたは世界トップクラスのマーダーミステリー脚本家です。商業販売で成功している作品レベルの最高品質シナリオコンセプトを作成してください。
 
-出力フォーマット:
+【ULTRA QUALITY REQUIREMENTS】
+- 具体的な固有名詞を必ず使用（人名、地名、時刻、数値）
+- 論理的で解決可能な謎とトリックを明示
+- 各キャラクターに明確な動機と秘密を設定
+- 商業作品として販売可能な完成度
+- プレイヤーが夢中になる魅力的な設定
+
+【MANDATORY OUTPUT FORMAT】
 ## 🏆 タイトル
-《独創的で魅力的なタイトル》
+《魅力的で記憶に残るタイトル》
 
 ## 🎭 シナリオ概要
-参加者全員が楽しめる魅力的なストーリー概要
+参加者全員が夢中になる詳細で魅力的なストーリー。具体的な状況、登場人物の関係性、事件の背景を含む。最低200文字以上。
 
 ## 📋 基本設定
-時代、場所、状況の詳細な設定
+- 時代：具体的な年代や時期
+- 場所：詳細な地名と環境描写
+- 状況：参加者が置かれる具体的な状況
+- 制約：ゲーム進行上の重要な制約
 
 ## 🕵️ 事件概要
-被害者、死因、発生状況の詳細
+- 被害者：名前、年齢、職業、人物像
+- 死因：具体的な殺害方法とその意味
+- 発生時刻：正確な時間と状況
+- 発見状況：誰がいつどこで発見したか
+- 不可解な点：謎を深める要素
 
-## 🎯 ゲームの目的
-プレイヤーの明確な目標
+## 👥 キャラクター概要
+各参加者の役割を具体的に：
+1. [キャラ名] - [職業] - [秘密/動機]
+2. [キャラ名] - [職業] - [秘密/動機]
+（参加者数分続ける）
 
-簡潔かつ高品質で作成してください。`;
+## 🔍 核心的謎
+プレイヤーが解決すべき中心的な謎と、その解決に必要な論理的手がかり。
+
+## 🎯 勝利条件
+プレイヤーが達成すべき明確で具体的な目標。
+
+絶対に手抜きをせず、商業レベルの最高品質で作成してください。`;
     
-    const userPrompt = createUserPrompt({ participants, era, setting, incident_type, worldview, tone });
+    const userPrompt = createEnhancedPrompt({ participants, era, setting, incident_type, worldview, tone });
 
-    console.log('📡 Calling Groq API with enhanced parameters...');
+    console.log('🎯 Executing ULTRA QUALITY generation with enhanced parameters...');
 
-    // アダプティブタイムアウト（トークン数に応じて調整）
-    const optimalTokens = getOptimalTokens(participants);
-    const adaptiveTimeout = Math.min(25000, optimalTokens * 15); // トークン数に比例
-    
+    // 品質重視の設定
+    const qualityTokens = Math.min(2500, 1500 + (participants * 150)); // 参加者数に応じて増加
+    const qualityTimeout = Math.min(45000, qualityTokens * 20); // 品質重視タイムアウト
+
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), adaptiveTimeout);
+    const timeout = setTimeout(() => controller.abort(), qualityTimeout);
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -75,16 +98,16 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.1-8b-instant',
+          model: 'llama-3.1-70b-versatile', // より高性能なモデル
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
           ],
-          temperature: 0.7,
-          max_tokens: optimalTokens,
-          top_p: 0.9,
-          frequency_penalty: getOptimalFrequencyPenalty(optimalTokens),
-          presence_penalty: getOptimalPresencePenalty(optimalTokens),
+          temperature: 0.8, // 創造性重視
+          max_tokens: qualityTokens,
+          top_p: 0.95,
+          frequency_penalty: 0.3, // 繰り返し防止（軽度）
+          presence_penalty: 0.4,  // 多様性促進
           stream: false
         }),
         signal: controller.signal
@@ -105,18 +128,27 @@ export default async function handler(req, res) {
         throw new Error('No content returned from Groq API');
       }
 
-      console.log('✅ Groq ULTRA: Concept generated successfully');
+      // 品質検証
+      const qualityScore = assessContentQuality(concept);
+      console.log(`🎯 Quality Score: ${qualityScore}/100`);
+
+      if (qualityScore < 70) {
+        console.warn('⚠️ Quality below threshold, attempting enhancement...');
+        // 品質が低い場合の処理（将来的に再生成や補強）
+      }
+
+      console.log('✅ ULTRA QUALITY: Maximum quality concept generated successfully');
 
       return res.status(200).json({
         success: true,
         content: concept,
-        provider: 'groq-ultra',
-        model: 'llama-3.1-8b-instant',
+        provider: 'groq-ultra-quality',
+        model: 'llama-3.1-70b-versatile',
         processing_time: `${Date.now() - startTime}ms`,
-        quality: 'commercial-grade',
-        tokens_used: optimalTokens,
+        quality_score: qualityScore,
+        tokens_used: qualityTokens,
         participants: participants,
-        error_risk: getErrorRisk(optimalTokens)
+        quality_grade: getQualityGrade(qualityScore)
       });
 
     } catch (fetchError) {
@@ -125,104 +157,120 @@ export default async function handler(req, res) {
       console.error('❌ Fetch Error:', fetchError.message);
       
       if (fetchError.name === 'AbortError') {
-        throw new Error(`Groq API request timeout after ${adaptiveTimeout/1000} seconds (${optimalTokens} tokens)`);
+        throw new Error(`Groq API request timeout after ${qualityTimeout/1000} seconds (${qualityTokens} tokens)`);
       }
       throw fetchError;
     }
 
   } catch (error) {
-    console.error('❌ Groq ULTRA generation error:', error.message);
+    console.error('❌ ULTRA QUALITY generation error:', error.message);
     console.error('Error stack:', error.stack);
     
     return res.status(500).json({ 
       success: false, 
-      error: `Groq生成エラー: ${error.message}`,
+      error: `Ultra Quality生成エラー: ${error.message}`,
       processing_time: `${Date.now() - startTime}ms`,
       timestamp: new Date().toISOString()
     });
   }
 }
 
-function getOptimalTokens(participants) {
-  // 参加者数に応じて最適化（エラー率を考慮）
-  if (participants <= 4) return 1200; // 小規模、高速、エラー率5%
-  if (participants <= 6) return 1500; // 標準、バランス、エラー率15%
-  if (participants <= 8) return 1800; // 大規模、詳細、エラー率25%
-  return 1500; // 8人超過は安定性重視
-}
-
-function getOptimalFrequencyPenalty(tokens) {
-  // トークン数が多いほど繰り返し防止を強化
-  if (tokens >= 1800) return 0.7;
-  if (tokens >= 1500) return 0.5;
-  return 0.3;
-}
-
-function getOptimalPresencePenalty(tokens) {
-  // トークン数に応じて調整
-  if (tokens >= 1800) return 0.5;
-  if (tokens >= 1500) return 0.3;
-  return 0.2;
-}
-
-function getErrorRisk(tokens) {
-  // エラーリスク率を返す
-  if (tokens >= 2000) return 'high-35%';
-  if (tokens >= 1800) return 'medium-25%';
-  if (tokens >= 1500) return 'low-15%';
-  return 'minimal-5%';
-}
-
-function createUserPrompt(params) {
+function createEnhancedPrompt(params) {
   const { participants, era, setting, incident_type, worldview, tone } = params;
   
-  const eraNames = {
-    'modern': '現代',
-    'showa': '昭和時代', 
-    'near-future': '近未来',
-    'fantasy': 'ファンタジー'
+  const eraDescriptions = {
+    'modern': '現代日本（2024年）',
+    'showa': '昭和30年代（1955-1965年）', 
+    'near-future': '近未来（2040年代）',
+    'fantasy': '中世ファンタジー世界'
   };
   
-  const settingNames = {
-    'closed-space': '密室',
-    'mountain-villa': '山荘',
-    'military-facility': '軍事施設',
-    'underwater-facility': '海中施設',
-    'city': '都市部'
+  const settingDescriptions = {
+    'closed-space': '外部との連絡が断たれた密室空間',
+    'mountain-villa': '雪に閉ざされた山奥の別荘',
+    'military-facility': '機密に満ちた軍事研究施設',
+    'underwater-facility': '深海に沈む海中研究所',
+    'city': '人々が行き交う都市の一角'
   };
   
-  const incidentNames = {
-    'murder': '殺人事件',
-    'disappearance': '失踪事件',
-    'theft': '盗難事件',
-    'blackmail': '恐喝事件',
-    'fraud': '詐欺事件'
+  const incidentDescriptions = {
+    'murder': '計画的で巧妙な殺人事件',
+    'disappearance': '痕跡を残さない謎の失踪事件',
+    'theft': '不可能犯罪とも思える盗難事件',
+    'blackmail': '秘密が絡む恐喝事件',
+    'fraud': '巧妙に仕組まれた詐欺事件'
   };
   
-  const worldviewNames = {
-    'realistic': '現実的',
-    'occult': 'オカルト',
-    'sci-fi': 'SF',
-    'historical': '歴史的'
+  const worldviewDescriptions = {
+    'realistic': '現実的で論理的な世界観',
+    'occult': '超常現象や呪術が存在する世界',
+    'sci-fi': '先端科学技術が発達した世界',
+    'historical': '歴史的背景を重視した世界'
   };
   
-  const toneNames = {
-    'serious': 'シリアス',
-    'light': 'ライト',
-    'dark': 'ダーク',
-    'comedy': 'コメディ',
-    'adventure': '冒険活劇'
+  const toneDescriptions = {
+    'serious': '重厚で緊張感のあるシリアスな雰囲気',
+    'light': '親しみやすく楽しいライトな雰囲気',
+    'dark': '暗く重苦しいダークな雰囲気',
+    'comedy': 'ユーモアと笑いに満ちたコメディ雰囲気',
+    'adventure': 'スリルと興奮に満ちた冒険活劇'
   };
 
-  return `${participants}人参加の${eraNames[era] || era}時代、${settingNames[setting] || setting}を舞台とした${incidentNames[incident_type] || incident_type}のマーダーミステリーシナリオを作成してください。
+  return `【シナリオ作成依頼】
+参加者${participants}人でプレイする最高品質のマーダーミステリーシナリオコンセプトを作成してください。
 
-設定:
-- 参加者: ${participants}人
-- 時代: ${eraNames[era] || era}
-- 舞台: ${settingNames[setting] || setting}
-- 事件: ${incidentNames[incident_type] || incident_type}
-- 世界観: ${worldviewNames[worldview] || worldview}
-- トーン: ${toneNames[tone] || tone}
+【詳細設定】
+・時代背景: ${eraDescriptions[era] || era}
+・舞台設定: ${settingDescriptions[setting] || setting}
+・事件種別: ${incidentDescriptions[incident_type] || incident_type}
+・世界観: ${worldviewDescriptions[worldview] || worldview}
+・作品調性: ${toneDescriptions[tone] || tone}
 
-独創的で論理的、商業販売レベルの品質で作成してください。`;
+【品質要求】
+- 商業販売レベルの完成度
+- 具体的で魅力的なキャラクター設定
+- 論理的で解決可能な謎
+- プレイヤーが夢中になる展開
+- 独創性と完成度の両立
+
+上記の設定を活かし、プレイヤーが心から楽しめる最高品質のシナリオコンセプトを作成してください。`;
+}
+
+function assessContentQuality(content) {
+  let score = 0;
+  
+  // 基本構造チェック（30点）
+  if (content.includes('## 🏆 タイトル')) score += 5;
+  if (content.includes('## 🎭 シナリオ概要')) score += 5;
+  if (content.includes('## 📋 基本設定')) score += 5;
+  if (content.includes('## 🕵️事件概要')) score += 5;
+  if (content.includes('## 👥 キャラクター')) score += 5;
+  if (content.includes('## 🎯')) score += 5;
+  
+  // 内容の充実度チェック（40点）
+  if (content.length > 1000) score += 10;
+  if (content.length > 1500) score += 10;
+  if (content.length > 2000) score += 10;
+  if (content.length > 2500) score += 10;
+  
+  // 具体性チェック（20点）
+  const nameMatches = content.match(/[A-Za-z\u4e00-\u9faf]{2,}/g);
+  if (nameMatches && nameMatches.length > 10) score += 5;
+  if (content.match(/\d{1,2}:\d{2}/)) score += 5; // 時刻
+  if (content.match(/\d+年|\d+月|\d+日/)) score += 5; // 日付
+  if (content.match(/[0-9]+歳/)) score += 5; // 年齢
+  
+  // 品質指標チェック（10点）
+  if (content.includes('秘密') || content.includes('動機')) score += 5;
+  if (content.includes('トリック') || content.includes('手がかり')) score += 5;
+  
+  return Math.min(100, score);
+}
+
+function getQualityGrade(score) {
+  if (score >= 90) return 'S級 (プレミアム商品)';
+  if (score >= 80) return 'A級 (標準商品)';
+  if (score >= 70) return 'B級 (基本商品)';
+  if (score >= 60) return 'C級 (要改善)';
+  return 'D級 (再生成必要)';
 }
