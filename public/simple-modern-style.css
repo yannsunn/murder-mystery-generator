@@ -440,7 +440,7 @@ header p {
 
 .btn {
   padding: var(--space-md) var(--space-lg);
-  border: none;
+  border: 2px solid #333333;
   border-radius: var(--radius-lg);
   font-size: 1rem;
   font-weight: 600;
@@ -449,7 +449,7 @@ header p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: #000000 !important;
   gap: var(--space-sm);
   text-decoration: none;
   min-height: 48px;
@@ -458,6 +458,7 @@ header p {
   box-shadow: var(--shadow);
   position: relative;
   overflow: hidden;
+  background: var(--bg-card);
 }
 
 /* ULTRA BUTTON LAYOUT - NO OVERLAPPING */
@@ -497,40 +498,47 @@ header p {
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: white !important;
-  border: 2px solid var(--accent);
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: var(--bg-card);
+  color: #000000 !important;
+  border: 3px solid var(--accent) !important;
+  font-weight: 700;
+  text-shadow: none;
 }
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg), 0 0 20px rgba(109, 40, 217, 0.4);
-  background: var(--accent-hover);
+  background: var(--accent-soft);
+  color: #000000 !important;
+  border-color: var(--accent-hover) !important;
 }
 
 .btn-success {
-  background: var(--success);
-  color: white !important;
-  border: 2px solid transparent;
+  background: var(--bg-card);
+  color: #000000 !important;
+  border: 3px solid var(--success) !important;
+  font-weight: 700;
 }
 
 .btn-success:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(56, 217, 169, 0.4);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(5, 150, 105, 0.4);
+  background: rgba(5, 150, 105, 0.1);
+  color: #000000 !important;
+  border-color: #047857 !important;
 }
 
 .btn-secondary {
-  background: var(--bg-tertiary);
-  color: var(--text-secondary);
-  border: 2px solid var(--border);
+  background: var(--bg-card);
+  color: #000000 !important;
+  border: 3px solid #666666 !important;
+  font-weight: 700;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-card);
-  color: var(--text-primary);
-  border-color: var(--accent);
+  background: var(--bg-tertiary);
+  color: #000000 !important;
+  border-color: #333333 !important;
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
 }
@@ -660,22 +668,7 @@ header p {
 }
 
 /* 🔧 内部利用向けボタンスタイル - 実用重視 */
-.btn-success {
-  background: #10b981;
-  color: white;
-  border: 1px solid #059669;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-}
-
-.btn-success:hover {
-  background: #059669;
-  border-color: #047857;
-}
-
-.btn-success:active {
-  background: #047857;
-}
+/* .btn-success スタイルは上部で統一定義済み */
 
 /* アクションボタンレイアウト - 実用的配置 */
 .action-buttons {
@@ -695,6 +688,10 @@ header p {
   font-size: 0.9rem;
   border-radius: var(--radius);
   white-space: nowrap;
+  color: #000000 !important;
+  border: 2px solid #333333 !important;
+  background: var(--bg-card) !important;
+  font-weight: 700;
 }
 
 /* 内部利用向け情報表示エリア */
@@ -963,30 +960,35 @@ select:focus {
 }
 
 .copy-handout-btn {
-  background: var(--secondary);
-  color: white;
-  border: none;
+  background: var(--bg-card);
+  color: #000000 !important;
+  border: 2px solid #666666 !important;
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background-color 0.3s ease;
+  font-weight: 700;
+  transition: all 0.3s ease;
 }
 
 .copy-handout-btn:hover {
-  background: var(--secondary-dark);
+  background: var(--bg-tertiary);
+  color: #000000 !important;
+  border-color: #333333 !important;
 }
 
 /* PDFダウンロードボタン */
 #pdf-download-btn {
-  background: var(--accent);
-  color: white;
+  background: var(--bg-card);
+  color: #000000 !important;
+  border: 3px solid var(--accent) !important;
   padding: var(--space-sm) var(--space-lg);
   margin: var(--space-md) var(--space-sm);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 #pdf-download-btn:hover {
-  background: var(--accent-dark);
+  background: var(--accent-soft);
+  color: #000000 !important;
   transform: translateY(-1px);
 }
