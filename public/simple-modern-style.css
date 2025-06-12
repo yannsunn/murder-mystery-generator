@@ -11,10 +11,7 @@
   font-size: 1.5rem;
   margin-bottom: var(--space-lg);
   text-align: center;
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
 }
 
 .content-section {
@@ -61,28 +58,22 @@
 }
 
 :root {
-  /* Ultra Color Palette - Enhanced Visibility */
-  --bg-primary: #1a1d23;
-  --bg-secondary: #242830;
-  --bg-tertiary: #2f3349;
-  --bg-card: #3a3f54;
-  --bg-card-hover: #434965;
-  --text-primary: #ffffff;
-  --text-secondary: #f1f5f9;
-  --text-muted: #cbd5e1;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-light: #6366f1;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-  
-  /* Gradient Combinations */
-  --gradient-primary: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-  --gradient-secondary: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-text: linear-gradient(45deg, #4f46e5, #6366f1, #ec4899);
+  /* Bright Theme - Clear and Professional */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #3b82f6;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --info: #0284c7;
   
   /* Ultra Spacing System */
   --space-xs: 0.25rem;
@@ -98,15 +89,15 @@
   --radius: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
-  --border: 1px solid rgba(255, 255, 255, 0.15);
-  --border-hover: 1px solid rgba(255, 255, 255, 0.3);
+  --border: 1px solid #e2e8f0;
+  --border-hover: 1px solid #cbd5e1;
   
-  /* Shadows - Ultra Enhanced */
+  /* Light Theme Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-  --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 10px rgba(37, 99, 235, 0.2);
   
   /* Animation Timings */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -133,9 +124,10 @@ body {
 header {
   background: var(--bg-secondary);
   border-bottom: var(--border);
-  padding: var(--space-md) var(--space-xl);
+  padding: var(--space-lg) var(--space-xl);
   position: sticky;
   top: 0;
+  box-shadow: var(--shadow-sm);
   z-index: 1000;
 }
 
@@ -211,10 +203,10 @@ header p {
 }
 
 .step-indicator-item.active {
-  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  background: var(--accent);
   color: white;
   border-color: var(--accent-light);
-  box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
+  box-shadow: var(--shadow-lg);
 }
 
 .step-indicator-item.active span {
@@ -229,10 +221,10 @@ header p {
 }
 
 .step-indicator-item.completed {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: var(--success);
   color: white;
-  border-color: #059669;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+  border-color: var(--success);
+  box-shadow: var(--shadow);
 }
 
 .step-indicator-item.completed span {
@@ -268,7 +260,7 @@ header p {
 }
 
 .step-line.active {
-  background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+  background: var(--accent);
 }
 
 .step-line.completed {
@@ -403,7 +395,7 @@ header p {
 
 /* GENERATION BUTTON SPECIAL POSITIONING */
 #stepwise-generation-btn {
-  background: var(--gradient-primary);
+  background: var(--accent);
   color: white;
   font-weight: 700;
   min-width: 160px;
@@ -423,7 +415,7 @@ header p {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: var(--accent);
   color: white;
   border: 2px solid transparent;
   font-weight: 600;
@@ -435,7 +427,7 @@ header p {
 }
 
 .btn-success {
-  background: var(--gradient-success);
+  background: var(--success);
   color: white;
   border: 2px solid transparent;
 }
