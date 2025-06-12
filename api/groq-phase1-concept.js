@@ -37,31 +37,33 @@ export default async function handler(req, res) {
 
     const systemPrompt = `あなたはマーダーミステリーのコンセプト作成専門家です。簡潔で具体的なシナリオコンセプトを作成してください。
 
-【出力制約】
-- 各セクションは2-3文で簡潔に
-- 同じ内容の繰り返し禁止
-- 具体的な名前、時刻、場所を使用
+【商業品質基準】
+- 各セクションは十分な詳細さで記述
+- 独創性と論理性を重視
+- 具体的な固有名詞、時刻、場所を多用
+- 商業販売に耐える品質で作成
 - 完結性を保つ（途中で終わらない）
 
 【出力フォーマット】
 以下のフォーマットで出力してください。
 
 ## 🏆 タイトル
-《[独創的なタイトル]》
+《[商業レベルの独創的タイトル]》
 
 ## 🎭 シナリオ概要
-[簡潔なあらすじ 2-3文]
+[詳細なあらすじ、独創性と魅力を十分に表現]
 
 ## 📋 基本設定
-[時代、場所、状況 2-3文]
+[時代、場所、状況を具体的かつ詳細に記述]
 
 ## 🕵️ 事件概要
-[被害者、死因、発生時刻 2-3文]
+[被害者、死因、発生時刻、状況を詳細に]
 
 ## 🎯 ゲームの目的
-[プレイヤーが達成すべき目標 1-2文]
+[プレイヤーの目標と勝利条件を明確に]
 
-以上で終了。追加の説明は不要です。`;
+## 🎬 特徴と魅力
+[このシナリオの独自性と商業的価値]`;
     
     const userPrompt = generatePrompt({ participants, era, setting, incident_type, worldview, tone });
 
@@ -83,10 +85,10 @@ export default async function handler(req, res) {
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.7,
-          max_tokens: 800, // 短縮
+          max_tokens: 2000, // 商業品質用
           top_p: 0.85,
-          frequency_penalty: 1.5, // 繰り返しを強力に防ぐ
-          presence_penalty: 1.2,   // 新しいトピックを促進
+          frequency_penalty: 0.8, // 繰り返しを防ぐが品質を保持
+          presence_penalty: 0.6   // バランスを保つ
           stream: false
         }),
         signal: controller.signal
