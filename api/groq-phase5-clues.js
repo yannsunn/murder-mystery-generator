@@ -98,7 +98,7 @@ async function callGroq(prompt) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
+      model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: '証拠分析専門家として効率的で巧妙な手がかりシステムを設計。' },
         { role: 'user', content: prompt }

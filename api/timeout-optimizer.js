@@ -12,16 +12,16 @@ export const TIMEOUT_CONFIG = {
   GROQ_TIMEOUT: 30000,       // 30秒（Groqは高速）
   PDF_TIMEOUT: 45000,        // 45秒
   
-  // フェーズ別推奨時間設定
+  // 最適化されたフェーズ別時間設定（Ultra-Sync版）
   PHASE_LIMITS: {
-    concept: 30,      // コンセプト生成
-    characters: 45,   // キャラクター生成
-    relationships: 30, // 関係性生成
-    incident: 40,     // 事件生成
-    clues: 35,        // 手がかり生成
-    timeline: 30,     // タイムライン生成
-    solution: 40,     // 解決生成
-    gamemaster: 60    // ゲームマスター（最も複雑）
+    concept: 25,      // コンセプト生成（5秒短縮）
+    characters: 35,   // キャラクター生成（10秒短縮）
+    relationships: 25, // 関係性生成（5秒短縮）
+    incident: 30,     // 事件生成（10秒短縮）
+    clues: 25,        // 手がかり生成（10秒短縮）
+    timeline: 20,     // タイムライン生成（10秒短縮）
+    solution: 30,     // 解決生成（10秒短縮）
+    gamemaster: 45    // ゲームマスター（15秒短縮）
   },
   
   // リトライ設定

@@ -131,9 +131,11 @@ class MurderMysteryApp {
       const additionalContent = {};
 
       try {
-        console.log('👥 Generating Phase 2-8 + ハンドアウト in parallel...');
+        console.log('👥 Generating Phase 2-8 + ハンドアウト with optimized batching...');
         
-        const [characters, relationships, incident, clues, timeline, solution, gamemaster, handouts] = await Promise.all([
+        // Sequential batching for better reliability
+        console.log('📊 Batch 1: Characters & Relationships...');
+        const [characters, relationships] = await Promise.all([
           this.callAPI(apiClient, '/api/groq-phase2-characters', { 
             concept: scenarioText, 
             participants: formData.participants,
@@ -143,7 +145,11 @@ class MurderMysteryApp {
           this.callAPI(apiClient, '/api/groq-phase3-relationships', { 
             concept: scenarioText, 
             participants: formData.participants 
-          }),
+          })
+        ]);
+
+        console.log('📊 Batch 2: Incident & Investigation...');
+        const [incident, clues] = await Promise.all([
           this.callAPI(apiClient, '/api/groq-phase4-incident', { 
             concept: scenarioText, 
             participants: formData.participants 
@@ -151,7 +157,11 @@ class MurderMysteryApp {
           this.callAPI(apiClient, '/api/groq-phase5-clues', { 
             concept: scenarioText, 
             participants: formData.participants 
-          }),
+          })
+        ]);
+
+        console.log('📊 Batch 3: Timeline & Game Management...');
+        const [timeline, solution, gamemaster] = await Promise.all([
           this.callAPI(apiClient, '/api/groq-phase6-timeline', { 
             concept: scenarioText, 
             participants: formData.participants 
@@ -163,13 +173,15 @@ class MurderMysteryApp {
           this.callAPI(apiClient, '/api/groq-phase8-gamemaster', { 
             concept: scenarioText, 
             participants: formData.participants 
-          }),
-          this.callAPI(apiClient, '/api/generate-handouts', { 
-            scenario: scenarioText,
-            characters: scenarioText,
-            participants: formData.participants
           })
         ]);
+
+        console.log('📊 Final: Handouts Generation...');
+        const handouts = await this.callAPI(apiClient, '/api/generate-handouts', { 
+          scenario: scenarioText,
+          characters: characters,
+          participants: formData.participants
+        });
 
         additionalContent.characters = characters;
         additionalContent.relationships = relationships;
