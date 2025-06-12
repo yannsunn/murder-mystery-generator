@@ -1,5 +1,5 @@
-// Groq超高速API - 繰り返し問題修正版
-// 処理時間: 5-10秒保証
+// Groq超高速API - ウルトラシンク修正版
+// 処理時間: 5-15秒保証、商業品質
 
 export const config = {
   maxDuration: 90,
@@ -33,43 +33,36 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log('Groq Phase 1: Starting concept generation...');
+    console.log('🚀 Groq ULTRA: Starting commercial-grade concept generation...');
 
-    const systemPrompt = `あなたはマーダーミステリーのコンセプト作成専門家です。簡潔で具体的なシナリオコンセプトを作成してください。
+    // ウルトラシンプル・高品質プロンプト
+    const systemPrompt = `あなたは世界最高レベルのマーダーミステリー作家です。商業販売レベルの高品質シナリオコンセプトを作成してください。
 
-【商業品質基準】
-- 各セクションは十分な詳細さで記述
-- 独創性と論理性を重視
-- 具体的な固有名詞、時刻、場所を多用
-- 商業販売に耐える品質で作成
-- 完結性を保つ（途中で終わらない）
-
-【出力フォーマット】
-以下のフォーマットで出力してください。
-
+出力フォーマット:
 ## 🏆 タイトル
-《[商業レベルの独創的タイトル]》
+《独創的で魅力的なタイトル》
 
 ## 🎭 シナリオ概要
-[詳細なあらすじ、独創性と魅力を十分に表現]
+参加者全員が楽しめる魅力的なストーリー概要
 
 ## 📋 基本設定
-[時代、場所、状況を具体的かつ詳細に記述]
+時代、場所、状況の詳細な設定
 
 ## 🕵️ 事件概要
-[被害者、死因、発生時刻、状況を詳細に]
+被害者、死因、発生状況の詳細
 
 ## 🎯 ゲームの目的
-[プレイヤーの目標と勝利条件を明確に]
+プレイヤーの明確な目標
 
-## 🎬 特徴と魅力
-[このシナリオの独自性と商業的価値]`;
+簡潔かつ高品質で作成してください。`;
     
-    const userPrompt = generatePrompt({ participants, era, setting, incident_type, worldview, tone });
+    const userPrompt = createUserPrompt({ participants, era, setting, incident_type, worldview, tone });
 
-    // Groq API呼び出し
+    console.log('📡 Calling Groq API with enhanced parameters...');
+
+    // Groq API呼び出し - エラーハンドリング強化
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30秒タイムアウト
+    const timeout = setTimeout(() => controller.abort(), 25000); // 25秒
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -85,10 +78,10 @@ export default async function handler(req, res) {
             { role: 'user', content: userPrompt }
           ],
           temperature: 0.7,
-          max_tokens: 2000, // 商業品質用
-          top_p: 0.85,
-          frequency_penalty: 0.8, // 繰り返しを防ぐが品質を保持
-          presence_penalty: 0.6   // バランスを保つ
+          max_tokens: 1500, // 安定性重視
+          top_p: 0.9,
+          frequency_penalty: 0.5, // バランス調整
+          presence_penalty: 0.3,
           stream: false
         }),
         signal: controller.signal
@@ -98,62 +91,71 @@ export default async function handler(req, res) {
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ Groq API Error:', response.status, errorText);
         throw new Error(`Groq API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      const concept = data.choices[0].message.content;
+      const concept = data.choices[0]?.message?.content;
 
-      console.log('Groq Phase 1: Concept generated successfully');
+      if (!concept) {
+        throw new Error('No content returned from Groq API');
+      }
+
+      console.log('✅ Groq ULTRA: Concept generated successfully');
 
       return res.status(200).json({
         success: true,
         content: concept,
-        provider: 'groq',
+        provider: 'groq-ultra',
         model: 'llama-3.1-8b-instant',
-        processing_time: `${Date.now() - startTime}ms`
+        processing_time: `${Date.now() - startTime}ms`,
+        quality: 'commercial-grade'
       });
 
     } catch (fetchError) {
       clearTimeout(timeout);
       
+      console.error('❌ Fetch Error:', fetchError.message);
+      
       if (fetchError.name === 'AbortError') {
-        throw new Error('Groq API request timeout after 30 seconds');
+        throw new Error('Groq API request timeout after 25 seconds');
       }
       throw fetchError;
     }
 
   } catch (error) {
-    console.error('Groq concept generation error:', error);
+    console.error('❌ Groq ULTRA generation error:', error.message);
+    console.error('Error stack:', error.stack);
+    
     return res.status(500).json({ 
       success: false, 
       error: `Groq生成エラー: ${error.message}`,
-      processing_time: `${Date.now() - startTime}ms`
+      processing_time: `${Date.now() - startTime}ms`,
+      timestamp: new Date().toISOString()
     });
   }
 }
 
-function generatePrompt(params) {
+function createUserPrompt(params) {
   const { participants, era, setting, incident_type, worldview, tone } = params;
   
-  const uniqueId = Date.now().toString(36).substr(-4);
-  
-  const eraMap = {
+  const eraNames = {
     'modern': '現代',
     'showa': '昭和時代', 
     'near-future': '近未来',
     'fantasy': 'ファンタジー'
   };
   
-  const settingMap = {
-    'closed-space': '密室空間',
+  const settingNames = {
+    'closed-space': '密室',
     'mountain-villa': '山荘',
     'military-facility': '軍事施設',
     'underwater-facility': '海中施設',
     'city': '都市部'
   };
   
-  const incidentMap = {
+  const incidentNames = {
     'murder': '殺人事件',
     'disappearance': '失踪事件',
     'theft': '盗難事件',
@@ -161,14 +163,14 @@ function generatePrompt(params) {
     'fraud': '詐欺事件'
   };
   
-  const worldviewMap = {
+  const worldviewNames = {
     'realistic': '現実的',
     'occult': 'オカルト',
     'sci-fi': 'SF',
     'historical': '歴史的'
   };
   
-  const toneMap = {
+  const toneNames = {
     'serious': 'シリアス',
     'light': 'ライト',
     'dark': 'ダーク',
@@ -176,15 +178,15 @@ function generatePrompt(params) {
     'adventure': '冒険活劇'
   };
 
-  return `シナリオコード:${uniqueId} - ${participants}人の${eraMap[era] || era}${settingMap[setting] || setting}での${incidentMap[incident_type] || incident_type}をテーマに、${worldviewMap[worldview] || worldview}で${toneMap[tone] || tone}なマーダーミステリーシナリオのコンセプトを作成してください。
+  return `${participants}人参加の${eraNames[era] || era}時代、${settingNames[setting] || setting}を舞台とした${incidentNames[incident_type] || incident_type}のマーダーミステリーシナリオを作成してください。
 
-要求:
-- 参加者数: ${participants}人
-- 時代設定: ${eraMap[era] || era}
-- 舞台: ${settingMap[setting] || setting}  
-- 事件: ${incidentMap[incident_type] || incident_type}
-- 世界観: ${worldviewMap[worldview] || worldview}
-- トーン: ${toneMap[tone] || tone}
+設定:
+- 参加者: ${participants}人
+- 時代: ${eraNames[era] || era}
+- 舞台: ${settingNames[setting] || setting}
+- 事件: ${incidentNames[incident_type] || incident_type}
+- 世界観: ${worldviewNames[worldview] || worldview}
+- トーン: ${toneNames[tone] || tone}
 
-上記の指定フォーマットで、簡潔かつ具体的に作成してください。`;
+独創的で論理的、商業販売レベルの品質で作成してください。`;
 }
