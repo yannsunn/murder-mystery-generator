@@ -311,10 +311,11 @@ class ScenarioGenerator extends EventEmitter {
   async callGroqAPI(endpoint, data) {
     try {
       const response = await this.apiClient.post(endpoint, data);
-      if (!response.data || !response.data.success) {
+      if (!response.data || response.data.success === false) {
         throw new Error(response.data?.error || 'Groq API call failed');
       }
-      return response.data.data || response.data.result;
+      // APIのレスポンス構造に合わせた処理
+      return response.data.data || response.data.result || response.data.content || response.data;
     } catch (error) {
       Logger.error(`Groq API call failed for ${endpoint}:`, error);
       throw error;
@@ -327,10 +328,11 @@ class ScenarioGenerator extends EventEmitter {
   async callOpenAIAPI(endpoint, data) {
     try {
       const response = await this.apiClient.post(endpoint, data);
-      if (!response.data || !response.data.success) {
+      if (!response.data || response.data.success === false) {
         throw new Error(response.data?.error || 'OpenAI API call failed');
       }
-      return response.data.data || response.data.result;
+      // APIのレスポンス構造に合わせた処理
+      return response.data.data || response.data.result || response.data.content || response.data;
     } catch (error) {
       Logger.error(`OpenAI API call failed for ${endpoint}:`, error);
       throw error;
@@ -414,7 +416,13 @@ class ScenarioGenerator extends EventEmitter {
       const finalScenario = this.integrateResults(results);
 
       // ハンドアウト生成
-      const handouts = await this.generateHandouts(finalScenario, results.characters);
+      let handouts = [];
+      try {
+        handouts = await this.generateHandouts(finalScenario, results.characters);
+      } catch (error) {
+        Logger.error('Handout generation failed, continuing without handouts:', error);
+        handouts = this.generateLocalHandouts(results.characters || []);
+      }
 
       this.updateProgress(100, '🎉 生成完了！', 'あなた専用のマーダーミステリーシナリオが完成しました！', '完了');
 
@@ -500,7 +508,13 @@ class ScenarioGenerator extends EventEmitter {
       const finalScenario = this.integrateResults(results);
 
       // ハンドアウト生成
-      const handouts = await this.generateHandouts(finalScenario, results.characters);
+      let handouts = [];
+      try {
+        handouts = await this.generateHandouts(finalScenario, results.characters);
+      } catch (error) {
+        Logger.error('Handout generation failed, continuing without handouts:', error);
+        handouts = this.generateLocalHandouts(results.characters || []);
+      }
 
       this.updateProgress(100, '✅ OpenAI生成完了', 'フォールバックシナリオが完成しました', '完了');
 
@@ -672,17 +686,27 @@ ${this.getEraName(era)}の${this.getSettingName(setting)}。外部との連絡�
     try {
       this.emit('handouts:generation:start');
       
+      // キャラクター情報の整理
+      const charactersArray = Array.isArray(characters) ? characters : 
+        typeof characters === 'string' ? this.parseCharactersFromText(characters) :
+        Object.values(characters || {}).slice(0, 8); // 最大8人まで
+      
+      if (!charactersArray || charactersArray.length === 0) {
+        Logger.warn('No characters found for handout generation');
+        return this.generateLocalHandouts([{name: 'キャラクター1'}]);
+      }
+      
       const response = await this.apiClient.post('/generate-handouts', {
-        scenario,
-        characters
+        scenario: typeof scenario === 'string' ? scenario : scenario.scenario || String(scenario),
+        characters: charactersArray
       });
       
-      if (!response.data || !response.data.success) {
+      if (!response.data || response.data.success === false) {
         throw new Error(response.data?.error || 'Handout generation failed');
       }
       
       this.emit('handouts:generation:complete', response.data.handouts);
-      return response.data.handouts;
+      return response.data.handouts || [];
     } catch (error) {
       Logger.error('Handout generation failed:', error);
       this.emit('handouts:generation:error', error);
@@ -691,12 +715,45 @@ ${this.getEraName(era)}の${this.getSettingName(setting)}。外部との連絡�
   }
 
   /**
+   * テキストからキャラクター情報を抽出
+   */
+  parseCharactersFromText(text) {
+    const characters = [];
+    const lines = text.split('\n');
+    let currentCharacter = null;
+    
+    for (const line of lines) {
+      const nameMatch = line.match(/名前[::：]\s*(.+)/);
+      if (nameMatch) {
+        if (currentCharacter) characters.push(currentCharacter);
+        currentCharacter = { name: nameMatch[1].trim() };
+        continue;
+      }
+      
+      if (currentCharacter) {
+        const roleMatch = line.match(/役割[::：]\s*(.+)/);
+        const backgroundMatch = line.match(/背景[::：]\s*(.+)/);
+        
+        if (roleMatch) currentCharacter.role = roleMatch[1].trim();
+        if (backgroundMatch) currentCharacter.background = backgroundMatch[1].trim();
+      }
+    }
+    
+    if (currentCharacter) characters.push(currentCharacter);
+    return characters.length > 0 ? characters : [{name: 'キャラクター1'}];
+  }
+
+  /**
    * ローカルハンドアウト生成（フォールバック）
    */
   generateLocalHandouts(characters) {
-    return characters.map(character => ({
-      character: character.name,
-      content: `## ${character.name}のハンドアウト\n\n### あなたの役割\n${character.role || 'マーダーミステリーの参加者'}\n\n### 背景\n${character.background || '詳細は後ほど提供されます'}\n\n### 秘密\n${character.secret || 'あなたには重要な秘密があります'}\n\n### 目標\n1. 真相を解明する\n2. 自分の秘密を守る\n3. 他の参加者の動機を探る`
+    const charactersArray = Array.isArray(characters) ? characters : 
+      typeof characters === 'string' ? this.parseCharactersFromText(characters) :
+      [{name: 'キャラクター1'}];
+      
+    return charactersArray.map((character, index) => ({
+      character: character.name || `キャラクター${index + 1}`,
+      content: `## ${character.name || `キャラクター${index + 1}`}のハンドアウト\n\n### あなたの役割\n${character.role || 'マーダーミステリーの参加者'}\n\n### 背景\n${character.background || '詳細は後ほど提供されます'}\n\n### 秘密\n${character.secret || 'あなたには重要な秘密があります'}\n\n### 目標\n1. 真相を解明する\n2. 自分の秘密を守る\n3. 他の参加者の動機を探る`
     }));
   }
 

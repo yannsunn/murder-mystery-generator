@@ -688,6 +688,14 @@ class MurderMysteryApp extends EventEmitter {
    * PDF生成と表示
    */
   async generateAndShowPDF(result) {
+    // 重複実行を防ぐ
+    if (this._pdfGenerating) {
+      this.logger.warn('PDF generation already in progress');
+      return;
+    }
+    
+    this._pdfGenerating = true;
+    
     try {
       const pdfData = await this.scenarioGenerator.generatePDF({
         scenario: result.scenario,
@@ -701,6 +709,8 @@ class MurderMysteryApp extends EventEmitter {
     } catch (error) {
       this.logger.error('PDF generation failed:', error);
       // PDF生成に失敗してもシナリオ表示には影響しない
+    } finally {
+      this._pdfGenerating = false;
     }
   }
 
