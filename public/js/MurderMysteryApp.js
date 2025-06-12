@@ -231,105 +231,90 @@ class MurderMysteryApp {
       const additionalContent = {};
       let completedPhases = 0;
 
-      try {
-        console.log('👥 Starting individual phase generation with progress tracking...');
+      // 🎯 順次フェーズ実行: エラー時停止システム
+      console.log('👥 Starting sequential phase generation with error handling...');
+      
+      // フェーズ定義配列
+      const phases = [
+        { id: 2, name: 'Characters', endpoint: '/api/groq-phase2-characters', key: 'characters' },
+        { id: 3, name: 'Relationships', endpoint: '/api/groq-phase3-relationships', key: 'relationships' },
+        { id: 4, name: 'Incident', endpoint: '/api/groq-phase4-incident', key: 'incident' },
+        { id: 5, name: 'Clues', endpoint: '/api/groq-phase5-clues', key: 'clues' },
+        { id: 6, name: 'Timeline', endpoint: '/api/groq-phase6-timeline', key: 'timeline' },
+        { id: 7, name: 'Solution', endpoint: '/api/groq-phase7-solution', key: 'solution' },
+        { id: 8, name: 'Game Master', endpoint: '/api/groq-phase8-gamemaster', key: 'gamemaster' }
+      ];
+      
+      // 各フェーズを順次実行
+      for (let i = 0; i < phases.length; i++) {
+        const phase = phases[i];
         
-        // Phase 2: Characters
-        this.updatePhaseStatus(2, '🔄 生成中', 'generating');
-        console.log('📊 Phase 2: Characters...');
-        const characters = await this.callAPI(apiClient, '/api/groq-phase2-characters', { 
-          concept: scenarioText, 
-          participants: formData.participants,
-          era: formData.era,
-          setting: formData.setting
-        });
-        additionalContent.characters = characters;
-        completedPhases++;
-        this.updatePhaseStatus(2, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 3: Relationships
-        this.updatePhaseStatus(3, '🔄 生成中', 'generating');
-        console.log('📊 Phase 3: Relationships...');
-        const relationships = await this.callAPI(apiClient, '/api/groq-phase3-relationships', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.relationships = relationships;
-        completedPhases++;
-        this.updatePhaseStatus(3, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 4: Incident
-        this.updatePhaseStatus(4, '🔄 生成中', 'generating');
-        console.log('📊 Phase 4: Incident...');
-        const incident = await this.callAPI(apiClient, '/api/groq-phase4-incident', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.incident = incident;
-        completedPhases++;
-        this.updatePhaseStatus(4, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 5: Clues
-        this.updatePhaseStatus(5, '🔄 生成中', 'generating');
-        console.log('📊 Phase 5: Clues...');
-        const clues = await this.callAPI(apiClient, '/api/groq-phase5-clues', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.clues = clues;
-        completedPhases++;
-        this.updatePhaseStatus(5, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 6: Timeline
-        this.updatePhaseStatus(6, '🔄 生成中', 'generating');
-        console.log('📊 Phase 6: Timeline...');
-        const timeline = await this.callAPI(apiClient, '/api/groq-phase6-timeline', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.timeline = timeline;
-        completedPhases++;
-        this.updatePhaseStatus(6, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 7: Solution
-        this.updatePhaseStatus(7, '🔄 生成中', 'generating');
-        console.log('📊 Phase 7: Solution...');
-        const solution = await this.callAPI(apiClient, '/api/groq-phase7-solution', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.solution = solution;
-        completedPhases++;
-        this.updatePhaseStatus(7, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Phase 8: Game Master
-        this.updatePhaseStatus(8, '🔄 生成中', 'generating');
-        console.log('📊 Phase 8: Game Master...');
-        const gamemaster = await this.callAPI(apiClient, '/api/groq-phase8-gamemaster', { 
-          concept: scenarioText, 
-          participants: formData.participants 
-        });
-        additionalContent.gamemaster = gamemaster;
-        completedPhases++;
-        this.updatePhaseStatus(8, '✅ 完了', 'completed');
-        this.updateOverallProgress(completedPhases, 8);
-
-        // Handouts Generation
-        this.updatePhaseStatus('handouts', '🔄 生成中', 'generating');
+        try {
+          console.log(`🚀 Phase ${phase.id}: ${phase.name} 開始中...`);
+          this.updatePhaseStatus(phase.id, '🔄 生成中', 'generating');
+          
+          // API呼び出しパラメータ構築
+          const apiParams = { 
+            concept: scenarioText, 
+            participants: formData.participants
+          };
+          
+          // Phase 2の特別パラメータ
+          if (phase.id === 2) {
+            apiParams.era = formData.era;
+            apiParams.setting = formData.setting;
+          }
+          
+          // API呼び出し
+          const result = await this.callAPIWithErrorHandling(apiClient, phase.endpoint, apiParams, phase.id);
+          
+          // 結果保存
+          additionalContent[phase.key] = result;
+          completedPhases++;
+          
+          // 成功時の状態更新
+          this.updatePhaseStatus(phase.id, '✅ 完了', 'completed');
+          this.updateOverallProgress(completedPhases, 8);
+          
+          console.log(`✅ Phase ${phase.id}: ${phase.name} 完了 (${completedPhases}/8)`);
+          
+          // 次フェーズまで短時間待機（UI更新のため）
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+        } catch (error) {
+          console.error(`❌ Phase ${phase.id}: ${phase.name} でエラー発生:`, error.message);
+          
+          // エラー状態表示
+          this.updatePhaseStatus(phase.id, '❌ エラー', 'error');
+          this.showNotification(`Phase ${phase.id} (${phase.name}) でエラーが発生しました: ${error.message}`, 'error');
+          
+          // ❌ エラー時は処理を停止
+          throw new Error(`Phase ${phase.id} (${phase.name}) 実行中にエラーが発生したため処理を停止しました: ${error.message}`);
+        }
+      }
+      
+      // 全フェーズ完了後: ハンドアウト生成
+      try {
         console.log('📊 Final: Handouts Generation...');
-        const handouts = await this.callAPI(apiClient, '/api/generate-handouts', { 
+        this.updatePhaseStatus('handouts', '🔄 生成中', 'generating');
+        
+        const handouts = await this.callAPIWithErrorHandling(apiClient, '/api/generate-handouts', { 
           scenario: scenarioText,
-          characters: characters,
+          characters: additionalContent.characters,
           participants: formData.participants
-        });
+        }, 'handouts');
+        
         additionalContent.handouts = handouts;
         this.updatePhaseStatus('handouts', '✅ 完了', 'completed');
+        
+      } catch (error) {
+        console.error('❌ Handouts generation failed:', error.message);
+        this.updatePhaseStatus('handouts', '❌ エラー', 'error');
+        this.showNotification(`ハンドアウト生成でエラーが発生しました: ${error.message}`, 'error');
+        
+        // ハンドアウトエラーでも処理停止
+        throw new Error(`ハンドアウト生成中にエラーが発生したため処理を停止しました: ${error.message}`);
+      }
 
         this.additionalContent = additionalContent;
         this.displayAdditionalContent();
@@ -346,24 +331,37 @@ class MurderMysteryApp {
           this.autoDownloadZIP();
         }, 2000); // 2秒後に自動ダウンロード開始
 
-      } catch (error) {
-        console.warn('⚠️ Some phases failed, but continuing:', error);
-        additionalContent.error = error.message;
-        this.additionalContent = additionalContent;
-        
-        // Even with partial failure, allow ZIP generation
-        this.isPhaseComplete = true;
-        this.enableZipButton();
-        
-        // 🎯 部分完了でも自動ZIP出力
-        console.log('⚠️ Partial completion - Auto-starting ZIP download...');
-        setTimeout(() => {
-          this.autoDownloadZIP();
-        }, 2000);
+    } catch (error) {
+      console.error('❌ Phase generation stopped due to error:', error.message);
+      
+      // エラー時の詳細情報表示
+      this.showNotification(`フェーズ生成エラーにより処理を停止しました: ${error.message}`, 'error');
+      
+      // エラー情報を保存
+      this.additionalContent = {
+        ...additionalContent,
+        error: error.message,
+        completedPhases: completedPhases,
+        totalPhases: 8
+      };
+      
+      // エラー状態でもコンテンツ表示（デバッグのため）
+      this.displayAdditionalContent();
+      
+      // ❌ エラー時はZIPボタンを無効のまま維持
+      this.isPhaseComplete = false;
+      const zipBtn = document.getElementById('download-zip-btn');
+      if (zipBtn) {
+        zipBtn.disabled = true;
+        zipBtn.innerHTML = '❌ エラーのため無効';
       }
+      
+      return; // エラー時は自動ZIP出力を行わない
+    }
 
     } catch (error) {
-      console.error('❌ Additional content generation failed:', error);
+      console.error('❌ Additional content generation completely failed:', error);
+      this.showNotification(`致命的エラー: ${error.message}`, 'error');
     }
   }
 
@@ -391,7 +389,60 @@ class MurderMysteryApp {
   }
 
   /**
-   * API呼び出しヘルパー
+   * 🎯 エラーハンドリング付きAPI呼び出し（フェーズ別進捗対応）
+   */
+  async callAPIWithErrorHandling(apiClient, endpoint, data, phaseId) {
+    const startTime = Date.now();
+    console.log(`📡 API Call Start: ${endpoint} (Phase ${phaseId})`);
+    
+    try {
+      const response = await apiClient.post(endpoint, data);
+      const processingTime = Date.now() - startTime;
+      
+      console.log(`✅ API Call Success: ${endpoint} (${processingTime}ms)`);
+      
+      if (!response) {
+        throw new Error('API レスポンスが空です');
+      }
+      
+      const content = response.content || response.data;
+      if (!content) {
+        throw new Error('API レスポンスにコンテンツが含まれていません');
+      }
+      
+      // 生成されたコンテンツの品質チェック
+      if (typeof content === 'string' && content.length < 50) {
+        console.warn(`⚠️ Short content warning for ${endpoint}: ${content.length} characters`);
+      }
+      
+      return content;
+      
+    } catch (error) {
+      const processingTime = Date.now() - startTime;
+      console.error(`❌ API Call Failed: ${endpoint} (${processingTime}ms)`, error);
+      
+      // 詳細なエラー情報
+      let errorMessage = `Phase ${phaseId} API エラー: `;
+      if (error.message.includes('fetch')) {
+        errorMessage += 'ネットワーク接続エラー';
+      } else if (error.message.includes('400')) {
+        errorMessage += 'リクエストパラメータエラー';
+      } else if (error.message.includes('401')) {
+        errorMessage += 'API認証エラー';
+      } else if (error.message.includes('500')) {
+        errorMessage += 'サーバー内部エラー';
+      } else if (error.message.includes('timeout')) {
+        errorMessage += 'タイムアウトエラー';
+      } else {
+        errorMessage += error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  }
+
+  /**
+   * 旧API呼び出しヘルパー（後方互換性のため残す）
    */
   async callAPI(apiClient, endpoint, data) {
     try {

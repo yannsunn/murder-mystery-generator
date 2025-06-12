@@ -1122,6 +1122,12 @@ select:focus {
   color: #6b7280;
 }
 
+.progress-item .status.error {
+  background: #fee2e2;
+  color: #dc2626;
+  animation: none;
+}
+
 .overall-progress {
   border-top: 1px solid var(--border);
   padding-top: 1rem;
