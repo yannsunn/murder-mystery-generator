@@ -1,10 +1,11 @@
-// Phase 6: タイムライン構築API
-// 処理時間: 15-20秒
+// Groq Phase 6: タイムライン超高速生成
+// 処理時間: 6-10秒保証
 
 export const config = {
-  maxDuration: 120,
+  maxDuration: 90,
 };
 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export default async function handler(request) {
@@ -28,105 +29,166 @@ export default async function handler(request) {
 
   try {
     const body = await request.json();
-    const { characters, incident, clues } = body;
+    const { concept, characters, relationships, incident, clues } = body;
 
-    if (!OPENAI_API_KEY) {
+    console.log('Groq Phase 6: Starting ultra-fast timeline generation...');
+
+    const prompt = generateTimelinePrompt(concept, characters, relationships, incident, clues);
+    
+    // Groq優先実行
+    try {
+      if (GROQ_API_KEY) {
+        const result = await callGroq(prompt);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            phase: 'timeline',
+            content: result.content,
+            next_phase: 'solution',
+            estimated_cost: '$0.002',
+            progress: 75,
+            provider: 'Groq (Ultra-Fast)',
+            processing_time: result.time
+          }),
+          { status: 200, headers }
+        );
+      }
+    } catch (groqError) {
+      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
+    }
+
+    // OpenAI フォールバック
+    if (OPENAI_API_KEY) {
+      const result = await callOpenAI(prompt);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'OpenAI APIキーが設定されていません' 
+        JSON.stringify({
+          success: true,
+          phase: 'timeline',
+          content: result.content,
+          next_phase: 'solution',
+          estimated_cost: '$0.006',
+          progress: 75,
+          provider: 'OpenAI (Fallback)',
+          processing_time: result.time
         }),
-        { status: 500, headers }
+        { status: 200, headers }
       );
     }
 
-    console.log('Phase 6: Starting timeline construction...');
-
-    const systemPrompt = `タイムライン設計専門家として、論理的で一貫したタイムラインを構築してください。`;
-    
-    const userPrompt = `以下の情報に基づいて、詳細なタイムラインを構築してください：
-
-【キャラクター情報】
-${characters}
-
-【事件情報】
-${incident}
-
-【手がかり情報】
-${clues}
-
-【タイムライン構築】
-## 事件当日のタイムライン
-時刻順に以下を記録：
-
-### [時刻] - [重要な出来事]
-- 関与者：[誰が]
-- 行動：[何をしたか]
-- 場所：[どこで]
-- 証拠：[関連する手がかり]
-- 目撃者：[誰が見ていたか]
-
-（事件前3-4時間から事件発見まで、30分刻み程度で詳細に）
-
-## 各キャラクターの行動記録
-各キャラクターの当日の行動を時系列で：
-- アリバイの有無
-- 重要な行動
-- 他キャラクターとの接触
-- 証言できる内容
-
-## 矛盾点・疑問点
-タイムライン上の重要な矛盾や疑問
-
-1500文字程度で詳細に作成してください。`;
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.6, // 論理性重視
-        max_tokens: 1800,
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    const timeline = data.choices[0].message.content;
-
-    console.log('Phase 6: Timeline constructed successfully');
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        phase: 'timeline',
-        content: timeline,
-        next_phase: 'solution',
-        estimated_cost: '$0.007',
-        progress: 75
-      }),
-      { status: 200, headers }
-    );
+    throw new Error('APIキーが設定されていません');
 
   } catch (error) {
-    console.error('Timeline construction error:', error);
+    console.error('Timeline generation error:', error);
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: `タイムライン構築エラー: ${error.message}` 
+        error: `タイムライン生成エラー: ${error.message}` 
       }),
       { status: 500, headers }
     );
   }
+}
+
+async function callGroq(prompt) {
+  const startTime = Date.now();
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'llama-3.1-70b-versatile',
+      messages: [
+        { role: 'system', content: 'タイムライン構築専門家として効率的で正確な時系列を作成。' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.6,
+      max_tokens: 3500,
+    })
+  });
+
+  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
+  
+  const data = await response.json();
+  const endTime = Date.now();
+  
+  return {
+    content: data.choices[0].message.content,
+    time: `${endTime - startTime}ms (Groq超高速)`
+  };
+}
+
+async function callOpenAI(prompt) {
+  const startTime = Date.now();
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'タイムライン構築専門家として正確な時系列を作成。' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.6,
+      max_tokens: 3500,
+    })
+  });
+
+  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
+  
+  const data = await response.json();
+  const endTime = Date.now();
+  
+  return {
+    content: data.choices[0].message.content,
+    time: `${endTime - startTime}ms (OpenAI標準)`
+  };
+}
+
+function generateTimelinePrompt(concept, characters, relationships, incident, clues) {
+  return `以下の事件の詳細なタイムラインを効率的に構築：
+
+【コンセプト】
+${concept}
+
+【キャラクター】
+${characters}
+
+【関係性】
+${relationships}
+
+【事件詳細】
+${incident}
+
+【証拠・手がかり】
+${clues}
+
+【タイムライン構築】
+以下形式で事件当日の詳細時系列を：
+
+## 事件前（数日前〜前日）
+- 重要な出来事
+- 各キャラクターの動向
+
+## 事件当日
+### 午前
+- 00:00 [詳細]
+- 00:00 [詳細]
+
+### 午後
+- 00:00 [詳細]
+- 00:00 [詳細]
+
+### 夜間
+- 00:00 [詳細]
+- 00:00 [詳細]
+
+## 事件発覚後
+- 発見から調査開始まで
+
+800文字で効率的に高品質作成。`;
 }

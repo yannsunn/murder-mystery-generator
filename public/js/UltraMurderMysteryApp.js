@@ -9,6 +9,7 @@ import PerformanceOptimizer from './core/PerformanceOptimizer.js';
 import QuantumProcessor from './core/QuantumProcessor.js';
 import UltraErrorHandler from './core/UltraErrorHandler.js';
 import ApiClient from './core/ApiClient.js';
+import UIMessages from './core/UIMessages.js';
 
 class UltraMurderMysteryApp extends EventEmitter {
   constructor() {
@@ -20,6 +21,7 @@ class UltraMurderMysteryApp extends EventEmitter {
     this.performanceOptimizer = new PerformanceOptimizer();
     this.errorHandler = window.ultraErrorHandler;
     this.apiClient = new ApiClient();
+    this.uiMessages = new UIMessages();
     
     // Application state
     this.currentStep = 1;
@@ -215,21 +217,25 @@ class UltraMurderMysteryApp extends EventEmitter {
       const formData = this.collectFormData();
       this.logger.info('📋 Form data collected:', formData);
       
-      // Show ultra loading
-      this.showUltraLoading();
+      // Show ultra loading with Japanese messages
+      this.uiMessages.showLoading(
+        this.uiMessages.messages.loading.generation,
+        'AIエンジンを起動しています...',
+        5
+      );
       
       // Multi-phase progress tracking
-      this.updateUltraProgress(5, '🚀 Quantum Engine startup...', 'Initializing AI systems', 'ETA: 45s');
+      this.uiMessages.updateLoadingProgress(15, 'AIエンジン接続', 'Groqクラウドに接続中...');
       
       // API connectivity test
       this.logger.info('🔍 Testing API connectivity...');
       const testResult = await this.apiClient.get('/test-simple');
       this.logger.info('✅ API connectivity confirmed:', testResult);
       
-      this.updateUltraProgress(15, '⚡ API connected...', 'Groq AI engine ready', 'ETA: 35s');
+      this.uiMessages.updateLoadingProgress(25, 'API接続完了', 'Groq AIエンジンが準備完了');
       
       // Main generation using Quantum Processor
-      this.updateUltraProgress(30, '🧠 Quantum scenario generation...', 'Creating base scenario', 'ETA: 25s');
+      this.uiMessages.updateLoadingProgress(40, 'シナリオ生成中', 'ベースシナリオを作成中...');
       
       const result = await this.apiClient.post('/groq-phase1-concept', formData);
       this.logger.info('📖 Main scenario generated:', result);
@@ -254,7 +260,7 @@ class UltraMurderMysteryApp extends EventEmitter {
       }
       
       if (success) {
-        this.updateUltraProgress(70, '✅ Base scenario complete!', 'Generating additional content...', 'ETA: 15s');
+        this.uiMessages.updateLoadingProgress(70, 'ベースシナリオ完成', '追加コンテンツを生成中...');
         
         // Display main scenario
         this.displayUltraResult(content, metadata);
@@ -262,12 +268,12 @@ class UltraMurderMysteryApp extends EventEmitter {
         // Generate additional content using Quantum Processing
         setTimeout(async () => {
           try {
-            this.updateUltraProgress(80, '🎭 Enhanced content generation...', 'Characters, clues, timeline...', 'ETA: 10s');
+            this.uiMessages.updateLoadingProgress(85, '詳細コンテンツ生成中', 'キャラクター、手がかり、タイムライン...');
             await this.generateQuantumAdditionalContent(formData, content);
-            this.updateUltraProgress(100, '🎉 Ultra generation complete!', 'All content ready - PDF available', '');
+            this.uiMessages.updateLoadingProgress(100, '生成完了!', 'すべてのコンテンツが準備完了 - PDFダウンロード可能'); this.uiMessages.hideLoading(); this.uiMessages.showSuccess('generation_complete');
           } catch (error) {
             this.logger.warn('Additional content generation failed:', error);
-            this.updateUltraProgress(100, '✅ Main scenario complete!', 'PDF download available', '');
+            this.uiMessages.updateLoadingProgress(100, 'メインシナリオ完成', 'PDFダウンロード可能'); this.uiMessages.hideLoading(); this.uiMessages.showSuccess('generation_complete');
           }
         }, 1000);
       } else {
@@ -280,6 +286,9 @@ class UltraMurderMysteryApp extends EventEmitter {
       
     } catch (error) {
       this.logger.error('❌ Ultra generation failed:', error);
+      
+      this.uiMessages.hideLoading();
+      this.uiMessages.showError(error, 'シナリオ生成中にエラーが発生しました。再試行してください。');
       
       await this.errorHandler.handleError({
         type: 'GENERATION_ERROR',
@@ -437,6 +446,11 @@ class UltraMurderMysteryApp extends EventEmitter {
   async downloadEnhancedPDF() {
     try {
       this.logger.info('🖨️ Starting enhanced PDF generation...');
+      this.uiMessages.showLoading(
+        this.uiMessages.messages.loading.pdf_generation,
+        'PDFファイルを作成しています...',
+        0
+      );
       
       const scenarioContent = document.getElementById('scenario-content');
       if (!scenarioContent) {
@@ -476,15 +490,16 @@ class UltraMurderMysteryApp extends EventEmitter {
         document.body.removeChild(link);
         
         this.logger.info('✅ Enhanced PDF download completed');
-        
-        // Success notification
-        this.showSuccessMessage('🎉 Ultra Quality PDF downloaded successfully!');
+        this.uiMessages.hideLoading();
+        this.uiMessages.showSuccess('pdf_download');
       } else {
         throw new Error('PDF generation failed');
       }
       
     } catch (error) {
       this.logger.error('❌ PDF download failed:', error);
+      this.uiMessages.hideLoading();
+      this.uiMessages.showError(error, 'PDF生成に失敗しました。再試行してください。');
       
       await this.errorHandler.handleError({
         type: 'PDF_ERROR',

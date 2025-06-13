@@ -1,6 +1,6 @@
-# 🕵️ Murder Mystery Generator v2.0
+# 🕵️ Murder Mystery Generator
 
-Next-generation modular Murder Mystery scenario generator with AI-powered parallel processing, TypeScript-style type safety, and comprehensive performance optimization.
+Professional Murder Mystery scenario generator with AI-powered processing, optimized for commercial deployment on Netlify.
 
 ## ⚡ Features
 
@@ -98,18 +98,23 @@ public/js/
 
 ### Production Deployment
 
-#### Vercel (Recommended)
-```bash
-vercel --prod
-vercel env add GROQ_API_KEY
-vercel env add OPENAI_API_KEY
-```
+#### Netlify Deployment
 
-#### Netlify
 1. Connect GitHub repository
-2. Build command: `npm run build`
-3. Publish directory: `public`
-4. Add environment variables in Netlify dashboard
+2. Automatic build settings:
+   - Build command: `npm run build`
+   - Publish directory: `public`
+3. Add environment variables in Netlify dashboard:
+   - `GROQ_API_KEY`
+   - `OPENAI_API_KEY` (optional fallback)
+
+```bash
+# Local deployment test
+npm run dev
+
+# Deploy to production
+npm run deploy
+```
 
 ## 🎮 Usage Guide
 
@@ -132,16 +137,12 @@ vercel env add OPENAI_API_KEY
 
 ### Test Suites
 ```bash
-# Run all tests
-npm test
+# Development
+npm install
+npm run dev
 
-# Individual test suites
-npm run test:unit
-npm run test:integration
-npm run test:e2e
-
-# Quality audit
-npm run audit
+# Production deployment
+npm run deploy
 ```
 
 ### Browser Testing

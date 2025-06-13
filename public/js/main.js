@@ -147,12 +147,12 @@
    */
   function setupFallbackErrorHandling() {
     window.addEventListener('error', (event) => {
-      console.error('Global JavaScript Error:', event.error);
+      if (window.Logger) window.Logger.error('Global JavaScript Error:', event.error);
       showCriticalError('JavaScriptエラーが発生しました', event.error);
     });
 
     window.addEventListener('unhandledrejection', (event) => {
-      console.error('Unhandled Promise Rejection:', event.reason);
+      if (window.Logger) window.Logger.error('Unhandled Promise Rejection:', event.reason);
       showCriticalError('非同期処理エラーが発生しました', event.reason);
     });
   }
@@ -333,7 +333,7 @@
       });
 
     } catch (error) {
-      console.error('❌ Application initialization failed:', error);
+      if (window.Logger) window.Logger.error('Application initialization failed:', error);
       hideInitialLoader();
       showCriticalError('アプリケーション初期化エラー', error);
     }

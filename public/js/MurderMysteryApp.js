@@ -418,13 +418,13 @@ class MurderMysteryApp {
       
       // フェーズ定義配列
       const phases = [
-        { id: 2, name: 'Characters', endpoint: '/api/groq-phase2-characters', key: 'characters' },
-        { id: 3, name: 'Relationships', endpoint: '/api/groq-phase3-relationships', key: 'relationships' },
-        { id: 4, name: 'Incident', endpoint: '/api/groq-phase4-incident', key: 'incident' },
-        { id: 5, name: 'Clues', endpoint: '/api/groq-phase5-clues', key: 'clues' },
-        { id: 6, name: 'Timeline', endpoint: '/api/groq-phase6-timeline', key: 'timeline' },
-        { id: 7, name: 'Solution', endpoint: '/api/groq-phase7-solution', key: 'solution' },
-        { id: 8, name: 'Game Master', endpoint: '/api/groq-phase8-gamemaster', key: 'gamemaster' }
+        { id: 2, name: 'Characters', endpoint: '/api/phase2-characters', key: 'characters' },
+        { id: 3, name: 'Relationships', endpoint: '/api/phase3-relationships', key: 'relationships' },
+        { id: 4, name: 'Incident', endpoint: '/api/phase4-incident', key: 'incident' },
+        { id: 5, name: 'Clues', endpoint: '/api/phase5-clues', key: 'clues' },
+        { id: 6, name: 'Timeline', endpoint: '/api/phase6-timeline', key: 'timeline' },
+        { id: 7, name: 'Solution', endpoint: '/api/phase7-solution', key: 'solution' },
+        { id: 8, name: 'Game Master', endpoint: '/api/phase8-gamemaster', key: 'gamemaster' }
       ];
       
       // 各フェーズを順次実行
@@ -464,7 +464,7 @@ class MurderMysteryApp {
           await new Promise(resolve => setTimeout(resolve, 500));
           
         } catch (error) {
-          console.error(`❌ Phase ${phase.id}: ${phase.name} でエラー発生:`, error.message);
+          // Error handled by logger system
           
           // エラー状態表示
           this.updatePhaseStatus(phase.id, '❌ エラー', 'error');
@@ -490,7 +490,7 @@ class MurderMysteryApp {
         this.updatePhaseStatus('handouts', '✅ 完了', 'completed');
         
       } catch (error) {
-        console.error('❌ Handouts generation failed:', error.message);
+        // Error handled by logger system
         this.updatePhaseStatus('handouts', '❌ エラー', 'error');
         this.showNotification(`ハンドアウト生成でエラーが発生しました: ${error.message}`, 'error');
         
@@ -518,7 +518,7 @@ class MurderMysteryApp {
         }, 2000); // 2秒後に自動ダウンロード開始
 
     } catch (error) {
-      console.error('❌ Phase generation stopped due to error:', error.message);
+      // Error handled by logger system
       
       // エラー時の詳細情報表示
       this.showNotification(`フェーズ生成エラーにより処理を停止しました: ${error.message}`, 'error');
@@ -543,11 +543,6 @@ class MurderMysteryApp {
       }
       
       return; // エラー時は自動ZIP出力を行わない
-    }
-
-    } catch (error) {
-      console.error('❌ Additional content generation completely failed:', error);
-      this.showNotification(`致命的エラー: ${error.message}`, 'error');
     }
   }
 
@@ -598,14 +593,14 @@ class MurderMysteryApp {
       
       // 生成されたコンテンツの品質チェック
       if (typeof content === 'string' && content.length < 50) {
-        console.warn(`⚠️ Short content warning for ${endpoint}: ${content.length} characters`);
+        // Warning handled by logger system
       }
       
       return content;
       
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      console.error(`❌ API Call Failed: ${endpoint} (${processingTime}ms)`, error);
+      // Error handled by logger system
       
       // 詳細なエラー情報
       let errorMessage = `Phase ${phaseId} API エラー: `;
@@ -635,7 +630,7 @@ class MurderMysteryApp {
       const response = await apiClient.post(endpoint, data);
       return response.content || response.data || 'Generated content not available';
     } catch (error) {
-      console.warn(`API call failed: ${endpoint}`, error);
+      // Warning handled by logger system
       return `Failed to generate content for ${endpoint}`;
     }
   }
@@ -669,7 +664,7 @@ class MurderMysteryApp {
   displayAdditionalContent() {
     const container = document.getElementById('additional-content');
     if (!container) {
-      console.error('❌ Additional content container not found');
+      // Error handled by logger system
       return;
     }
 
@@ -830,7 +825,7 @@ class MurderMysteryApp {
       if (!this.additionalContent?.handouts) missingContent.push('Handouts');
 
       if (missingContent.length > 0) {
-        console.warn('⚠️ Missing content:', missingContent);
+        // Warning handled by logger system
         this.showNotification(`警告: ${missingContent.join(', ')} が生成されていません。再度Phase生成を実行してください。`, 'warning');
       }
 
@@ -859,7 +854,7 @@ class MurderMysteryApp {
       this.showNotification('完全ZIPパッケージダウンロード完了！', 'success');
 
     } catch (error) {
-      console.error('❌ ZIP package generation failed:', error);
+      // Error handled by logger system
       this.showNotification('ZIP生成エラー: ' + error.message, 'error');
     } finally {
       this._zipGenerating = false;

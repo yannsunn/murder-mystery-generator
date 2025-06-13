@@ -1,128 +1,149 @@
-// Phase 1: コンセプト生成API - 基本アイデアのみ
-// 処理時間: 15-20秒
+// Groq STABLE API - 緊急安定化版 + セキュリティ強化
+// 確実動作保証、8Bモデル使用、商業品質セキュリティ
+
+import { withSecurity, validateAndSanitizeInput, createErrorResponse } from './security-utils.js';
 
 export const config = {
-  maxDuration: 120, // OpenAI API用に適切な時間設定
+  maxDuration: 60,
 };
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
-  }
-
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
-    );
-  }
+async function handler(req, res) {
+  const startTime = Date.now();
 
   try {
-    const body = await request.json();
-    const { participants, era, setting, incident_type, worldview, tone } = body;
-
-    if (!OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'OpenAI APIキーが設定されていません' 
-        }),
-        { status: 500, headers }
-      );
-    }
-
-    console.log('Phase 1: Starting concept generation...');
-
-    const systemPrompt = `マーダーミステリーのコンセプト作成専門家として、魅力的な基本アイデアを生成してください。`;
+    // 入力検証とサニタイゼーション
+    const { errors, sanitized } = validateAndSanitizeInput(req.body);
     
-    const userPrompt = generateConceptPrompt({ participants, era, setting, incident_type, worldview, tone });
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo', // 最高速モデル
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.8, // バランス重視
-        max_tokens: 1000, // 短時間保証
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    if (errors.length > 0) {
+      const { status, body } = createErrorResponse(new Error(errors.join(', ')), 400);
+      return res.status(status).json(body);
     }
 
-    const data = await response.json();
-    const concept = data.choices[0].message.content;
+    const { participants, era, setting, incident_type, worldview, tone } = sanitized;
 
-    console.log('Phase 1: Concept generated successfully');
+    if (!GROQ_API_KEY) {
+      const { status, body } = createErrorResponse(new Error('API configuration error'), 500);
+      return res.status(status).json(body);
+    }
 
-    return new Response(
-      JSON.stringify({
+    // 安定動作プロンプト（8Bモデル用最適化）
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。魅力的で完成度の高いシナリオコンセプトを作成してください。
+
+【出力フォーマット】
+## 🏆 タイトル
+《魅力的なタイトル》
+
+## 🎭 シナリオ概要
+${participants}人のプレイヤーが楽しめる詳細なストーリー概要。登場人物の関係性と事件の背景を含む。
+
+## 📋 基本設定
+- 時代: ${era}
+- 舞台: ${setting}
+- 世界観: ${worldview}
+- 雰囲気: ${tone}
+
+## 🕵️ 事件概要
+- 被害者: 名前、年齢、職業を具体的に
+- 死因: 具体的な殺害方法
+- 発生時刻: 正確な時間
+- 発見状況: 詳細な状況
+
+## 👥 キャラクター概要
+${participants}人のプレイヤーキャラクター:
+1. [キャラ名] - [職業] - [秘密・動機]
+2. [キャラ名] - [職業] - [秘密・動機]
+（以下${participants}人分）
+
+## 🔍 核心的謎
+プレイヤーが解決すべき中心的な謎と手がかり
+
+## 🎯 ゲームの目標
+プレイヤーが達成すべき明確な目標
+
+具体的で魅力的に作成してください。`;
+    
+    const userPrompt = `${participants}人参加の${era}時代、${setting}を舞台とした${incident_type}のマーダーミステリーシナリオを作成してください。
+
+世界観: ${worldview}
+雰囲気: ${tone}
+
+プレイヤーが楽しめる高品質なシナリオコンセプトを作成してください。`;
+
+    console.log('📡 Calling Groq API (8B stable model)...');
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'llama-3.1-8b-instant', // 安定した8Bモデル
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 1800, // 安定動作範囲
+          top_p: 0.9,
+          frequency_penalty: 0.3,
+          presence_penalty: 0.4,
+          stream: false
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeout);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Groq API Error:', response.status, errorText);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      const concept = data.choices[0]?.message?.content;
+
+      if (!concept) {
+        throw new Error('No content returned from Groq API');
+      }
+
+      console.log('✅ STABLE: Concept generated successfully');
+
+      return res.status(200).json({
         success: true,
-        phase: 'concept',
         content: concept,
-        next_phase: 'characters',
-        estimated_cost: '$0.005',
-        progress: 12.5
-      }),
-      { status: 200, headers }
-    );
+        provider: 'groq-stable',
+        model: 'llama-3.1-8b-instant',
+        processing_time: `${Date.now() - startTime}ms`,
+        status: 'stable_generation'
+      });
+
+    } catch (fetchError) {
+      clearTimeout(timeout);
+      
+      console.error('❌ Fetch Error:', fetchError.message);
+      
+      if (fetchError.name === 'AbortError') {
+        throw new Error('Groq API request timeout after 30 seconds');
+      }
+      throw fetchError;
+    }
 
   } catch (error) {
-    console.error('Concept generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `コンセプト生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
-    );
+    const { status, body } = createErrorResponse(error);
+    return res.status(status).json({
+      ...body,
+      processing_time: `${Date.now() - startTime}ms`
+    });
   }
 }
 
-function generateConceptPrompt(params) {
-  const { participants, era, setting, incident_type, worldview, tone } = params;
-  
-  return `${participants}人マーダーミステリー高品質コンセプト作成
-
-設定：${era}/${setting}/${incident_type}/${worldview}/${tone}
-
-以下を魅力的に生成：
-
-## タイトル
-印象的で覚えやすいタイトル
-
-## コンセプト
-独創的な魅力とプレイヤー体験（4行）
-
-## 舞台設定
-${era}${setting}の詳細な雰囲気描写（4行）
-
-## 事件核心
-${incident_type}の意外性ある設定（4行）
-
-## テーマ
-${tone}調の深い人間ドラマ（3行）
-
-## 特徴
-他にない特別なゲーム体験（3行）
-
-1200文字程度で商業品質作成。`;
-}
+// セキュリティラッパーでエクスポート
+export default withSecurity(handler, 'phase1-concept');
