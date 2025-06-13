@@ -275,13 +275,23 @@ header p {
   opacity: 0;
   transform: translateX(30px);
   transition: all var(--animation-slow);
+  position: relative;
+  z-index: 1;
 }
 
 .step.active {
-  display: block;
-  opacity: 1;
-  transform: translateX(0);
+  display: block !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
   animation: slideInFromRight var(--animation-slow) ease-out;
+}
+
+.step.previous {
+  display: none !important;
+}
+
+.step.next {
+  display: none !important;
 }
 
 .step.entering-from-right {
