@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="optimized-production.css">
+  <link rel="stylesheet" href="ultra-modern-styles.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
 <body>
@@ -68,7 +68,7 @@
             <div class="form-grid">
               <div class="form-group">
                 <label for="participants" class="form-label">👥 参加人数</label>
-                <select id="participants" name="participants" class="form-select">
+                <select id="participants" name="participants" class="form-select" required>
                   <option value="4">4人 (コンパクト)</option>
                   <option value="5" selected>5人 (推奨)</option>
                   <option value="6">6人 (標準)</option>
@@ -80,7 +80,7 @@
               
               <div class="form-group">
                 <label for="era" class="form-label">⏰ 時代背景</label>
-                <select id="era" name="era" class="form-select">
+                <select id="era" name="era" class="form-select" required>
                   <option value="modern" selected>🏙️ 現代 (2020年代)</option>
                   <option value="showa">🏮 昭和 (1926-1989)</option>
                   <option value="near-future">🚀 近未来 (2030年代)</option>
@@ -90,7 +90,7 @@
               
               <div class="form-group">
                 <label for="setting" class="form-label">🏢 舞台設定</label>
-                <select id="setting" name="setting" class="form-select">
+                <select id="setting" name="setting" class="form-select" required>
                   <option value="closed-space" selected>🏠 閉鎖空間 (密室)</option>
                   <option value="mountain-villa">🏔️ 山荘 (隔離)</option>
                   <option value="military-facility">⚔️ 軍事施設</option>
@@ -1282,20 +1282,86 @@
     document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; backdrop-filter: blur(10px);"><div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div><h2 style="margin-bottom: 1rem; font-size: 1.8rem;">ブラウザが対応していません</h2><p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">このULTRA EDITIONアプリケーションには<br>モダンなブラウザが必要です。</p><div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><strong>推奨ブラウザ:</strong><br>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</div><button onclick="location.reload()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s;">再読み込み</button></div></div>';
   </script>
   
-  <!-- 新しいモジュラーアプリケーションの読み込み -->
+  <!-- 🎨 Ultra Modern Murder Mystery App - 完全新UI -->
   <script type="module">
-    // 新しいMurderMysteryApp.jsの読み込みと初期化
-    import { default as MurderMysteryApp } from './js/MurderMysteryApp.js';
+    // Ultra Modern Murder Mystery App の読み込みと初期化
+    import { default as UltraModernMurderMysteryApp } from './js/UltraModernMurderMysteryApp.js';
     
     // アプリケーション初期化
     window.addEventListener('DOMContentLoaded', () => {
       try {
-        console.log('🚀 Initializing new MurderMysteryApp...');
-        const app = new MurderMysteryApp();
-        window.murderMysteryApp = app; // デバッグ用のグローバル参照
-        console.log('✅ New MurderMysteryApp initialized successfully!');
+        console.log('🎨 Initializing Ultra Modern Murder Mystery App...');
+        const app = new UltraModernMurderMysteryApp();
+        window.app = app; // グローバル参照（UIとの連携用）
+        window.ultraModernApp = app; // デバッグ用
+        console.log('✅ Ultra Modern Murder Mystery App initialized successfully!');
       } catch (error) {
-        console.error('❌ Failed to initialize MurderMysteryApp:', error);
+        console.error('❌ Failed to initialize Ultra Modern App:', error);
+        // フォールバック処理
+        console.log('🔄 Attempting fallback initialization...');
+        try {
+          // 基本的なUI機能のみ有効化
+          const basicNav = {
+            currentStep: 1,
+            totalSteps: 5,
+            goToNextStep() {
+              if (this.currentStep < this.totalSteps) {
+                this.currentStep++;
+                this.updateDisplay();
+              }
+            },
+            goToPreviousStep() {
+              if (this.currentStep > 1) {
+                this.currentStep--;
+                this.updateDisplay();
+              }
+            },
+            updateDisplay() {
+              // 基本的なステップ表示更新
+              for (let i = 1; i <= this.totalSteps; i++) {
+                const step = document.getElementById(`step-${i}`);
+                if (step) {
+                  step.classList.toggle('active', i === this.currentStep);
+                  step.style.display = i === this.currentStep ? 'block' : 'none';
+                }
+              }
+              
+              // ボタン状態更新
+              const prevBtn = document.getElementById('prev-btn');
+              const nextBtn = document.getElementById('next-btn');
+              const generateBtn = document.getElementById('stepwise-generation-btn');
+              
+              if (prevBtn) prevBtn.disabled = this.currentStep === 1;
+              
+              if (this.currentStep === this.totalSteps) {
+                if (nextBtn) nextBtn.style.display = 'none';
+                if (generateBtn) generateBtn.style.display = 'block';
+              } else {
+                if (nextBtn) nextBtn.style.display = 'block';
+                if (generateBtn) generateBtn.style.display = 'none';
+              }
+            }
+          };
+          
+          // ナビゲーションボタンの設定
+          const prevBtn = document.getElementById('prev-btn');
+          const nextBtn = document.getElementById('next-btn');
+          
+          if (prevBtn) {
+            prevBtn.addEventListener('click', () => basicNav.goToPreviousStep());
+          }
+          
+          if (nextBtn) {
+            nextBtn.addEventListener('click', () => basicNav.goToNextStep());
+          }
+          
+          basicNav.updateDisplay();
+          window.basicNav = basicNav;
+          console.log('✅ Fallback navigation initialized');
+          
+        } catch (fallbackError) {
+          console.error('❌ Fallback initialization also failed:', fallbackError);
+        }
       }
     });
   </script>
