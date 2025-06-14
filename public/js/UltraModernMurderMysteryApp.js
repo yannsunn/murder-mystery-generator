@@ -356,27 +356,8 @@ export default class UltraModernMurderMysteryApp {
   }
 
   validateCurrentStep() {
-    // 一時的に常にtrueを返してバリデーションをスキップ（デバッグ用）
-    console.log('validateCurrentStep called for step:', this.currentStep);
+    // シンプルバリデーション：常にtrue（必要に応じて後で強化）
     return true;
-    
-    /* 元のコード（後で復元）
-    switch (this.currentStep) {
-      case 1:
-        return this.validateField('participants', this.formData.participants) &&
-               this.validateField('era', this.formData.era) &&
-               this.validateField('setting', this.formData.setting);
-      case 2:
-        return this.validateField('worldview', this.formData.worldview) &&
-               this.validateField('tone', this.formData.tone);
-      case 3:
-        return this.validateField('incident_type', this.formData.incident_type);
-      case 4:
-        return this.validateField('complexity', this.formData.complexity);
-      default:
-        return true;
-    }
-    */
   }
 
   validateAllSteps() {

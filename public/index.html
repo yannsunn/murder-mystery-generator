@@ -351,160 +351,33 @@
     });
   </script>
   
-  <!-- 🚀 STREAMLINED ULTRA SYSTEM V4.0 - SINGLE SOURCE -->
-  <script type="module">
-    // ✨ 統一初期化システム - 競合完全排除
-    const timestamp = Date.now();
-    const version = '4.0.0-STREAMLINED';
-    console.log(`🚀 Murder Mystery Generator ${version} [${timestamp}] - Unified Init`);
-    
-    // QUANTUM LOADER OVERLAY
+  <!-- ✨ シンプル初期化システム -->
+  <script>
+    // シンプルな初期化オーバーレイ
     const overlay = document.createElement('div');
-    overlay.id = 'ultra-init-overlay';
     overlay.style.cssText = `
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: linear-gradient(135deg, #0f1419, #1a202c, #2d3748); 
+      background: linear-gradient(135deg, #667eea, #764ba2); 
       display: flex; justify-content: center; align-items: center; 
       z-index: 20000; color: white; font-family: 'Inter', sans-serif;
     `;
     overlay.innerHTML = `
-      <div style="text-align: center; max-width: 500px;">
-        <div style="font-size: 5rem; margin-bottom: 1rem; animation: pulse 2s infinite;">🕵️</div>
-        <h2 style="margin-bottom: 0.5rem; font-size: 2rem; font-weight: 800; background: linear-gradient(45deg, #667eea, #764ba2, #f093fb); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Murder Mystery Generator</h2>
-        <p style="margin-bottom: 0.5rem; font-size: 1.2rem; color: #a0aec0;">STREAMLINED EDITION ${version}</p>
-        <p style="margin-bottom: 2rem; font-size: 0.9rem; color: #718096;">統一システム初期化中...</p>
-        
-        <div style="width: 400px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin: 0 auto;">
-          <div id="ultra-progress" style="width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2, #f093fb); border-radius: 3px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);"></div>
-        </div>
-        
-        <div id="ultra-status" style="margin-top: 1.5rem; font-size: 1rem; opacity: 0.9; min-height: 1.5rem;">統一システム起動中...</div>
-        <div id="ultra-substatus" style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.6; color: #a0aec0;">競合解決システム実行中...</div>
+      <div style="text-align: center;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🕵️</div>
+        <h2 style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;">Murder Mystery Generator</h2>
+        <p style="font-size: 1.2rem; opacity: 0.9;">シンプルシステム起動中...</p>
       </div>
     `;
     document.body.appendChild(overlay);
     
-    function updateUltraProgress(percent, message, submessage = '') {
-      const progress = document.getElementById('ultra-progress');
-      const status = document.getElementById('ultra-status');
-      const substatus = document.getElementById('ultra-substatus');
-      if (progress) {
-        progress.style.width = percent + '%';
-        progress.style.filter = `brightness(${1 + percent/100})`;
-      }
-      if (status) status.textContent = message;
-      if (substatus) substatus.textContent = submessage;
-    }
+    // 2秒後にオーバーレイを削除
+    setTimeout(() => {
+      overlay.style.transition = 'opacity 0.5s ease';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.remove(), 500);
+    }, 2000);
     
-    try {
-      updateUltraProgress(20, '📦 モジュラーシステム起動中...', 'UltraModernMurderMysteryApp単一実行モード');
-      
-      // UltraModernMurderMysteryApp の読み込みと初期化 (SINGLE SOURCE)
-      const { default: UltraModernMurderMysteryApp } = await import('./js/UltraModernMurderMysteryApp.js?v=' + timestamp);
-      
-      updateUltraProgress(60, '🎮 メインアプリケーション初期化中...', 'イベントシステム + API構築');
-      
-      // 単一アプリケーションインスタンス
-      const app = new UltraModernMurderMysteryApp();
-      
-      updateUltraProgress(85, '🔗 グローバル参照設定中...', 'デバッグ用参照構築');
-      
-      // グローバル参照（デバッグ用）
-      window.app = app;
-      window.ultraModernApp = app;
-      window.version = version;
-      
-      updateUltraProgress(100, '✅ 統一システム初期化完了!', 'シングルソース・ゼロ競合で動作中');
-      
-      // FADE OUT OVERLAY
-      setTimeout(() => {
-        overlay.style.transition = 'opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
-        overlay.style.opacity = '0';
-        setTimeout(() => {
-          overlay.remove();
-          performance.mark('app-init-complete');
-          performance.measure('app-initialization', 'navigationStart', 'app-init-complete');
-        }, 800);
-      }, 1000);
-      
-      console.log(`✅ STREAMLINED Murder Mystery Generator ${version} initialized successfully!`);
-      console.log('🚀 UNIFIED Features: Single source, Zero conflicts, Enhanced performance');
-      
-    } catch (error) {
-      console.error('❌ STREAMLINED Initialization failed:', error);
-      updateUltraProgress(0, '❌ エラー: ' + error.message, 'フォールバック起動中...');
-      
-      // BASIC FALLBACK
-      setTimeout(() => {
-        updateUltraProgress(50, '🔄 ベーシック システム起動中...', '基本ナビゲーション有効化');
-        
-        // 基本的なナビゲーション機能
-        const basicNav = {
-          currentStep: 1,
-          totalSteps: 5,
-          init() {
-            this.setupBasicNavigation();
-            this.updateDisplay();
-          },
-          setupBasicNavigation() {
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            
-            if (prevBtn) {
-              prevBtn.addEventListener('click', () => this.goToPreviousStep());
-            }
-            if (nextBtn) {
-              nextBtn.addEventListener('click', () => this.goToNextStep());
-            }
-          },
-          goToNextStep() {
-            if (this.currentStep < this.totalSteps) {
-              this.currentStep++;
-              this.updateDisplay();
-            }
-          },
-          goToPreviousStep() {
-            if (this.currentStep > 1) {
-              this.currentStep--;
-              this.updateDisplay();
-            }
-          },
-          updateDisplay() {
-            for (let i = 1; i <= this.totalSteps; i++) {
-              const step = document.getElementById(`step-${i}`);
-              if (step) {
-                step.classList.toggle('active', i === this.currentStep);
-                step.style.display = i === this.currentStep ? 'block' : 'none';
-              }
-            }
-            
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
-            const generateBtn = document.getElementById('stepwise-generation-btn');
-            
-            if (prevBtn) prevBtn.disabled = this.currentStep === 1;
-            
-            if (this.currentStep === this.totalSteps) {
-              if (nextBtn) nextBtn.style.display = 'none';
-              if (generateBtn) generateBtn.style.display = 'block';
-            } else {
-              if (nextBtn) nextBtn.style.display = 'block';
-              if (generateBtn) generateBtn.style.display = 'none';
-            }
-          }
-        };
-        
-        basicNav.init();
-        window.basicNav = basicNav;
-        
-        setTimeout(() => {
-          overlay.style.opacity = '0';
-          setTimeout(() => overlay.remove(), 500);
-        }, 1000);
-        
-        console.log('✅ Fallback navigation initialized');
-      }, 2000);
-    }
+    console.log('✅ Simple initialization complete');
   </script>
   
   <!-- Enhanced fallback for browsers without ES6 module support -->
@@ -512,193 +385,8 @@
     document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; backdrop-filter: blur(10px);"><div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div><h2 style="margin-bottom: 1rem; font-size: 1.8rem;">ブラウザが対応していません</h2><p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">このULTRA EDITIONアプリケーションには<br>モダンなブラウザが必要です。</p><div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><strong>推奨ブラウザ:</strong><br>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</div><button onclick="location.reload()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s;">再読み込み</button></div></div>';
   </script>
 
-  <!-- 🚨 ULTIMATE DIAGNOSTIC & FIX SYSTEM - 限界突破版 -->
-  <script src="./ULTIMATE_DIAGNOSTIC_FIX.js"></script>
+  <!-- 🎯 SIMPLE RELIABLE SYSTEM - シンプル確実動作システム -->
+  <script src="./SIMPLE_RELIABLE_SYSTEM.js"></script>
   
-  <!-- 🚨 ABSOLUTE BUTTON FIX - 絶対確実システム -->
-  <script src="./ABSOLUTE_BUTTON_FIX.js"></script>
-  
-  <!-- 🚨 EMERGENCY ULTIMATE FALLBACK - 限界突破システム -->
-  <script>
-    // ULTIMATE FALLBACK - モジュールが全て失敗した場合の最終手段
-    window.addEventListener('DOMContentLoaded', function() {
-      // 3秒後にアプリが初期化されていない場合、緊急システム起動
-      setTimeout(function() {
-        if (!window.app && !window.ultraModernApp && !window.basicNav) {
-          console.log('🚨🚨🚨 EMERGENCY ULTIMATE FALLBACK ACTIVATED');
-          
-          // 強制的にオーバーレイを削除
-          const overlay = document.getElementById('ultra-init-overlay');
-          if (overlay) overlay.remove();
-          
-          // ULTIMATE NAVIGATION SYSTEM
-          const ultimate = {
-            step: 1,
-            max: 5,
-            
-            init() {
-              console.log('🚨 Ultimate system starting...');
-              this.wireButtons();
-              this.show();
-              this.toast('🚨 緊急システム起動 - ナビゲーション動作保証');
-            },
-            
-            wireButtons() {
-              // 強制的にイベント設定
-              document.getElementById('prev-btn').onclick = () => this.prev();
-              document.getElementById('next-btn').onclick = () => this.next();
-              document.getElementById('stepwise-generation-btn').onclick = () => this.generate();
-              
-              // ステップインジケーターも設定
-              document.querySelectorAll('.step-indicator-item').forEach((item, i) => {
-                item.onclick = () => this.jump(i + 1);
-              });
-            },
-            
-            next() {
-              console.log('🚨 ULTIMATE NEXT:', this.step);
-              if (this.step < this.max) {
-                this.step++;
-                this.show();
-                this.toast('ステップ ' + this.step + ' に進みました');
-              }
-            },
-            
-            prev() {
-              console.log('🚨 ULTIMATE PREV:', this.step);
-              if (this.step > 1) {
-                this.step--;
-                this.show();
-                this.toast('ステップ ' + this.step + ' に戻りました');
-              }
-            },
-            
-            jump(target) {
-              if (target <= this.step && target >= 1) {
-                this.step = target;
-                this.show();
-                this.toast('ステップ ' + target + ' に移動しました');
-              }
-            },
-            
-            show() {
-              // 全ステップを強制非表示
-              for (let i = 1; i <= this.max; i++) {
-                const el = document.getElementById('step-' + i);
-                if (el) {
-                  el.style.display = 'none';
-                  el.classList.remove('active');
-                }
-              }
-              
-              // 現在ステップを強制表示
-              const current = document.getElementById('step-' + this.step);
-              if (current) {
-                current.style.display = 'block';
-                current.classList.add('active');
-              }
-              
-              // ボタン更新
-              const prev = document.getElementById('prev-btn');
-              const next = document.getElementById('next-btn');
-              const gen = document.getElementById('stepwise-generation-btn');
-              
-              if (prev) {
-                prev.disabled = this.step === 1;
-                prev.style.opacity = this.step === 1 ? '0.5' : '1';
-              }
-              
-              if (this.step === this.max) {
-                if (next) next.style.display = 'none';
-                if (gen) gen.style.display = 'block';
-              } else {
-                if (next) next.style.display = 'block';
-                if (gen) gen.style.display = 'none';
-              }
-              
-              // インジケーター更新
-              document.querySelectorAll('.step-indicator-item').forEach((item, i) => {
-                item.classList.toggle('active', i + 1 === this.step);
-                item.classList.toggle('completed', i + 1 < this.step);
-              });
-            },
-            
-            async generate() {
-              console.log('🚨 ULTIMATE GENERATE');
-              this.toast('🚀 シナリオ生成開始...');
-              
-              try {
-                const res = await fetch('/api/test-simple');
-                const data = await res.json();
-                
-                // 結果表示
-                const main = document.getElementById('main-card');
-                const result = document.getElementById('result-container');
-                const content = document.getElementById('scenario-content');
-                
-                if (main) main.style.display = 'none';
-                
-                if (content) {
-                  content.innerHTML = `
-                    <div style="text-align: center; padding: 3rem; background: linear-gradient(135deg, #10b981, #34d399); border-radius: 1rem; color: white;">
-                      <h2 style="margin-bottom: 1rem; font-size: 2rem;">🎉 緊急システム成功！</h2>
-                      <p style="margin-bottom: 1rem; font-size: 1.2rem;">限界突破完了 - UI完全動作</p>
-                      <p style="margin-bottom: 2rem;">API: ${data.message}</p>
-                      <button onclick="location.reload()" style="background: white; color: #10b981; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 8px;">🔄 新規作成</button>
-                      <button onclick="alert('フル機能は次回実装予定')" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 8px;">📦 完全生成</button>
-                    </div>
-                  `;
-                }
-                
-                if (result) {
-                  result.style.display = 'block';
-                  result.classList.remove('hidden');
-                }
-                
-                this.toast('✅ 生成成功！');
-                
-              } catch (err) {
-                this.toast('❌ エラー: ' + err.message);
-              }
-            },
-            
-            toast(msg) {
-              const t = document.createElement('div');
-              t.textContent = msg;
-              t.style.cssText = `
-                position: fixed; top: 20px; right: 20px; z-index: 99999;
-                background: #1f2937; color: white; padding: 12px 20px; border-radius: 8px;
-                box-shadow: 0 10px 25px rgba(0,0,0,0.3); font-weight: 500; max-width: 300px;
-                border-left: 4px solid #3b82f6;
-              `;
-              document.body.appendChild(t);
-              setTimeout(() => { if (t.parentNode) t.parentNode.removeChild(t); }, 4000);
-            }
-          };
-          
-          ultimate.init();
-          window.ultimate = ultimate;
-          
-          console.log('✅ EMERGENCY ULTIMATE FALLBACK COMPLETED');
-        }
-      }, 10000); // 10秒待機に変更（3秒から延長）
-    });
-    
-    // エラーハンドリング
-    window.addEventListener('error', (e) => {
-      if (e.message && (
-        e.message.includes('runtime.lastError') ||
-        e.message.includes('Extension context') ||
-        e.message.includes('message port closed')
-      )) {
-        e.preventDefault();
-        return false;
-      }
-    });
-    
-    window.addEventListener('unhandledrejection', (e) => {
-      console.error('Promise rejection:', e.reason);
-    });
-  </script>
 </body>
 </html>
