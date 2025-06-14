@@ -331,6 +331,26 @@
     <p>Murder Mystery Generator | Professional AI-Powered System</p>
   </footer>
 
+  <!-- デバッグ用の基本イベントリスナー -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM loaded, setting up debug listeners');
+      
+      // 次へボタンの基本的なクリック確認
+      const nextBtn = document.getElementById('next-btn');
+      if (nextBtn) {
+        console.log('Next button found:', nextBtn);
+        nextBtn.addEventListener('click', function(e) {
+          console.log('=== NEXT BUTTON CLICKED (native listener) ===');
+          console.log('Event:', e);
+          console.log('Button:', this);
+        }, true); // captureフェーズで確実にキャッチ
+      } else {
+        console.error('Next button not found!');
+      }
+    });
+  </script>
+  
   <!-- 🚀 STREAMLINED ULTRA SYSTEM V4.0 - SINGLE SOURCE -->
   <script type="module">
     // ✨ 統一初期化システム - 競合完全排除
@@ -492,6 +512,12 @@
     document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; backdrop-filter: blur(10px);"><div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div><h2 style="margin-bottom: 1rem; font-size: 1.8rem;">ブラウザが対応していません</h2><p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">このULTRA EDITIONアプリケーションには<br>モダンなブラウザが必要です。</p><div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><strong>推奨ブラウザ:</strong><br>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</div><button onclick="location.reload()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s;">再読み込み</button></div></div>';
   </script>
 
+  <!-- 🚨 ULTIMATE DIAGNOSTIC & FIX SYSTEM - 限界突破版 -->
+  <script src="./ULTIMATE_DIAGNOSTIC_FIX.js"></script>
+  
+  <!-- 🚨 ABSOLUTE BUTTON FIX - 絶対確実システム -->
+  <script src="./ABSOLUTE_BUTTON_FIX.js"></script>
+  
   <!-- 🚨 EMERGENCY ULTIMATE FALLBACK - 限界突破システム -->
   <script>
     // ULTIMATE FALLBACK - モジュールが全て失敗した場合の最終手段
@@ -655,7 +681,7 @@
           
           console.log('✅ EMERGENCY ULTIMATE FALLBACK COMPLETED');
         }
-      }, 3000);
+      }, 10000); // 10秒待機に変更（3秒から延長）
     });
     
     // エラーハンドリング
