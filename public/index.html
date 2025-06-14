@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Murder Mystery Generator - Professional Edition</title>
-  <meta name="description" content="世界最速のマーダーミステリー生成システム - AI駆動・タイムアウトフリー">
+  <meta name="description" content="プロフェッショナル品質のマーダーミステリー生成システム">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -17,44 +17,42 @@
     <p>AI駆動マーダーミステリー生成システム</p>
   </header>
 
-  <!-- 🎨 メインコンテンツ -->
   <main class="main-container">
-    <!-- 🎯 メインカード -->
     <div class="card" id="main-card">
       <div class="card-header">
         <h2>シナリオ生成システム</h2>
         <p>プロフェッショナル品質のマーダーミステリーシナリオを効率的に生成</p>
       </div>
       
-      <!-- 🎪 革命的ステップインジケーター -->
+      <!-- ステップインジケーター -->
       <div class="step-indicator" id="step-indicator">
-        <div class="step-indicator-item active" data-step="1" data-title="基本設定">
+        <div class="step-indicator-item active" data-step="1">
           <span>1</span>
           <div class="step-title">基本設定</div>
         </div>
         <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="2" data-title="世界観">
+        <div class="step-indicator-item" data-step="2">
           <span>2</span>
           <div class="step-title">世界観</div>
         </div>
         <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="3" data-title="事件設定">
+        <div class="step-indicator-item" data-step="3">
           <span>3</span>
           <div class="step-title">事件設定</div>
         </div>
         <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="4" data-title="詳細オプション">
+        <div class="step-indicator-item" data-step="4">
           <span>4</span>
           <div class="step-title">詳細</div>
         </div>
         <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="5" data-title="確認・生成">
+        <div class="step-indicator-item" data-step="5">
           <span>5</span>
           <div class="step-title">生成</div>
         </div>
       </div>
       
-      <!-- 🔥 フォームコンテナ -->
+      <!-- フォームコンテナ -->
       <form id="scenario-form" class="form-container">
         <div id="step-container">
           
@@ -102,7 +100,7 @@
           </div>
           
           <!-- ステップ2: 世界観 -->
-          <div id="step-2" class="step next">
+          <div id="step-2" class="step">
             <div class="step-header">
               <h3 class="text-gradient">🌟 世界観とトーン</h3>
               <p>シナリオの雰囲気と世界観を決定します</p>
@@ -132,7 +130,7 @@
           </div>
           
           <!-- ステップ3: 事件設定 -->
-          <div id="step-3" class="step next">
+          <div id="step-3" class="step">
             <div class="step-header">
               <h3 class="text-gradient">🔍 事件設定</h3>
               <p>発生する事件の種類と詳細を設定します</p>
@@ -153,7 +151,7 @@
           </div>
           
           <!-- ステップ4: 詳細オプション -->
-          <div id="step-4" class="step next">
+          <div id="step-4" class="step">
             <div class="step-header">
               <h3 class="text-gradient">⚙️ 詳細オプション</h3>
               <p>シナリオの複雑さと特殊要素を調整します</p>
@@ -192,7 +190,7 @@
           </div>
           
           <!-- ステップ5: 確認・生成 -->
-          <div id="step-5" class="step next">
+          <div id="step-5" class="step">
             <div class="step-header">
               <h3 class="text-gradient">🚀 最終確認</h3>
               <p>設定を確認して、超高速生成を開始します</p>
@@ -205,26 +203,11 @@
                   <!-- 動的に生成される設定サマリー -->
                 </div>
               </div>
-              
-              <div class="generation-info">
-                <div class="info-item">
-                  <span class="info-icon">⚡</span>
-                  <span class="info-text">予想生成時間: <strong>45秒以内</strong></span>
-                </div>
-                <div class="info-item">
-                  <span class="info-icon">🛡️</span>
-                  <span class="info-text">フェイルセーフ: <strong>Groq → OpenAI</strong></span>
-                </div>
-                <div class="info-item">
-                  <span class="info-icon">🎯</span>
-                  <span class="info-text">成功率: <strong>99.9%保証</strong></span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
         
-        <!-- ナビゲーションボタン - 完全固定位置 -->
+        <!-- ナビゲーションボタン -->
         <div class="button-container">
           <button type="button" id="prev-btn" class="btn btn-secondary" disabled>
             <span>←</span> 前へ
@@ -233,7 +216,7 @@
           <button type="button" id="next-btn" class="btn btn-primary">
             次へ <span>→</span>
           </button>
-          <button type="button" id="stepwise-generation-btn" class="btn btn-success" style="display: none;">
+          <button type="button" id="generate-btn" class="btn btn-success" style="display: none;">
             <span>🚀</span> 生成開始
           </button>
         </div>
@@ -241,7 +224,7 @@
     </div>
     
     <!-- ローディング表示 -->
-    <div id="loading-indicator" class="card hidden">
+    <div id="loading-container" class="card hidden">
       <div class="loading-container">
         <div class="loading-header">
           <h3>🚀 AIシナリオ生成中...</h3>
@@ -274,13 +257,6 @@
             <span class="stat-value" id="generation-method">AI並列処理</span>
           </div>
         </div>
-        
-        <!-- ARIA Live Region for Progress Updates -->
-        <div id="progress-announcements" aria-live="polite" aria-atomic="true" class="sr-only">
-          進行状況の更新がここに表示されます
-        </div>
-        
-        <div class="loading-spinner"></div>
       </div>
     </div>
     
@@ -296,27 +272,22 @@
           <!-- 生成されたシナリオがここに表示される -->
         </div>
         
-        <!-- 追加コンテンツ表示エリア -->
-        <div id="additional-content" class="additional-content hidden">
-          <!-- 追加コンテンツがここに動的に表示される -->
+        <!-- アクションボタン -->
+        <div class="result-actions">
+          <button id="download-pdf" class="btn btn-primary">
+            <span>📄</span> PDFダウンロード
+          </button>
+          <button id="download-zip" class="btn btn-secondary">
+            <span>📦</span> ZIPパッケージ
+          </button>
+          <button id="new-scenario" class="btn btn-outline">
+            <span>🔄</span> 新規作成
+          </button>
         </div>
-        
-        <!-- ハンドアウト表示エリア -->
-        <div id="handouts-container" class="handouts-container" style="display: none;">
-          <h3>📄 キャラクターハンドアウト</h3>
-          <div id="handouts-list" class="handouts-list">
-            <!-- ハンドアウトがここに表示されます -->
-          </div>
-        </div>
-      </div>
-      
-      <!-- 動的アクションボタンはJavaScriptで生成されます -->
-      <div id="dynamic-actions" class="result-actions">
-        <!-- アクションボタンはMurderMysteryApp.jsのaddActionButtons()で動的に生成 -->
       </div>
     </div>
     
-    <!-- 🚨 エラー表示 -->
+    <!-- エラー表示 -->
     <div id="error-container" class="error-container hidden">
       <div class="error-message" id="error-message">
         <!-- エラーメッセージがここに表示される -->
@@ -327,66 +298,11 @@
     </div>
   </main>
 
-  <footer style="text-align: center; padding: 2rem; color: #64748b; font-size: 0.9rem; background: var(--bg-secondary); border-top: 1px solid var(--accent-soft);">
+  <footer>
     <p>Murder Mystery Generator | Professional AI-Powered System</p>
   </footer>
 
-  <!-- デバッグ用の基本イベントリスナー -->
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM loaded, setting up debug listeners');
-      
-      // 次へボタンの基本的なクリック確認
-      const nextBtn = document.getElementById('next-btn');
-      if (nextBtn) {
-        console.log('Next button found:', nextBtn);
-        nextBtn.addEventListener('click', function(e) {
-          console.log('=== NEXT BUTTON CLICKED (native listener) ===');
-          console.log('Event:', e);
-          console.log('Button:', this);
-        }, true); // captureフェーズで確実にキャッチ
-      } else {
-        console.error('Next button not found!');
-      }
-    });
-  </script>
-  
-  <!-- ✨ シンプル初期化システム -->
-  <script>
-    // シンプルな初期化オーバーレイ
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-      background: linear-gradient(135deg, #667eea, #764ba2); 
-      display: flex; justify-content: center; align-items: center; 
-      z-index: 20000; color: white; font-family: 'Inter', sans-serif;
-    `;
-    overlay.innerHTML = `
-      <div style="text-align: center;">
-        <div style="font-size: 4rem; margin-bottom: 1rem;">🕵️</div>
-        <h2 style="margin-bottom: 1rem; font-size: 2rem; font-weight: 800;">Murder Mystery Generator</h2>
-        <p style="font-size: 1.2rem; opacity: 0.9;">シンプルシステム起動中...</p>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-    
-    // 2秒後にオーバーレイを削除
-    setTimeout(() => {
-      overlay.style.transition = 'opacity 0.5s ease';
-      overlay.style.opacity = '0';
-      setTimeout(() => overlay.remove(), 500);
-    }, 2000);
-    
-    console.log('✅ Simple initialization complete');
-  </script>
-  
-  <!-- Enhanced fallback for browsers without ES6 module support -->
-  <script nomodule>
-    document.body.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Inter, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2); color: white;"><div style="background: rgba(255,255,255,0.1); padding: 3rem; border-radius: 20px; backdrop-filter: blur(10px);"><div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div><h2 style="margin-bottom: 1rem; font-size: 1.8rem;">ブラウザが対応していません</h2><p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">このULTRA EDITIONアプリケーションには<br>モダンなブラウザが必要です。</p><div style="background: rgba(255,255,255,0.2); padding: 1rem; border-radius: 10px; margin-bottom: 2rem;"><strong>推奨ブラウザ:</strong><br>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</div><button onclick="location.reload()" style="background: #667eea; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s;">再読み込み</button></div></div>';
-  </script>
-
-  <!-- 🎯 SIMPLE RELIABLE SYSTEM - シンプル確実動作システム -->
-  <script src="./SIMPLE_RELIABLE_SYSTEM.js"></script>
-  
+  <!-- メインアプリケーション -->
+  <script type="module" src="./js/MurderMysteryApp.js"></script>
 </body>
 </html>

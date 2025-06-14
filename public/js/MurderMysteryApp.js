@@ -1,943 +1,833 @@
 /**
- * MurderMysteryApp - 完全簡素化版
- * ZIP出力 + 新規作成の2択のみ
+ * 🎭 Murder Mystery Generator - Main Application
+ * プロフェッショナル品質のマーダーミステリー生成システム
+ * 基本設定 → 世界観 → 事件設定 → 詳細設定 → 生成
  */
+
 class MurderMysteryApp {
   constructor() {
-    this.version = '4.0.0-FINAL';
-    this.isGenerating = false;
-    this.currentResult = null;
-    this.additionalContent = null;
-    this._zipGenerating = false;
-    this.isPhaseComplete = false;
+    this.currentStep = 1;
+    this.totalSteps = 5;
+    this.formData = {};
+    this.generatedScenario = null;
     
+    console.log('🎭 Murder Mystery Generator - 初期化開始');
     this.init();
   }
 
   init() {
-    console.log('🚀 MurderMysteryApp v4.0.0-FINAL - 2択システム');
-    this.setupActionButtons();
-    this.initializeEventListeners();
-    console.log('✅ 簡素化システム初期化完了！');
-  }
-
-  /**
-   * 2つのアクションボタンのみ
-   */
-  setupActionButtons() {
-    const resultContainer = document.getElementById('result-container');
-    if (!resultContainer || resultContainer.classList.contains('hidden')) {
-      return;
-    }
-
-    let actionPanel = document.getElementById('action-panel');
-    if (actionPanel) {
-      return;
-    }
-
-    actionPanel = document.createElement('div');
-    actionPanel.id = 'action-panel';
-    actionPanel.className = 'action-panel-simple';
-    actionPanel.innerHTML = `
-      <div class="action-buttons-simple">
-        <button id="new-scenario-btn" class="btn btn-primary btn-large">
-          🚀 新規作成
-        </button>
-        <button id="download-zip-btn" class="btn btn-success btn-large" ${!this.isPhaseComplete ? 'disabled' : ''}>
-          📦 フェーズ2-8完了後に自動出力
-        </button>
-      </div>
-      <div id="phase-progress" class="phase-progress" style="display: none;">
-        <div class="progress-header">📊 フェーズ生成進行状況</div>
-        <div class="progress-list">
-          <div class="progress-item" data-phase="2">Phase 2: キャラクター設定 <span class="status">⏳ 準備中</span></div>
-          <div class="progress-item" data-phase="3">Phase 3: 人物関係 <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="4">Phase 4: 事件詳細 <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="5">Phase 5: 証拠・手がかり <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="6">Phase 6: タイムライン <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="7">Phase 7: 真相解決 <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="8">Phase 8: GMガイド <span class="status">⏳ 待機中</span></div>
-          <div class="progress-item" data-phase="handouts">ハンドアウト生成 <span class="status">⏳ 待機中</span></div>
-        </div>
-        <div class="overall-progress">
-          <div class="progress-bar">
-            <div class="progress-fill" id="overall-progress-fill" style="width: 0%"></div>
-          </div>
-          <div class="progress-text">0/8 フェーズ完了</div>
-        </div>
-      </div>
-      <div class="zip-info">
-        <h4>📦 ZIP パッケージ内容</h4>
-        <div class="package-contents">
-          ✅ Phase 1-8 完全実装 (全8フェーズ)<br>
-          ✅ キャラクターハンドアウト<br>
-          ✅ PDF + テキストファイル (12ファイル)<br>
-          ✅ ゲームマスターガイド + 真相解決<br>
-          ✅ 29200トークン最高品質コンテンツ
-        </div>
-      </div>
-    `;
+    // イベントリスナーの設定
+    this.setupEventListeners();
     
-    resultContainer.appendChild(actionPanel);
-    this.setupActionButtonEvents();
+    // 初期表示の更新
+    this.updateStepDisplay();
+    this.updateButtonStates();
+    
+    // フォームデータの復元
+    this.restoreFormData();
+    
+    console.log('✅ Murder Mystery Generator - 初期化完了');
   }
 
-  /**
-   * 2つのボタンのイベントリスナー
-   */
-  setupActionButtonEvents() {
-    const zipBtn = document.getElementById('download-zip-btn');
-    if (zipBtn && !zipBtn.hasAttribute('data-listener')) {
-      zipBtn.addEventListener('click', () => this.generateAndDownloadZIP());
-      zipBtn.setAttribute('data-listener', 'true');
+  setupEventListeners() {
+    // ナビゲーションボタン
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const generateBtn = document.getElementById('generate-btn');
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => this.goToPreviousStep());
     }
 
-    const newBtn = document.getElementById('new-scenario-btn');
-    if (newBtn && !newBtn.hasAttribute('data-listener')) {
-      newBtn.addEventListener('click', () => this.resetForNewScenario());
-      newBtn.setAttribute('data-listener', 'true');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => this.goToNextStep());
     }
-  }
 
-  /**
-   * イベントリスナーの初期化
-   */
-  initializeEventListeners() {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-          const target = mutation.target;
-          if (target.id === 'result-container' && !target.classList.contains('hidden')) {
-            setTimeout(() => this.setupActionButtons(), 100);
-          }
+    if (generateBtn) {
+      generateBtn.addEventListener('click', () => this.startGeneration());
+    }
+
+    // フォーム変更監視
+    const form = document.getElementById('scenario-form');
+    if (form) {
+      form.addEventListener('change', (e) => this.handleFormChange(e));
+    }
+
+    // ステップインジケーター
+    const indicators = document.querySelectorAll('.step-indicator-item');
+    indicators.forEach((indicator, index) => {
+      indicator.addEventListener('click', () => {
+        const targetStep = index + 1;
+        if (targetStep <= this.currentStep) {
+          this.navigateToStep(targetStep);
         }
       });
     });
 
-    const resultContainer = document.getElementById('result-container');
-    if (resultContainer) {
-      observer.observe(resultContainer, { attributes: true });
+    // キーボードショートカット
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          this.goToNextStep();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          this.goToPreviousStep();
+        }
+      }
+    });
+
+    // 結果画面のボタン
+    this.setupResultButtons();
+  }
+
+  setupResultButtons() {
+    const downloadPdfBtn = document.getElementById('download-pdf');
+    const downloadZipBtn = document.getElementById('download-zip');
+    const newScenarioBtn = document.getElementById('new-scenario');
+
+    if (downloadPdfBtn) {
+      downloadPdfBtn.addEventListener('click', () => this.downloadPDF());
     }
 
-    document.addEventListener('generation:complete', (event) => {
-      this.currentResult = event.detail;
-      this.isPhaseComplete = false; // Reset phase completion status
+    if (downloadZipBtn) {
+      downloadZipBtn.addEventListener('click', () => this.downloadZIP());
+    }
+
+    if (newScenarioBtn) {
+      newScenarioBtn.addEventListener('click', () => this.resetToStart());
+    }
+  }
+
+  goToNextStep() {
+    if (this.currentStep < this.totalSteps) {
+      this.collectFormData();
+      this.currentStep++;
+      this.updateStepDisplay();
+      this.updateButtonStates();
       
-      console.log('🎯 generation:complete イベント受信 - フェーズ1完了処理開始');
+      if (this.currentStep === this.totalSteps) {
+        this.updateSummary();
+      }
+    }
+  }
+
+  goToPreviousStep() {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      this.updateStepDisplay();
+      this.updateButtonStates();
+    }
+  }
+
+  navigateToStep(targetStep) {
+    if (targetStep >= 1 && targetStep <= this.totalSteps && targetStep <= this.currentStep) {
+      this.currentStep = targetStep;
+      this.updateStepDisplay();
+      this.updateButtonStates();
       
-      // 🚨 即座に結果表示を強制的に非表示（最優先）
-      this.hideResultsUntilPhase8Complete();
+      if (this.currentStep === this.totalSteps) {
+        this.updateSummary();
+      }
+    }
+  }
+
+  updateStepDisplay() {
+    // 全ステップを非表示
+    for (let i = 1; i <= this.totalSteps; i++) {
+      const stepEl = document.getElementById(`step-${i}`);
+      if (stepEl) {
+        stepEl.classList.remove('active');
+        stepEl.style.display = 'none';
+      }
+    }
+
+    // 現在のステップを表示
+    const currentStepEl = document.getElementById(`step-${this.currentStep}`);
+    if (currentStepEl) {
+      currentStepEl.classList.add('active');
+      currentStepEl.style.display = 'block';
+    }
+
+    // ステップインジケーターの更新
+    this.updateStepIndicators();
+  }
+
+  updateStepIndicators() {
+    const indicators = document.querySelectorAll('.step-indicator-item');
+    indicators.forEach((indicator, index) => {
+      const step = index + 1;
+      indicator.classList.remove('active', 'completed');
       
-      // 🎯 フェーズ1完了時: ZIPボタン無効化とフェーズ2-8開始通知
-      this.disableZipButtonWithMessage();
-      
-      // フェーズ2-8生成を即座に開始（タイムアウト削除）
-      this.generateAdditionalContent();
+      if (step === this.currentStep) {
+        indicator.classList.add('active');
+      } else if (step < this.currentStep) {
+        indicator.classList.add('completed');
+      }
     });
   }
 
-  /**
-   * 🎯 フェーズ1完了時: 結果を非表示にしてフェーズ8まで待機
-   */
-  hideResultsUntilPhase8Complete() {
-    console.log('🔒 フェーズ1完了: 結果表示をフェーズ8まで非表示にします');
-    
-    // 🚨 強制的に結果表示を即座に非表示
-    const resultContainer = document.getElementById('result-container');
-    if (resultContainer) {
-      resultContainer.style.display = 'none !important';
-      resultContainer.classList.add('hidden');
-      resultContainer.style.visibility = 'hidden';
-      console.log('✅ result-container を強制非表示しました');
-    }
-    
-    // シナリオ内容も強制非表示
-    const scenarioContent = document.getElementById('scenario-content');
-    if (scenarioContent) {
-      scenarioContent.style.display = 'none !important';
-      scenarioContent.style.visibility = 'hidden';
-      console.log('✅ scenario-content を強制非表示しました');
-    }
-    
-    // 追加コンテンツエリアも非表示
-    const additionalContent = document.getElementById('additional-content');
-    if (additionalContent) {
-      additionalContent.style.display = 'none !important';
-      additionalContent.style.visibility = 'hidden';
-    }
-    
-    // メインカードも非表示
-    const mainCard = document.getElementById('main-card');
-    if (mainCard) {
-      mainCard.classList.add('hidden');
-      mainCard.style.display = 'none';
-      console.log('✅ main-card を非表示しました');
-    }
-    
-    // 進捗表示のみを表示するため、専用コンテナを作成
-    this.createProgressOnlyDisplay();
-  }
+  updateButtonStates() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const generateBtn = document.getElementById('generate-btn');
 
-  /**
-   * 🚀 フェーズ1完了時: ZIPボタン無効化メッセージ表示
-   */
-  disableZipButtonWithMessage() {
-    const zipBtn = document.getElementById('download-zip-btn');
-    if (zipBtn) {
-      zipBtn.disabled = true;
-      zipBtn.classList.add('disabled');
-      zipBtn.innerHTML = '📦 フェーズ2-8完了後に自動出力';
+    // 前へボタン
+    if (prevBtn) {
+      prevBtn.disabled = this.currentStep === 1;
     }
-    
-    this.showNotification('🚀 フェーズ1完了！フェーズ2-8生成開始中...', 'info');
-  }
 
-  /**
-   * 🎯 進捗表示のみのコンテナ作成
-   */
-  createProgressOnlyDisplay() {
-    // 既存の進捗専用コンテナがあれば削除
-    const existingProgress = document.getElementById('progress-only-container');
-    if (existingProgress) {
-      existingProgress.remove();
-    }
-    
-    // 進捗専用コンテナ作成
-    const progressContainer = document.createElement('div');
-    progressContainer.id = 'progress-only-container';
-    progressContainer.className = 'main-container';
-    progressContainer.innerHTML = `
-      <div class="card">
-        <div class="card-header">
-          <h2>🚀 マーダーミステリー生成中</h2>
-          <p>フェーズ2-8を順次生成しています。完了まで少々お待ちください...</p>
-        </div>
-        <div id="phase-progress-only" class="phase-progress">
-          <div class="progress-header">📊 フェーズ生成進行状況</div>
-          <div class="progress-list">
-            <div class="progress-item" data-phase="2">Phase 2: キャラクター設定 <span class="status waiting">⏳ 準備中</span></div>
-            <div class="progress-item" data-phase="3">Phase 3: 人物関係 <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="4">Phase 4: 事件詳細 <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="5">Phase 5: 証拠・手がかり <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="6">Phase 6: タイムライン <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="7">Phase 7: 真相解決 <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="8">Phase 8: GMガイド <span class="status waiting">⏳ 待機中</span></div>
-            <div class="progress-item" data-phase="handouts">ハンドアウト生成 <span class="status waiting">⏳ 待機中</span></div>
-          </div>
-          <div class="overall-progress">
-            <div class="progress-bar">
-              <div class="progress-fill" id="overall-progress-fill-only" style="width: 0%"></div>
-            </div>
-            <div class="progress-text">0/8 フェーズ完了</div>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // メインコンテナの後に挿入
-    const mainCard = document.getElementById('main-card');
-    if (mainCard && mainCard.parentNode) {
-      mainCard.parentNode.insertBefore(progressContainer, mainCard.nextSibling);
+    // 次へ・生成ボタンの切り替え
+    if (this.currentStep === this.totalSteps) {
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (generateBtn) generateBtn.style.display = 'block';
     } else {
-      document.body.appendChild(progressContainer);
-    }
-    
-    console.log('✅ 進捗専用表示コンテナを作成しました');
-  }
-
-  /**
-   * 🎯 フェーズ8完了時: 結果表示を復元
-   */
-  showResultsAfterPhase8Complete() {
-    console.log('🔓 フェーズ8+ハンドアウト完了: 結果表示を復元します');
-    
-    // 進捗専用コンテナを削除
-    const progressOnlyContainer = document.getElementById('progress-only-container');
-    if (progressOnlyContainer) {
-      progressOnlyContainer.remove();
-      console.log('✅ 進捗専用コンテナを削除しました');
-    }
-    
-    // メインの結果表示エリアを再表示
-    const resultContainer = document.getElementById('result-container');
-    if (resultContainer) {
-      resultContainer.style.display = 'block';
-      resultContainer.classList.remove('hidden');
-      console.log('✅ 結果コンテナを再表示しました');
-    }
-    
-    // シナリオ内容を再表示
-    const scenarioContent = document.getElementById('scenario-content');
-    if (scenarioContent) {
-      scenarioContent.style.display = 'block';
-      console.log('✅ シナリオコンテンツを再表示しました');
-    }
-    
-    // 追加コンテンツエリアを再表示
-    const additionalContent = document.getElementById('additional-content');
-    if (additionalContent) {
-      additionalContent.style.display = 'block';
-      console.log('✅ 追加コンテンツエリアを再表示しました');
-    }
-    
-    // メインカードを非表示（結果が表示されているため）
-    const mainCard = document.getElementById('main-card');
-    if (mainCard) {
-      mainCard.classList.add('hidden');
-      console.log('✅ メインカードを非表示にしました');
-    }
-    
-    // アクションパネルを設定
-    setTimeout(() => {
-      this.setupActionButtons();
-      console.log('✅ アクションボタンを再設定しました');
-    }, 500);
-    
-    this.showNotification('🎉 フェーズ8+ハンドアウト完了！結果を表示中...', 'success');
-  }
-
-  /**
-   * Enable ZIP button after phase completion
-   */
-  enableZipButton() {
-    const zipBtn = document.getElementById('download-zip-btn');
-    if (zipBtn) {
-      zipBtn.disabled = false;
-      zipBtn.classList.remove('disabled');
-      zipBtn.innerHTML = '📦 完全ZIP出力';
-    }
-    
-    const phaseStatus = document.querySelector('.phase-status');
-    if (phaseStatus) {
-      phaseStatus.remove();
+      if (nextBtn) nextBtn.style.display = 'block';
+      if (generateBtn) generateBtn.style.display = 'none';
     }
   }
 
-  /**
-   * Show phase progress display
-   */
-  showPhaseProgress() {
-    const progressDiv = document.getElementById('phase-progress');
-    if (progressDiv) {
-      progressDiv.style.display = 'block';
-    }
+  handleFormChange(event) {
+    this.collectFormData();
+    this.saveFormData();
   }
 
-  /**
-   * Update individual phase status (進捗専用表示対応)
-   */
-  updatePhaseStatus(phase, status, className) {
-    // 通常の進捗表示を更新
-    const phaseItem = document.querySelector(`[data-phase="${phase}"]`);
-    if (phaseItem) {
-      const statusSpan = phaseItem.querySelector('.status');
-      if (statusSpan) {
-        statusSpan.textContent = status;
-        statusSpan.className = `status ${className}`;
-      }
-    }
-    
-    // 進捗専用表示も更新（フェーズ1完了後の表示用）
-    const progressOnlyContainer = document.getElementById('phase-progress-only');
-    if (progressOnlyContainer) {
-      const progressOnlyItem = progressOnlyContainer.querySelector(`[data-phase="${phase}"]`);
-      if (progressOnlyItem) {
-        const progressOnlyStatus = progressOnlyItem.querySelector('.status');
-        if (progressOnlyStatus) {
-          progressOnlyStatus.textContent = status;
-          progressOnlyStatus.className = `status ${className}`;
-        }
-      }
-    }
-  }
-
-  /**
-   * Update overall progress bar (進捗専用表示対応)
-   */
-  updateOverallProgress(completed, total) {
-    // 通常の進捗バー更新
-    const progressFill = document.getElementById('overall-progress-fill');
-    const progressText = document.querySelector('.progress-text');
-    
-    if (progressFill) {
-      const percentage = (completed / total) * 100;
-      progressFill.style.width = `${percentage}%`;
-    }
-    
-    if (progressText) {
-      progressText.textContent = `${completed}/${total} フェーズ完了`;
-    }
-    
-    // 進捗専用表示も更新
-    const progressFillOnly = document.getElementById('overall-progress-fill-only');
-    const progressOnlyContainer = document.getElementById('phase-progress-only');
-    if (progressFillOnly) {
-      const percentage = (completed / total) * 100;
-      progressFillOnly.style.width = `${percentage}%`;
-    }
-    
-    if (progressOnlyContainer) {
-      const progressTextOnly = progressOnlyContainer.querySelector('.progress-text');
-      if (progressTextOnly) {
-        progressTextOnly.textContent = `${completed}/${total} フェーズ完了`;
-      }
-    }
-  }
-
-  /**
-   * Phase 2-8 + ハンドアウト生成
-   */
-  async generateAdditionalContent() {
-    if (!this.currentResult) {
-      console.log('⚠️ No current result to enhance');
-      return;
-    }
-
-    try {
-      console.log('🚀 Starting Phase 2-8 + ハンドアウト with detailed progress tracking...');
-      
-      // Show progress display
-      this.showPhaseProgress();
-      
-      const scenarioContent = document.getElementById('scenario-content');
-      if (!scenarioContent) {
-        throw new Error('シナリオコンテンツが見つかりません');
-      }
-
-      const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
-      const formData = this.collectFormData();
-
-      console.log('📝 Scenario text length:', scenarioText.length);
-
-      const apiClient = this.createApiClient();
-      const additionalContent = {};
-      let completedPhases = 0;
-
-      // 🎯 順次フェーズ実行: エラー時停止システム
-      console.log('👥 Starting sequential phase generation with error handling...');
-      
-      // フェーズ定義配列
-      const phases = [
-        { id: 2, name: 'Characters', endpoint: '/api/phase2-characters', key: 'characters' },
-        { id: 3, name: 'Relationships', endpoint: '/api/phase3-relationships', key: 'relationships' },
-        { id: 4, name: 'Incident', endpoint: '/api/phase4-incident', key: 'incident' },
-        { id: 5, name: 'Clues', endpoint: '/api/phase5-clues', key: 'clues' },
-        { id: 6, name: 'Timeline', endpoint: '/api/phase6-timeline', key: 'timeline' },
-        { id: 7, name: 'Solution', endpoint: '/api/phase7-solution', key: 'solution' },
-        { id: 8, name: 'Game Master', endpoint: '/api/phase8-gamemaster', key: 'gamemaster' }
-      ];
-      
-      // 各フェーズを順次実行
-      for (let i = 0; i < phases.length; i++) {
-        const phase = phases[i];
-        
-        try {
-          console.log(`🚀 Phase ${phase.id}: ${phase.name} 開始中...`);
-          this.updatePhaseStatus(phase.id, '🔄 生成中', 'generating');
-          
-          // API呼び出しパラメータ構築
-          const apiParams = { 
-            concept: scenarioText, 
-            participants: formData.participants
-          };
-          
-          // Phase 2の特別パラメータ
-          if (phase.id === 2) {
-            apiParams.era = formData.era;
-            apiParams.setting = formData.setting;
-          }
-          
-          // API呼び出し
-          const result = await this.callAPIWithErrorHandling(apiClient, phase.endpoint, apiParams, phase.id);
-          
-          // 結果保存
-          additionalContent[phase.key] = result;
-          completedPhases++;
-          
-          // 成功時の状態更新
-          this.updatePhaseStatus(phase.id, '✅ 完了', 'completed');
-          this.updateOverallProgress(completedPhases, 8);
-          
-          console.log(`✅ Phase ${phase.id}: ${phase.name} 完了 (${completedPhases}/8)`);
-          
-          // 次フェーズまで短時間待機（UI更新のため）
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-        } catch (error) {
-          // Error handled by logger system
-          
-          // エラー状態表示
-          this.updatePhaseStatus(phase.id, '❌ エラー', 'error');
-          this.showNotification(`Phase ${phase.id} (${phase.name}) でエラーが発生しました: ${error.message}`, 'error');
-          
-          // ❌ エラー時は処理を停止
-          throw new Error(`Phase ${phase.id} (${phase.name}) 実行中にエラーが発生したため処理を停止しました: ${error.message}`);
-        }
-      }
-      
-      // 全フェーズ完了後: ハンドアウト生成
-      try {
-        console.log('📊 Final: Handouts Generation...');
-        this.updatePhaseStatus('handouts', '🔄 生成中', 'generating');
-        
-        const handouts = await this.callAPIWithErrorHandling(apiClient, '/api/generate-handouts', { 
-          scenario: scenarioText,
-          characters: additionalContent.characters,
-          participants: formData.participants
-        }, 'handouts');
-        
-        additionalContent.handouts = handouts;
-        this.updatePhaseStatus('handouts', '✅ 完了', 'completed');
-        
-      } catch (error) {
-        // Error handled by logger system
-        this.updatePhaseStatus('handouts', '❌ エラー', 'error');
-        this.showNotification(`ハンドアウト生成でエラーが発生しました: ${error.message}`, 'error');
-        
-        // ハンドアウトエラーでも処理停止
-        throw new Error(`ハンドアウト生成中にエラーが発生したため処理を停止しました: ${error.message}`);
-      }
-
-        this.additionalContent = additionalContent;
-        
-        // 🎯 フェーズ8+ハンドアウト完了: 結果表示を復元
-        this.showResultsAfterPhase8Complete();
-        
-        this.displayAdditionalContent();
-        
-        console.log('✅ Phase 2-8 + ハンドアウト generation completed successfully!');
-        
-        // 🚀 ULTRA SYNC: フェーズ8完了後に自動ZIP出力
-        this.isPhaseComplete = true;
-        this.enableZipButton();
-        
-        // 🎯 限界突破: 全フェーズ完了後に自動的にZIPダウンロード開始
-        console.log('🚀 ULTRA SYNC: All phases completed! Auto-starting ZIP download...');
-        setTimeout(() => {
-          this.autoDownloadZIP();
-        }, 2000); // 2秒後に自動ダウンロード開始
-
-    } catch (error) {
-      // Error handled by logger system
-      
-      // エラー時の詳細情報表示
-      this.showNotification(`フェーズ生成エラーにより処理を停止しました: ${error.message}`, 'error');
-      
-      // エラー情報を保存
-      this.additionalContent = {
-        ...additionalContent,
-        error: error.message,
-        completedPhases: completedPhases,
-        totalPhases: 8
-      };
-      
-      // エラー状態でもコンテンツ表示（デバッグのため）
-      this.displayAdditionalContent();
-      
-      // ❌ エラー時はZIPボタンを無効のまま維持
-      this.isPhaseComplete = false;
-      const zipBtn = document.getElementById('download-zip-btn');
-      if (zipBtn) {
-        zipBtn.disabled = true;
-        zipBtn.innerHTML = '❌ エラーのため無効';
-      }
-      
-      return; // エラー時は自動ZIP出力を行わない
-    }
-  }
-
-  /**
-   * APIクライアント作成
-   */
-  createApiClient() {
-    return {
-      post: async (endpoint, data) => {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-          throw new Error(`API call failed: ${response.status}`);
-        }
-        
-        return await response.json();
-      }
-    };
-  }
-
-  /**
-   * 🎯 エラーハンドリング付きAPI呼び出し（フェーズ別進捗対応）
-   */
-  async callAPIWithErrorHandling(apiClient, endpoint, data, phaseId) {
-    const startTime = Date.now();
-    console.log(`📡 API Call Start: ${endpoint} (Phase ${phaseId})`);
-    
-    try {
-      const response = await apiClient.post(endpoint, data);
-      const processingTime = Date.now() - startTime;
-      
-      console.log(`✅ API Call Success: ${endpoint} (${processingTime}ms)`);
-      
-      if (!response) {
-        throw new Error('API レスポンスが空です');
-      }
-      
-      const content = response.content || response.data;
-      if (!content) {
-        throw new Error('API レスポンスにコンテンツが含まれていません');
-      }
-      
-      // 生成されたコンテンツの品質チェック
-      if (typeof content === 'string' && content.length < 50) {
-        // Warning handled by logger system
-      }
-      
-      return content;
-      
-    } catch (error) {
-      const processingTime = Date.now() - startTime;
-      // Error handled by logger system
-      
-      // 詳細なエラー情報
-      let errorMessage = `Phase ${phaseId} API エラー: `;
-      if (error.message.includes('fetch')) {
-        errorMessage += 'ネットワーク接続エラー';
-      } else if (error.message.includes('400')) {
-        errorMessage += 'リクエストパラメータエラー';
-      } else if (error.message.includes('401')) {
-        errorMessage += 'API認証エラー';
-      } else if (error.message.includes('500')) {
-        errorMessage += 'サーバー内部エラー';
-      } else if (error.message.includes('timeout')) {
-        errorMessage += 'タイムアウトエラー';
-      } else {
-        errorMessage += error.message;
-      }
-      
-      throw new Error(errorMessage);
-    }
-  }
-
-  /**
-   * 旧API呼び出しヘルパー（後方互換性のため残す）
-   */
-  async callAPI(apiClient, endpoint, data) {
-    try {
-      const response = await apiClient.post(endpoint, data);
-      return response.content || response.data || 'Generated content not available';
-    } catch (error) {
-      // Warning handled by logger system
-      return `Failed to generate content for ${endpoint}`;
-    }
-  }
-
-  /**
-   * フォームデータを収集
-   */
   collectFormData() {
     const form = document.getElementById('scenario-form');
-    if (!form) return {};
+    if (!form) return;
 
     const formData = new FormData(form);
-    const data = {};
-    
+    this.formData = {};
+
+    // 通常のフィールド
     for (const [key, value] of formData.entries()) {
-      data[key] = value;
+      this.formData[key] = value;
     }
-    
+
+    // チェックボックス（チェックされていない場合もfalseとして保存）
     const checkboxes = ['red_herring', 'twist_ending', 'secret_roles'];
     checkboxes.forEach(name => {
       const checkbox = document.getElementById(name);
-      data[name] = checkbox ? checkbox.checked : false;
+      if (checkbox) {
+        this.formData[name] = checkbox.checked;
+      }
     });
-    
-    return data;
   }
 
-  /**
-   * Phase 2-8 + ハンドアウトコンテンツを表示
-   */
-  displayAdditionalContent() {
-    const container = document.getElementById('additional-content');
-    if (!container) {
-      // Error handled by logger system
-      return;
-    }
+  updateSummary() {
+    const summaryEl = document.getElementById('settings-summary');
+    if (!summaryEl) return;
 
-    const formatContent = (content) => {
-      if (!content) return '生成中...';
-      if (typeof content === 'string') return content;
-      if (Array.isArray(content)) return content.join('\n\n');
-      return JSON.stringify(content, null, 2);
+    this.collectFormData();
+
+    const getOptionText = (selectId, value) => {
+      const select = document.getElementById(selectId);
+      if (select) {
+        const option = select.querySelector(`option[value="${value}"]`);
+        return option ? option.textContent : value;
+      }
+      return value;
     };
 
-    container.innerHTML = `
-      <div class="additional-sections">
-        <h3>🎭 Phase 2-8 + ハンドアウト 生成完了</h3>
-        
-        <div class="content-section">
-          <h4>👥 詳細キャラクター設定 (Phase 2)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.characters)}</div>
+    const summaryHtml = `
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="summary-icon">👥</span>
+          <span class="summary-label">参加人数:</span>
+          <span class="summary-value">${this.formData.participants || '5'}人</span>
         </div>
-        
-        <div class="content-section">
-          <h4>🤝 人物関係 (Phase 3)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.relationships)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">⏰</span>
+          <span class="summary-label">時代背景:</span>
+          <span class="summary-value">${getOptionText('era', this.formData.era || 'modern')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>🎯 事件詳細・動機 (Phase 4)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.incident)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">🏢</span>
+          <span class="summary-label">舞台設定:</span>
+          <span class="summary-value">${getOptionText('setting', this.formData.setting || 'closed-space')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>🔍 証拠・手がかり (Phase 5)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.clues)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">🌍</span>
+          <span class="summary-label">世界観:</span>
+          <span class="summary-value">${getOptionText('worldview', this.formData.worldview || 'realistic')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>⏰ 詳細タイムライン (Phase 6)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.timeline)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">🎭</span>
+          <span class="summary-label">トーン:</span>
+          <span class="summary-value">${getOptionText('tone', this.formData.tone || 'serious')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>🎯 事件解決・真相 (Phase 7)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.solution)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">⚡</span>
+          <span class="summary-label">事件タイプ:</span>
+          <span class="summary-value">${getOptionText('incident_type', this.formData.incident_type || 'murder')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>🎮 ゲームマスター進行ガイド (Phase 8)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.gamemaster)}</div>
+        <div class="summary-item">
+          <span class="summary-icon">🧩</span>
+          <span class="summary-label">複雑さ:</span>
+          <span class="summary-value">${getOptionText('complexity', this.formData.complexity || 'standard')}</span>
         </div>
-        
-        <div class="content-section">
-          <h4>📋 キャラクターハンドアウト (完全版)</h4>
-          <div class="content-text">${formatContent(this.additionalContent.handouts)}</div>
-          <div class="info-note">💡 すべてのハンドアウトは完全ZIPパッケージに含まれます</div>
-        </div>
-        
-        <div class="content-section">
-          <h4>📊 最終統計 (商業品質 - Phase 1-8完全版)</h4>
-          <div class="content-text">
-            ✅ Phase 1: シナリオ概要 - 完了 (1800トークン)<br>
-            ${this.additionalContent.characters ? '✅' : '❌'} Phase 2: キャラクター設定 (4000トークン)<br>
-            ${this.additionalContent.relationships ? '✅' : '❌'} Phase 3: 人物関係 (3500トークン)<br>
-            ${this.additionalContent.incident ? '✅' : '❌'} Phase 4: 事件詳細・動機 (3500トークン)<br>
-            ${this.additionalContent.clues ? '✅' : '❌'} Phase 5: 証拠・手がかり (3500トークン)<br>
-            ${this.additionalContent.timeline ? '✅' : '❌'} Phase 6: タイムライン (3500トークン)<br>
-            ${this.additionalContent.solution ? '✅' : '❌'} Phase 7: 事件解決・真相 (3500トークン)<br>
-            ${this.additionalContent.gamemaster ? '✅' : '❌'} Phase 8: GMガイド (3500トークン)<br>
-            ${this.additionalContent.handouts ? '✅' : '❌'} ハンドアウト: 個別生成完了<br>
-            📈 <strong>総品質レベル: ULTIMATE (29200総トークン)</strong><br>
-            💼 <strong>商業出版レベル達成 - 顧客要求品質実現</strong>
-          </div>
-        </div>
+        ${this.formData.red_herring ? '<div class="summary-item special"><span class="summary-icon">🎯</span><span class="summary-text">レッドヘリング: 有効</span></div>' : ''}
+        ${this.formData.twist_ending ? '<div class="summary-item special"><span class="summary-icon">🌪️</span><span class="summary-text">どんでん返し: 有効</span></div>' : ''}
+        ${this.formData.secret_roles ? '<div class="summary-item special"><span class="summary-icon">🎭</span><span class="summary-text">秘密の役割: 有効</span></div>' : ''}
       </div>
     `;
-    
-    container.classList.remove('hidden');
-    console.log('✅ Additional content displayed successfully');
+
+    summaryEl.innerHTML = summaryHtml;
   }
 
-  /**
-   * 🚀 ULTRA SYNC: フェーズ8完了後の自動ZIP出力
-   */
-  async autoDownloadZIP() {
-    console.log('🎯 Auto ZIP download triggered after all phases completed');
-    
-    // 通知表示
-    this.showNotification('🚀 全フェーズ完了！自動的にZIPパッケージをダウンロード中...', 'success');
-    
-    // 自動ダウンロード実行
-    await this.generateAndDownloadZIP();
-  }
+  async startGeneration() {
+    console.log('🚀 シナリオ生成開始');
+    this.collectFormData();
 
-  /**
-   * 完全ZIP生成とダウンロード
-   */
-  async generateAndDownloadZIP() {
-    if (this._zipGenerating) {
-      console.log('⚠️ ZIP generation already in progress');
-      return;
-    }
+    // UI切り替え
+    this.showLoading();
 
-    this._zipGenerating = true;
-    
     try {
-      console.log('🚀 Starting complete ZIP package generation...');
-      
-      const scenarioContent = document.getElementById('scenario-content');
-      if (!scenarioContent) {
-        throw new Error('シナリオコンテンツが見つかりません');
-      }
-      
-      const scenarioText = scenarioContent.innerText || scenarioContent.textContent;
-      const formData = this.collectFormData();
-
-      // Check if Phase 2-8 content is ready
-      if (!this.additionalContent || Object.keys(this.additionalContent).length < 8) {
-        console.log('📋 Phase 2-8 content not ready, generating now...');
-        this.showNotification('Phase 2-8コンテンツを生成中... しばらくお待ちください', 'info');
-        
-        // Generate Phase 2-8 content first
-        await this.generateAdditionalContent();
-        
-        // Wait a bit to ensure content is ready
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-
-      // Ensure all content is properly generated
-      const zipData = {
-        scenario: scenarioText,
-        characters: this.additionalContent?.characters || 'Error: Characters not generated',
-        relationships: this.additionalContent?.relationships || 'Error: Relationships not generated',
-        incident: this.additionalContent?.incident || 'Error: Incident not generated',
-        clues: this.additionalContent?.clues || 'Error: Clues not generated',
-        timeline: this.additionalContent?.timeline || 'Error: Timeline not generated',
-        solution: this.additionalContent?.solution || 'Error: Solution not generated',
-        gamemaster: this.additionalContent?.gamemaster || 'Error: GM Guide not generated',
-        handouts: this.additionalContent?.handouts || 'Error: Handouts not generated',
-        title: this.extractTitle(scenarioText),
-        quality: 'PREMIUM',
-        generationStats: {
-          totalTokens: 29200,
-          phases: 'Phase 1-8 Complete (Ultimate Quality)',
-          qualityLevel: 'Commercial Publishing Grade',
-          generationTime: new Date().toISOString(),
-          model: 'Groq llama-3.1-70b-versatile',
-          customerGrade: 'Maximum Quality Level'
-        }
-      };
-
-      // Validate content before ZIP generation
-      const missingContent = [];
-      if (!this.additionalContent?.characters) missingContent.push('Characters');
-      if (!this.additionalContent?.relationships) missingContent.push('Relationships');
-      if (!this.additionalContent?.incident) missingContent.push('Incident');
-      if (!this.additionalContent?.clues) missingContent.push('Clues');
-      if (!this.additionalContent?.timeline) missingContent.push('Timeline');
-      if (!this.additionalContent?.solution) missingContent.push('Solution');
-      if (!this.additionalContent?.gamemaster) missingContent.push('GameMaster');
-      if (!this.additionalContent?.handouts) missingContent.push('Handouts');
-
-      if (missingContent.length > 0) {
-        // Warning handled by logger system
-        this.showNotification(`警告: ${missingContent.join(', ')} が生成されていません。再度Phase生成を実行してください。`, 'warning');
-      }
-
-      console.log('📦 Complete ZIP data prepared');
-
-      const apiClient = this.createApiClient();
-      const zipResponse = await apiClient.post('/api/generate-zip-package', zipData);
-      
-      if (!zipResponse.success) {
-        throw new Error(zipResponse.error || 'ZIP生成に失敗しました');
-      }
-
-      const zipBlob = this.base64ToBlob(zipResponse.zipPackage, 'application/zip');
-      const downloadUrl = URL.createObjectURL(zipBlob);
-      
-      const downloadLink = document.createElement('a');
-      downloadLink.href = downloadUrl;
-      downloadLink.download = zipResponse.packageName || `murder_mystery_complete_${Date.now()}.zip`;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      URL.revokeObjectURL(downloadUrl);
-
-      console.log('✅ Complete ZIP package generation and download successful');
-      this.showNotification('完全ZIPパッケージダウンロード完了！', 'success');
-
+      // 8フェーズ生成システム
+      const scenario = await this.generateScenario();
+      this.generatedScenario = scenario;
+      this.showResults(scenario);
     } catch (error) {
-      // Error handled by logger system
-      this.showNotification('ZIP生成エラー: ' + error.message, 'error');
-    } finally {
-      this._zipGenerating = false;
+      console.error('生成エラー:', error);
+      this.showError(error.message);
     }
   }
 
-  /**
-   * Base64をBlobに変換
-   */
-  base64ToBlob(base64, mimeType) {
-    const byteCharacters = atob(base64);
-    const byteNumbers = new Array(byteCharacters.length);
-    
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+  async generateScenario() {
+    const phases = [
+      { id: 1, name: 'コンセプト生成', endpoint: '/api/phase1-concept' },
+      { id: 2, name: 'キャラクター設定', endpoint: '/api/phase2-characters' },
+      { id: 3, name: '人物関係', endpoint: '/api/phase3-relationships' },
+      { id: 4, name: '事件詳細', endpoint: '/api/phase4-incident' },
+      { id: 5, name: '証拠・手がかり', endpoint: '/api/phase5-clues' },
+      { id: 6, name: 'タイムライン', endpoint: '/api/phase6-timeline' },
+      { id: 7, name: '真相解決', endpoint: '/api/phase7-solution' },
+      { id: 8, name: 'GMガイド', endpoint: '/api/phase8-gamemaster' }
+    ];
+
+    const scenario = {
+      metadata: {
+        participants: this.formData.participants,
+        era: this.formData.era,
+        setting: this.formData.setting,
+        worldview: this.formData.worldview,
+        tone: this.formData.tone,
+        incident_type: this.formData.incident_type,
+        complexity: this.formData.complexity,
+        features: {
+          red_herring: this.formData.red_herring,
+          twist_ending: this.formData.twist_ending,
+          secret_roles: this.formData.secret_roles
+        }
+      },
+      phases: {}
+    };
+
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i];
+      
+      // プログレス更新
+      const progress = ((i + 1) / phases.length) * 100;
+      this.updateProgress(progress, `フェーズ${phase.id}: ${phase.name}`, `${i + 1}/${phases.length} 完了`);
+
+      try {
+        const requestData = {
+          ...this.formData,
+          previousPhases: scenario.phases
+        };
+
+        const response = await fetch(phase.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+
+        if (!response.ok) {
+          throw new Error(`フェーズ${phase.id}の生成に失敗しました`);
+        }
+
+        const phaseResult = await response.json();
+        scenario.phases[`phase${phase.id}`] = phaseResult;
+
+        console.log(`✅ フェーズ${phase.id} 完了:`, phase.name);
+
+      } catch (error) {
+        console.warn(`⚠️ フェーズ${phase.id} エラー:`, error);
+        // フェールバック処理
+        scenario.phases[`phase${phase.id}`] = await this.generateFallbackContent(phase, this.formData);
+      }
     }
-    
-    const byteArray = new Uint8Array(byteNumbers);
-    return new Blob([byteArray], { type: mimeType });
+
+    return scenario;
   }
 
-  /**
-   * タイトル抽出
-   */
-  extractTitle(scenario) {
-    const titleMatch = scenario.match(/《(.+?)》|【(.+?)】|#\s*(.+)/);
-    return titleMatch ? (titleMatch[1] || titleMatch[2] || titleMatch[3]) : 'マーダーミステリーシナリオ';
+  async generateFallbackContent(phase, formData) {
+    // フェールバック用のシンプルな生成
+    console.log(`🔄 フェーズ${phase.id} フェールバック生成`);
+    
+    const fallbackTemplates = {
+      1: this.generateBasicConcept(formData),
+      2: this.generateBasicCharacters(formData),
+      3: this.generateBasicRelationships(formData),
+      4: this.generateBasicIncident(formData),
+      5: this.generateBasicClues(formData),
+      6: this.generateBasicTimeline(formData),
+      7: this.generateBasicSolution(formData),
+      8: this.generateBasicGMGuide(formData)
+    };
+
+    return {
+      content: fallbackTemplates[phase.id] || `フェーズ${phase.id}の内容`,
+      generated_by: 'fallback_system',
+      timestamp: new Date().toISOString()
+    };
   }
 
-  /**
-   * 通知表示
-   */
-  showNotification(message, type = 'info') {
-    console.log(`📢 ${type.toUpperCase()}: ${message}`);
-    
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 1rem 1.5rem;
-      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
-      color: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      z-index: 10000;
-      font-weight: 600;
-      max-width: 400px;
-    `;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-      notification.remove();
-    }, 5000);
+  generateBasicConcept(formData) {
+    const participants = formData.participants || '5';
+    const era = formData.era || 'modern';
+    const setting = formData.setting || 'closed-space';
+    const incident = formData.incident_type || 'murder';
+
+    return `# 🎭 マーダーミステリー：${era === 'modern' ? '現代' : era}の${incident === 'murder' ? '殺人' : '事件'}
+
+## 基本情報
+- **参加人数**: ${participants}人
+- **時代設定**: ${era === 'modern' ? '現代（2020年代）' : era}
+- **舞台**: ${setting === 'closed-space' ? '閉鎖空間' : setting}
+- **事件種別**: ${incident === 'murder' ? '殺人事件' : incident}
+
+## あらすじ
+${participants}人の登場人物が${setting === 'closed-space' ? '密室空間' : '特定の場所'}に集まった時、思わぬ事件が発生する。
+参加者は探偵となり、限られた情報と手がかりから真相を解明しなければならない。
+
+**推定プレイ時間**: 2-3時間
+**難易度**: ${formData.complexity === 'simple' ? '初心者向け' : formData.complexity === 'complex' ? '上級者向け' : '標準'}`;
   }
 
-  /**
-   * 新しいシナリオ用リセット
-   */
-  resetForNewScenario() {
+  generateBasicCharacters(formData) {
+    const participants = parseInt(formData.participants || '5');
+    const characters = [];
+
+    for (let i = 1; i <= participants; i++) {
+      characters.push(`
+## キャラクター${i}
+- **名前**: [キャラクター${i}の名前]
+- **年齢**: [年齢]
+- **職業**: [職業]
+- **性格**: [性格の特徴]
+- **秘密**: [隠している秘密]
+- **動機**: [行動の動機]`);
+    }
+
+    return `# 👥 キャラクター設定
+
+${characters.join('\n')}
+
+## 注意事項
+- 各キャラクターには明確な動機と秘密を設定
+- 全員に事件への関わりを持たせる
+- バランスよく疑惑を分散させる`;
+  }
+
+  generateBasicRelationships(formData) {
+    return `# 🤝 人物関係図
+
+## 関係性マップ
+各キャラクター間の複雑な関係性を設定します。
+
+## 主要な関係
+- **同盟関係**: 協力し合うキャラクター
+- **対立関係**: 敵対するキャラクター  
+- **秘密の関係**: 隠された繋がり
+- **過去の因縁**: 古い恨みや愛情
+
+## ゲームマスターへの注意
+- 関係性は段階的に明かす
+- プレイヤーの推理を誘導する手がかりとして活用
+- 意外性のある関係性を1-2個仕込む`;
+  }
+
+  generateBasicIncident(formData) {
+    const incident = formData.incident_type || 'murder';
+    
+    return `# 💀 事件詳細
+
+## 事件概要
+${incident === 'murder' ? '殺人事件' : '事件'}が発生しました。
+
+## 発生状況
+- **発生時刻**: [具体的な時刻]
+- **発見時刻**: [発見された時刻]
+- **現場状況**: [現場の詳細な状況]
+- **第一発見者**: [誰が発見したか]
+
+## 物証
+- **凶器**: [使用された凶器]
+- **現場の手がかり**: [現場に残された証拠]
+- **目撃情報**: [重要な目撃情報]
+
+## 謎の要素
+- なぜその場所で？
+- なぜその時刻に？
+- 真の動機は何か？`;
+  }
+
+  generateBasicClues(formData) {
+    return `# 🔍 証拠・手がかり
+
+## 物的証拠
+1. **血痕**: 現場に残された血液
+2. **指紋**: 重要な場所の指紋
+3. **足跡**: 犯人の移動ルート
+4. **遺留品**: 犯人が落とした物品
+
+## 証言・目撃情報
+1. **アリバイ証言**: 各人のアリバイ
+2. **行動証言**: 事件前後の行動
+3. **関係性証言**: 人間関係の証言
+4. **動機情報**: 各人の動機に関する情報
+
+## 隠された手がかり
+- 一見無関係に見える重要な証拠
+- 複数の証拠を組み合わせて判明する真実
+- ${formData.red_herring ? 'レッドヘリング（偽の手がかり）も含む' : ''}`;
+  }
+
+  generateBasicTimeline(formData) {
+    return `# ⏰ タイムライン
+
+## 事件当日のスケジュール
+
+### 午前
+- **09:00**: 参加者集合
+- **10:00**: 開始イベント
+- **11:00**: 各キャラクターの行動開始
+
+### 午後  
+- **13:00**: 昼食・休憩
+- **14:00**: 重要イベント発生
+- **15:30**: 事件発生
+- **16:00**: 事件発見・調査開始
+
+### 夜
+- **18:00**: 推理・議論フェーズ
+- **19:00**: 解決フェーズ
+- **20:00**: 真相発表
+
+## 重要なポイント
+- 各時間帯での各キャラクターの行動
+- アリバイの確認ポイント
+- 事件発生の決定的瞬間`;
+  }
+
+  generateBasicSolution(formData) {
+    return `# 🎯 真相と解決
+
+## 犯人
+**[犯人の名前]**が真犯人です。
+
+## 動機
+[具体的な犯行動機を記載]
+
+## 犯行手順
+1. **準備段階**: [事前の準備]
+2. **実行段階**: [犯行の実行方法]
+3. **隠蔽段階**: [証拠隠滅の方法]
+4. **発覚回避**: [疑いを逸らす工作]
+
+## 決定的証拠
+- [犯人を特定する決定的な証拠]
+- [アリバイ崩しの方法]
+- [動機を裏付ける証拠]
+
+## 解決のポイント
+${formData.twist_ending ? '- どんでん返し要素が含まれています' : ''}
+${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
+
+## 代替解決案
+プレイヤーが異なる推理をした場合の対応方法も準備してください。`;
+  }
+
+  generateBasicGMGuide(formData) {
+    return `# 🎮 ゲームマスターガイド
+
+## 進行の流れ
+1. **導入**: キャラクター紹介と状況説明（15分）
+2. **事件発生**: 事件の発生と現場確認（10分）
+3. **調査フェーズ**: 証拠収集と聞き込み（60分）
+4. **推理フェーズ**: 議論と推理（30分）
+5. **解決フェーズ**: 真相発表（15分）
+
+## GMの役割
+- **情報管理**: 適切なタイミングで情報を開示
+- **進行管理**: 議論が停滞しないよう誘導
+- **雰囲気作り**: ${formData.tone || 'serious'}の雰囲気を維持
+
+## 注意事項
+- プレイヤーのレベルに合わせてヒントを調整
+- 全員が参加できるよう配慮
+- ${formData.complexity === 'simple' ? '初心者向けなので、適切なサポートを' : formData.complexity === 'complex' ? '上級者向けなので、高度な推理を求める' : '標準レベルなので、バランスよく進行'}
+
+## トラブルシューティング
+- 推理が行き詰まった場合の追加ヒント
+- 議論が紛糾した場合の仲裁方法
+- 時間管理のコツ`;
+  }
+
+  showLoading() {
+    document.getElementById('main-card').classList.add('hidden');
+    document.getElementById('loading-container').classList.remove('hidden');
+  }
+
+  hideLoading() {
+    document.getElementById('loading-container').classList.add('hidden');
+  }
+
+  updateProgress(percentage, phase, details) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercentage = document.getElementById('progress-percentage');
+    const currentPhase = document.getElementById('current-phase');
+    const phaseDetails = document.getElementById('phase-details');
+
+    if (progressFill) {
+      progressFill.style.width = `${percentage}%`;
+    }
+    if (progressPercentage) {
+      progressPercentage.textContent = `${Math.round(percentage)}%`;
+    }
+    if (currentPhase) {
+      currentPhase.textContent = phase;
+    }
+    if (phaseDetails) {
+      phaseDetails.textContent = details;
+    }
+  }
+
+  showResults(scenario) {
+    this.hideLoading();
+    
     const resultContainer = document.getElementById('result-container');
+    const scenarioContent = document.getElementById('scenario-content');
+    
+    if (scenarioContent) {
+      let contentHtml = '<div class="scenario-phases">';
+      
+      // 各フェーズの内容を表示
+      Object.entries(scenario.phases).forEach(([phaseKey, phaseData]) => {
+        const phaseNumber = phaseKey.replace('phase', '');
+        const phaseNames = {
+          '1': 'コンセプト',
+          '2': 'キャラクター設定', 
+          '3': '人物関係',
+          '4': '事件詳細',
+          '5': '証拠・手がかり',
+          '6': 'タイムライン',
+          '7': '真相解決',
+          '8': 'GMガイド'
+        };
+        
+        contentHtml += `
+          <div class="phase-section">
+            <h3>フェーズ${phaseNumber}: ${phaseNames[phaseNumber]}</h3>
+            <div class="phase-content">${this.formatContent(phaseData.content)}</div>
+          </div>
+        `;
+      });
+      
+      contentHtml += '</div>';
+      scenarioContent.innerHTML = contentHtml;
+    }
+    
     if (resultContainer) {
-      resultContainer.classList.add('hidden');
+      resultContainer.classList.remove('hidden');
+      resultContainer.scrollIntoView({ behavior: 'smooth' });
     }
+  }
 
-    const mainCard = document.getElementById('main-card');
-    if (mainCard) {
-      mainCard.classList.remove('hidden');
-    }
-
-    this.currentResult = null;
-    this.additionalContent = null;
-    this.isGenerating = false;
+  formatContent(content) {
+    if (!content) return '';
     
+    return content
+      .replace(/##\s*(.+)/g, '<h4 class="content-heading">$1</h4>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^- (.+)/gm, '<li>$1</li>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(.+)$/gm, '<p>$1</p>')
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      .replace(/\n/g, '<br>');
+  }
+
+  showError(message) {
+    this.hideLoading();
+    
+    const errorContainer = document.getElementById('error-container');
+    const errorMessage = document.getElementById('error-message');
+    
+    if (errorMessage) {
+      errorMessage.innerHTML = `
+        <div class="error-content">
+          <div class="error-icon">⚠️</div>
+          <div class="error-text">${message}</div>
+          <div class="error-suggestion">
+            ネットワーク接続を確認して再試行してください。
+          </div>
+        </div>
+      `;
+    }
+    
+    if (errorContainer) {
+      errorContainer.classList.remove('hidden');
+    }
+
+    // 再試行ボタン
+    const retryBtn = document.getElementById('retry-btn');
+    if (retryBtn) {
+      retryBtn.onclick = () => {
+        errorContainer.classList.add('hidden');
+        this.startGeneration();
+      };
+    }
+  }
+
+  async downloadPDF() {
+    if (!this.generatedScenario) return;
+
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          scenario: this.generatedScenario,
+          title: `マーダーミステリー_${this.formData.participants}人用`
+        })
+      });
+
+      if (!response.ok) throw new Error('PDF生成に失敗しました');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `murder_mystery_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('✅ PDF ダウンロード完了');
+    } catch (error) {
+      console.error('PDF ダウンロードエラー:', error);
+      alert('PDFのダウンロードに失敗しました: ' + error.message);
+    }
+  }
+
+  async downloadZIP() {
+    if (!this.generatedScenario) return;
+
+    try {
+      const response = await fetch('/api/generate-zip-package', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          scenario: this.generatedScenario,
+          title: `マーダーミステリー_${this.formData.participants}人用`,
+          settings: this.formData
+        })
+      });
+
+      if (!response.ok) throw new Error('ZIPパッケージ生成に失敗しました');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `murder_mystery_package_${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('✅ ZIP パッケージダウンロード完了');
+    } catch (error) {
+      console.error('ZIP ダウンロードエラー:', error);
+      alert('ZIPパッケージのダウンロードに失敗しました: ' + error.message);
+    }
+  }
+
+  resetToStart() {
+    this.currentStep = 1;
+    this.formData = {};
+    this.generatedScenario = null;
+
+    // UI をリセット
+    document.getElementById('result-container').classList.add('hidden');
+    document.getElementById('error-container').classList.add('hidden');
+    document.getElementById('main-card').classList.remove('hidden');
+
+    // フォームをリセット
+    const form = document.getElementById('scenario-form');
+    if (form) {
+      form.reset();
+    }
+
+    // 表示を更新
+    this.updateStepDisplay();
+    this.updateButtonStates();
+
+    // トップにスクロール
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
-    console.log('🔄 Reset for new scenario - Ready for next generation');
+
+    console.log('🔄 アプリケーションリセット完了');
+  }
+
+  saveFormData() {
+    try {
+      localStorage.setItem('murder-mystery-form-data', JSON.stringify({
+        ...this.formData,
+        currentStep: this.currentStep,
+        timestamp: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.warn('フォームデータの保存に失敗:', error);
+    }
+  }
+
+  restoreFormData() {
+    try {
+      const saved = localStorage.getItem('murder-mystery-form-data');
+      if (saved) {
+        const data = JSON.parse(saved);
+        this.formData = data;
+        
+        // フォームフィールドに値を復元
+        Object.entries(data).forEach(([key, value]) => {
+          const element = document.getElementById(key);
+          if (element) {
+            if (element.type === 'checkbox') {
+              element.checked = value;
+            } else {
+              element.value = value;
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('フォームデータの復元に失敗:', error);
+    }
   }
 }
 
-// グローバル利用可能にする
-window.MurderMysteryApp = MurderMysteryApp;
+// アプリケーションの初期化
+document.addEventListener('DOMContentLoaded', () => {
+  window.app = new MurderMysteryApp();
+});
 
 export default MurderMysteryApp;

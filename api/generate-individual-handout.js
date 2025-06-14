@@ -53,7 +53,7 @@ export default async function handler(req, res) {
     const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
     // 🎨 キャラクターハンドアウトページ（プロ仕様デザイン）
-    const page = pdfDoc.addPage();
+    let page = pdfDoc.addPage();
     const { width, height } = page.getSize();
     
     // Quality badge color

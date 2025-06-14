@@ -82,7 +82,7 @@ export default async function handler(req, res) {
     console.log('📖 Adding scenario content...');
     
     function addContentPage(title, content, icon = '📄') {
-      const page = pdfDoc.addPage();
+      let page = pdfDoc.addPage();
       let yPos = height - 60;
       
       // ページタイトル
