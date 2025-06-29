@@ -1,25 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**/*",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
   "functions": {
     "api/enhanced-pdf-generator.js": {
       "maxDuration": 90
@@ -30,10 +10,5 @@
     "api/scenario-storage.js": {
       "maxDuration": 30
     }
-  },
-  "outputDirectory": "public",
-  "installCommand": "npm install",
-  "env": {
-    "NODE_ENV": "production"
   }
 }
