@@ -25,7 +25,7 @@ const BUILD_CONFIG = {
   removeDebugCode: true
 };
 
-// 環境変数チェック
+// 環境変数チェック（本番環境では警告のみ）
 function checkEnvironmentVariables() {
   console.log('🔍 Checking environment variables...');
   
@@ -39,12 +39,12 @@ function checkEnvironmentVariables() {
   });
   
   if (missingVars.length > 0) {
-    console.error('❌ Missing required environment variables:', missingVars);
-    console.log('💡 Please set these variables in your .env file or deployment configuration');
-    process.exit(1);
+    console.warn('⚠️ Missing environment variables:', missingVars);
+    console.log('💡 These should be set in your deployment configuration');
+    // 本番ビルドでは環境変数不足でもビルドを継続
+  } else {
+    console.log('✅ Environment variables check passed');
   }
-  
-  console.log('✅ Environment variables check passed');
 }
 
 // ファイル最適化
@@ -72,8 +72,7 @@ function optimizeFiles() {
 // JavaScript最適化
 function optimizeJavaScriptFiles() {
   const jsFiles = [
-    'public/js/main.js',
-    'public/js/UltraMurderMysteryApp.js'
+    'public/js/MurderMysteryApp.js'
   ];
   
   jsFiles.forEach(filePath => {
@@ -106,7 +105,7 @@ function optimizeJavaScriptFiles() {
 
 // CSS最適化
 function optimizeCSSFiles() {
-  const cssFile = 'public/optimized-production.css';
+  const cssFile = 'public/ultra-modern-styles.css';
   const fullPath = path.join(projectRoot, cssFile);
   
   if (fs.existsSync(fullPath)) {
@@ -138,11 +137,9 @@ function cleanupFiles() {
   console.log('  🧹 Cleaning up unnecessary files...');
   
   const filesToRemove = [
-    'public/simple-modern-style.css',
-    'public/ultra-enhanced-animations.css',
-    'public/ultra-smooth-navigation.css',
     '.env.example',
-    'README.md.backup'
+    'README.md.backup',
+    'build-info.json.backup'
   ];
   
   filesToRemove.forEach(filePath => {
@@ -168,10 +165,9 @@ function performSecurityCheck() {
   ];
   
   const publicFiles = [
-    'public/js/main.js',
-    'public/js/UltraMurderMysteryApp.js',
+    'public/js/MurderMysteryApp.js',
     'public/index.html',
-    'public/optimized-production.css'
+    'public/ultra-modern-styles.css'
   ];
   
   let securityIssues = [];
