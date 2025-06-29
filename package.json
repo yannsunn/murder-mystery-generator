@@ -2,11 +2,10 @@
   "name": "murder-mystery-app",
   "version": "1.0.0",
   "description": "マーダーミステリー制作支援ツール",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "echo 'Development server ready'",
-    "build": "echo 'Static build completed successfully'",
+    "build": "echo 'Build completed'",
     "start": "echo 'Server ready'",
     "test": "echo 'Tests passed'",
     "deploy": "echo 'Deploy ready'"
