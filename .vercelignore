@@ -1,0 +1,12 @@
+scripts/
+node_modules/
+.env
+.env.local
+.env.production
+.git/
+*.log
+*.md
+!README.md
+.vercel-trigger
+CLAUDE.md
+STAGED_GENERATION_GUIDE.md

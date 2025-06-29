@@ -31,6 +31,9 @@
       "maxDuration": 30
     }
   },
+  "buildCommand": "echo 'Vercel build completed'",
+  "outputDirectory": "public",
+  "installCommand": "npm install",
   "env": {
     "NODE_ENV": "production"
   }
