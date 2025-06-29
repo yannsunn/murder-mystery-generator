@@ -47,7 +47,8 @@ export async function generateStage1(req, res) {
       try {
         console.log(`📝 Phase ${phase.id}: ${phase.name}`);
         
-        const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}${phase.endpoint}`, {
+        const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}${phase.endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -77,7 +78,7 @@ export async function generateStage1(req, res) {
     }
 
     // 中間結果を保存
-    await saveToStorage(sessionId, results, 'stage1');
+    await saveToStorage(sessionId, results, 'stage1', req);
 
     return res.status(200).json({
       success: true,
@@ -115,7 +116,7 @@ export async function generateStage1Continue(req, res) {
     console.log(`🚀 Stage1続き開始: ${sessionId}`);
 
     // 前半の結果を取得
-    const previousResults = await getFromStorage(sessionId);
+    const previousResults = await getFromStorage(sessionId, req);
     if (!previousResults) {
       throw new Error('前半の生成結果が見つかりません');
     }
@@ -133,7 +134,8 @@ export async function generateStage1Continue(req, res) {
       try {
         console.log(`📝 Phase ${phase.id}: ${phase.name}`);
         
-        const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}${phase.endpoint}`, {
+        const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}${phase.endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -164,7 +166,7 @@ export async function generateStage1Continue(req, res) {
     // 完全な結果を保存
     previousResults.isComplete = true;
     previousResults.completedAt = new Date().toISOString();
-    await saveToStorage(sessionId, previousResults, 'complete');
+    await saveToStorage(sessionId, previousResults, 'complete', req);
 
     return res.status(200).json({
       success: true,
@@ -201,13 +203,14 @@ export async function generateStage2(req, res) {
     console.log(`📄 Stage2 PDF生成開始: ${sessionId}`);
 
     // 保存されたシナリオを取得
-    const scenario = await getFromStorage(sessionId);
+    const scenario = await getFromStorage(sessionId, req);
     if (!scenario || !scenario.isComplete) {
       throw new Error('完成したシナリオが見つかりません');
     }
 
     // 強化版PDF生成APIを呼び出し
-    const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/enhanced-pdf-generator`, {
+    const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/api/enhanced-pdf-generator`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -231,7 +234,7 @@ export async function generateStage2(req, res) {
       mimeType: 'application/pdf',
       filename: `murder_mystery_${sessionId}.pdf`,
       createdAt: new Date().toISOString()
-    }, 'pdf');
+    }, 'pdf', req);
 
     return res.status(200).json({
       success: true,
@@ -268,7 +271,7 @@ export async function generateStage3(req, res) {
     console.log(`🖼️ Stage3 画像生成開始: ${sessionId}`);
 
     // PDF取得
-    const pdfData = await getFromStorage(`${sessionId}_pdf`);
+    const pdfData = await getFromStorage(`${sessionId}_pdf`, req);
     if (!pdfData) {
       throw new Error('PDFが見つかりません');
     }
@@ -296,8 +299,9 @@ export async function generateStage3(req, res) {
 /**
  * ストレージヘルパー関数
  */
-async function saveToStorage(sessionId, data, phase) {
-  const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/scenario-storage?action=save`, {
+async function saveToStorage(sessionId, data, phase, req) {
+  const baseUrl = req ? (req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000') : 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/scenario-storage?action=save`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -314,8 +318,9 @@ async function saveToStorage(sessionId, data, phase) {
   }
 }
 
-async function getFromStorage(sessionId) {
-  const response = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/scenario-storage?action=get&sessionId=${sessionId}`);
+async function getFromStorage(sessionId, req) {
+  const baseUrl = req ? (req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000') : 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/scenario-storage?action=get&sessionId=${sessionId}`);
   
   if (!response.ok) {
     return null;
