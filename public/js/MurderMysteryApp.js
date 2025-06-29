@@ -212,6 +212,12 @@ class MurderMysteryApp {
         this.formData[name] = checkbox.checked;
       }
     });
+    
+    // ラジオボタン（generation_mode）
+    const generationMode = document.querySelector('input[name="generation_mode"]:checked');
+    if (generationMode) {
+      this.formData.generation_mode = generationMode.value;
+    }
   }
 
   updateSummary() {
@@ -276,21 +282,217 @@ class MurderMysteryApp {
   }
 
   async startGeneration() {
-    console.log('🚀 シナリオ生成開始');
+    console.log('🚀 シナリオ生成開始 - 段階的処理モード');
     this.collectFormData();
 
     // UI切り替え
     this.showLoading();
 
     try {
-      // 8フェーズ生成システム
-      const scenario = await this.generateScenario();
-      this.generatedScenario = scenario;
-      this.showResults(scenario);
+      // 段階的生成モードを使用
+      if (this.useStageMode()) {
+        await this.startStagedGeneration();
+      } else {
+        // 従来の一括生成（フォールバック）
+        const scenario = await this.generateScenario();
+        this.generatedScenario = scenario;
+        this.showResults(scenario);
+      }
     } catch (error) {
       console.error('生成エラー:', error);
       this.showError(error.message);
     }
+  }
+
+  useStageMode() {
+    // 段階的生成モードを使用するかの判定
+    const generationMode = this.formData.generation_mode || 'staged';
+    return generationMode === 'staged';
+  }
+
+  async startStagedGeneration() {
+    console.log('📊 段階的生成モード開始');
+    
+    try {
+      // セッション作成
+      this.updateProgress(0, '初期化中...', 'セッションを作成しています');
+      const sessionId = await this.createGenerationSession();
+      this.currentSessionId = sessionId;
+      
+      // Stage 1: シナリオ生成（前半）
+      this.updateProgress(10, 'Stage 1: シナリオ生成中（前半）', 'Phase 1-4を生成中...');
+      await this.executeStage1(sessionId);
+      
+      // Stage 1続き: シナリオ生成（後半）
+      this.updateProgress(30, 'Stage 1: シナリオ生成中（後半）', 'Phase 5-8を生成中...');
+      await this.executeStage1Continue(sessionId);
+      
+      // シナリオ取得と表示
+      this.updateProgress(60, 'シナリオ取得中...', '生成されたシナリオを取得しています');
+      const scenario = await this.getGeneratedScenario(sessionId);
+      this.generatedScenario = scenario;
+      
+      // 結果表示
+      this.showResults(scenario);
+      
+      // Stage 2: PDF生成（自動実行オプション）
+      if (this.shouldAutoGeneratePDF()) {
+        this.updateProgress(70, 'Stage 2: PDF生成中', 'PDFを作成しています...');
+        await this.executeStage2(sessionId);
+      }
+      
+      this.updateProgress(100, '完了！', '全ての処理が完了しました');
+      
+    } catch (error) {
+      console.error('段階的生成エラー:', error);
+      this.handleStagedGenerationError(error);
+    }
+  }
+
+  async createGenerationSession() {
+    const response = await fetch('/api/scenario-storage?action=create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        metadata: this.formData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('セッション作成に失敗しました');
+    }
+
+    const result = await response.json();
+    console.log('✅ セッション作成:', result.sessionId);
+    return result.sessionId;
+  }
+
+  async executeStage1(sessionId) {
+    const response = await fetch('/api/staged-generation?stage=1', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sessionId,
+        formData: this.formData
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Stage 1の実行に失敗しました');
+    }
+
+    const result = await response.json();
+    console.log('✅ Stage 1完了:', result);
+    return result;
+  }
+
+  async executeStage1Continue(sessionId) {
+    const response = await fetch('/api/staged-generation?stage=1-continue', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sessionId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Stage 1続きの実行に失敗しました');
+    }
+
+    const result = await response.json();
+    console.log('✅ Stage 1続き完了:', result);
+    return result;
+  }
+
+  async executeStage2(sessionId) {
+    const response = await fetch('/api/staged-generation?stage=2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        sessionId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Stage 2の実行に失敗しました');
+    }
+
+    const result = await response.json();
+    console.log('✅ Stage 2完了:', result);
+    return result;
+  }
+
+  async getGeneratedScenario(sessionId) {
+    const response = await fetch(`/api/scenario-storage?action=get&sessionId=${sessionId}`);
+
+    if (!response.ok) {
+      throw new Error('シナリオの取得に失敗しました');
+    }
+
+    const result = await response.json();
+    return result.scenario;
+  }
+
+  shouldAutoGeneratePDF() {
+    // PDF自動生成の設定（将来的に設定可能に）
+    return false;
+  }
+
+  handleStagedGenerationError(error) {
+    // エラー処理とリトライオプション
+    const retryButton = `
+      <button onclick="window.app.retryStagedGeneration()" style="
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        margin-top: 1rem;
+      ">段階的生成を再試行</button>
+    `;
+    
+    this.showError(error.message + '<br>' + retryButton);
+  }
+
+  async retryStagedGeneration() {
+    if (this.currentSessionId) {
+      this.showLoading();
+      try {
+        // 最後の成功したステージから再開
+        await this.resumeStagedGeneration(this.currentSessionId);
+      } catch (error) {
+        this.showError('再試行に失敗しました: ' + error.message);
+      }
+    } else {
+      this.startGeneration();
+    }
+  }
+
+  async resumeStagedGeneration(sessionId) {
+    // セッションの状態を確認して適切なステージから再開
+    const scenario = await this.getGeneratedScenario(sessionId);
+    
+    if (!scenario.phases || Object.keys(scenario.phases).length === 0) {
+      // 最初から
+      await this.executeStage1(sessionId);
+    } else if (Object.keys(scenario.phases).length < 8) {
+      // 後半から
+      await this.executeStage1Continue(sessionId);
+    }
+    
+    // 結果表示
+    const updatedScenario = await this.getGeneratedScenario(sessionId);
+    this.generatedScenario = updatedScenario;
+    this.showResults(updatedScenario);
   }
 
   async generateScenario() {
@@ -694,36 +896,142 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
   }
 
   async downloadPDF() {
-    if (!this.generatedScenario) return;
+    if (!this.generatedScenario && !this.currentSessionId) return;
 
     try {
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          scenario: this.generatedScenario,
-          title: `マーダーミステリー_${this.formData.participants}人用`
-        })
-      });
+      // 段階的生成モードの場合
+      if (this.currentSessionId && this.useStageMode()) {
+        this.showPDFGenerationProgress();
+        
+        // Stage 2を実行してPDF生成
+        await this.executeStage2(this.currentSessionId);
+        
+        // PDFをダウンロード
+        await this.downloadGeneratedPDF(this.currentSessionId);
+        
+        this.hidePDFGenerationProgress();
+      } else {
+        // 強化版PDF生成を使用
+        const response = await fetch('/api/enhanced-pdf-generator', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            scenario: this.generatedScenario,
+            title: `マーダーミステリー_${this.formData.participants}人用`
+          })
+        });
 
-      if (!response.ok) throw new Error('PDF生成に失敗しました');
+        if (!response.ok) throw new Error('PDF生成に失敗しました');
 
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `murder_mystery_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        const blob = await response.blob();
+        this.downloadBlob(blob, `murder_mystery_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
 
       console.log('✅ PDF ダウンロード完了');
     } catch (error) {
       console.error('PDF ダウンロードエラー:', error);
+      this.hidePDFGenerationProgress();
       alert('PDFのダウンロードに失敗しました: ' + error.message);
+    }
+  }
+
+  async downloadGeneratedPDF(sessionId) {
+    // ストレージからPDFデータを取得
+    const response = await fetch(`/api/scenario-storage?action=get&sessionId=${sessionId}_pdf`);
+    
+    if (!response.ok) {
+      throw new Error('PDFデータの取得に失敗しました');
+    }
+
+    const result = await response.json();
+    const pdfData = result.scenario;
+    
+    // Base64からBlobに変換
+    const byteCharacters = atob(pdfData.data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
+    
+    this.downloadBlob(blob, pdfData.filename || `murder_mystery_${sessionId}.pdf`);
+  }
+
+  downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  showPDFGenerationProgress() {
+    // PDF生成中の進捗表示
+    const progressOverlay = document.createElement('div');
+    progressOverlay.id = 'pdf-generation-overlay';
+    progressOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+    `;
+    
+    progressOverlay.innerHTML = `
+      <div style="
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        text-align: center;
+        max-width: 400px;
+      ">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+        <h3 style="margin: 0 0 1rem 0; color: #1e293b;">PDF生成中...</h3>
+        <p style="color: #64748b; margin: 0 0 1rem 0;">
+          シナリオをPDF形式に変換しています
+        </p>
+        <div style="
+          width: 100%;
+          height: 6px;
+          background: #e5e7eb;
+          border-radius: 3px;
+          overflow: hidden;
+        ">
+          <div style="
+            width: 50%;
+            height: 100%;
+            background: #3b82f6;
+            animation: progress 2s ease-in-out infinite;
+          "></div>
+        </div>
+      </div>
+      
+      <style>
+        @keyframes progress {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+      </style>
+    `;
+    
+    document.body.appendChild(progressOverlay);
+  }
+
+  hidePDFGenerationProgress() {
+    const overlay = document.getElementById('pdf-generation-overlay');
+    if (overlay) {
+      overlay.remove();
     }
   }
 
