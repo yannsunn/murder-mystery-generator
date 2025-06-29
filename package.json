@@ -1,14 +1,17 @@
 {
   "name": "murder-mystery-app",
-  "version": "1.0.0",
-  "description": "マーダーミステリー制作支援ツール",
+  "version": "2.0.0",
+  "description": "マーダーミステリー制作支援ツール - 最適化版",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "echo 'Development server ready'",
-    "build": "echo 'Build completed'",
-    "start": "echo 'Server ready'",
-    "test": "echo 'Tests passed'",
-    "deploy": "echo 'Deploy ready'"
+    "dev": "netlify dev",
+    "build": "echo 'Static build completed'",
+    "start": "netlify serve",
+    "test": "echo 'Tests will be implemented'",
+    "deploy": "netlify deploy --prod",
+    "clean": "rm -rf node_modules package-lock.json && npm install",
+    "audit": "npm audit fix"
   },
   "dependencies": {
     "jszip": "^3.10.1",
@@ -16,5 +19,20 @@
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "murder-mystery",
+    "ai-generator",
+    "scenario-generator",
+    "mystery-game"
+  ],
+  "author": "AI System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yannsunn/murder-mystery-generator.git"
   }
 }
