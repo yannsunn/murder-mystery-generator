@@ -311,7 +311,7 @@ class MurderMysteryApp {
   }
 
   async startStagedGeneration() {
-    console.log('📊 段階的生成モード開始');
+    console.log('📊 段階的生成モード開始 - Individual Phase Execution');
     
     try {
       // セッション作成
@@ -319,34 +319,96 @@ class MurderMysteryApp {
       const sessionId = await this.createGenerationSession();
       this.currentSessionId = sessionId;
       
-      // Stage 1: シナリオ生成（前半）
-      this.updateProgress(10, 'Stage 1: シナリオ生成中（前半）', 'Phase 1-4を生成中...');
-      await this.executeStage1(sessionId);
+      // 警告メッセージを表示してフェーズ別実行モードを案内
+      this.showPhaseByPhaseRecommendation();
       
-      // Stage 1続き: シナリオ生成（後半）
-      this.updateProgress(30, 'Stage 1: シナリオ生成中（後半）', 'Phase 5-8を生成中...');
-      await this.executeStage1Continue(sessionId);
-      
-      // シナリオ取得と表示
-      this.updateProgress(60, 'シナリオ取得中...', '生成されたシナリオを取得しています');
-      const scenario = await this.getGeneratedScenario(sessionId);
-      this.generatedScenario = scenario;
-      
-      // 結果表示
-      this.showResults(scenario);
-      
-      // Stage 2: PDF生成（自動実行オプション）
-      if (this.shouldAutoGeneratePDF()) {
-        this.updateProgress(70, 'Stage 2: PDF生成中', 'PDFを作成しています...');
-        await this.executeStage2(sessionId);
-      }
-      
-      this.updateProgress(100, '完了！', '全ての処理が完了しました');
+      // Individual Phase Execution
+      await this.executePhaseByPhase(sessionId);
       
     } catch (error) {
       console.error('段階的生成エラー:', error);
       this.handleStagedGenerationError(error);
     }
+  }
+
+  showPhaseByPhaseRecommendation() {
+    const recommendationHtml = `
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <h3>🚀 推奨: フェーズ別実行モード</h3>
+        <p>タイムアウトエラーを回避するため、新しいフェーズ別実行モードをご利用ください。</p>
+        <div style="margin-top: 15px;">
+          <a href="/phase-by-phase.html" style="display: inline-block; padding: 12px 24px; background: white; color: #667eea; text-decoration: none; border-radius: 6px; font-weight: bold;">フェーズ別実行モードへ移動</a>
+        </div>
+      </div>
+    `;
+    
+    const loadingEl = document.getElementById('loading-spinner');
+    if (loadingEl) {
+      loadingEl.innerHTML = recommendationHtml;
+    }
+  }
+
+  async executePhaseByPhase(sessionId) {
+    const phases = [
+      { id: 1, name: 'コンセプト生成' },
+      { id: 2, name: 'キャラクター設定' },
+      { id: 3, name: '人物関係' },
+      { id: 4, name: '事件詳細' },
+      { id: 5, name: '証拠・手がかり' },
+      { id: 6, name: 'タイムライン' },
+      { id: 7, name: '真相解決' },
+      { id: 8, name: 'GMガイド' }
+    ];
+
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i];
+      try {
+        this.updateProgress((i / phases.length) * 100, `Phase ${phase.id}: ${phase.name}`, '実行中...');
+        
+        await this.executeSinglePhase(sessionId, phase.id);
+        
+        this.updateProgress(((i + 1) / phases.length) * 100, `Phase ${phase.id}: ${phase.name}`, '完了');
+        
+        // 各フェーズ間で少し待機
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`Phase ${phase.id} error:`, error);
+        // フェーズエラーでも続行を試行
+        this.updateProgress(((i + 1) / phases.length) * 100, `Phase ${phase.id}: ${phase.name}`, `エラー: ${error.message}`);
+      }
+    }
+
+    // 全フェーズ完了後にシナリオ取得
+    try {
+      const scenario = await this.getGeneratedScenario(sessionId);
+      this.generatedScenario = scenario;
+      this.showResults(scenario);
+    } catch (error) {
+      console.error('シナリオ取得エラー:', error);
+      this.showError('一部のフェーズでエラーが発生しました。フェーズ別実行モードをお試しください。');
+    }
+  }
+
+  async executeSinglePhase(sessionId, phaseId) {
+    const response = await fetch('/api/phase-executor?action=execute', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        phaseId,
+        sessionId,
+        formData: this.formData
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Phase ${phaseId} failed`);
+    }
+
+    return await response.json();
   }
 
   async createGenerationSession() {
