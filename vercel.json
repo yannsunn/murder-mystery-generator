@@ -2,26 +2,17 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/enhanced-pdf-generator.js": {
-      "maxDuration": 90
-    },
-    "api/staged-generation.js": {
-      "maxDuration": 60
-    },
-    "api/scenario-storage.js": {
-      "maxDuration": 30
-    },
-    "api/phase-executor.js": {
-      "maxDuration": 30
-    },
-    "api/enhanced-export-system.js": {
-      "maxDuration": 120
-    },
     "api/ultra-integrated-generator.js": {
       "maxDuration": 180
     },
     "api/ultra-export-system.js": {
       "maxDuration": 120
+    },
+    "api/scenario-storage.js": {
+      "maxDuration": 30
+    },
+    "api/health.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
