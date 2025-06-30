@@ -4,6 +4,7 @@
  */
 
 import { envManager } from './config/env-manager.js';
+import { createErrorResponse } from './utils/error-handler.js';
 
 // 環境変数マネージャーの初期化
 if (!envManager.initialized) {
@@ -143,26 +144,7 @@ export function checkRateLimit(clientIP, endpoint) {
   };
 }
 
-/**
- * セキュアなエラーレスポンス
- */
-export function createErrorResponse(error, statusCode = 500) {
-  // 本番環境では詳細なエラー情報を隠す
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  const errorResponse = {
-    success: false,
-    error: isProduction ? 'An error occurred' : error.message,
-    timestamp: new Date().toISOString()
-  };
-
-  // 開発環境でのみスタックトレースを含める
-  if (!isProduction && error.stack) {
-    errorResponse.stack = error.stack;
-  }
-
-  return { status: statusCode, body: errorResponse };
-}
+// createErrorResponse は error-handler.js から import して使用
 
 /**
  * 期限切れレート制限エントリのクリーンアップ
@@ -288,8 +270,8 @@ export async function handleSecureError(error, req, res, operation = 'unknown') 
     console.error('🚨 Security Error:', errorLog);
   }
 
-  const { status, body } = createErrorResponse(error);
-  return res.status(status).json(body);
+  const errorResponse = createErrorResponse(error);
+  return res.status(error.statusCode || 500).json(errorResponse);
 }
 
 /**

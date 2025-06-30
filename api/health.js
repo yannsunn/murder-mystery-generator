@@ -1,7 +1,9 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
 
+import { setSecurityHeaders } from './security-utils.js';
+
 export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  setSecurityHeaders(res);
   res.setHeader('Content-Type', 'application/json');
   
   // 環境変数チェック

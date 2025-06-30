@@ -4,11 +4,8 @@
  */
 
 import { envManager } from './config/env-manager.js';
-
-// 環境変数マネージャーの初期化
-if (!envManager.initialized) {
-  envManager.initialize();
-}
+import { setSecurityHeaders } from './security-utils.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 
 export const config = {
   maxDuration: 30,
@@ -223,10 +220,9 @@ function cleanupOldestSessions() {
  * ルーティング処理
  */
 export default async function handler(req, res) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // 統一セキュリティヘッダー設定
+  setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
