@@ -86,7 +86,7 @@ const VALIDATION_RULES = {
     action: {
       type: 'string',
       enum: ['generate_complete', 'get_progress', 'execute_task', 'get_next_tasks', 'create', 'save', 'get', 'delete'],
-      required: true,
+      required: false, // actionは必須ではない場合もある
       description: 'アクション'
     },
     taskId: {
@@ -95,6 +95,13 @@ const VALIDATION_RULES = {
       maxLength: 50,
       required: false,
       description: 'タスクID'
+    },
+    continueFrom: {
+      type: 'number',
+      min: 1,
+      max: 8,
+      required: false,
+      description: '継続フェーズ'
     }
   },
 
@@ -290,19 +297,30 @@ export class InputValidator {
       
       try {
         const value = data[fieldName];
-        validated[fieldName] = this.validateType(value, rule, fullFieldName);
+        const validatedValue = this.validateType(value, rule, fullFieldName);
+        if (validatedValue !== null && validatedValue !== undefined) {
+          validated[fieldName] = validatedValue;
+        }
       } catch (error) {
-        errors.push(error.message);
+        // 必須フィールドのエラーのみ致命的とする
+        if (rule.required) {
+          errors.push(error.message);
+        } else {
+          console.warn(`⚠️ Validation warning for ${fullFieldName}: ${error.message}`);
+        }
       }
     }
 
-    // 未定義フィールドの検出（ホワイトリスト方式）
+    // 未定義フィールドも通す（柔軟性のため）
     const allowedFields = Object.keys(ruleset);
     const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key));
     
     if (extraFields.length > 0) {
-      console.warn(`⚠️ Unknown fields detected: ${extraFields.join(', ')}`);
-      // 警告のみ、エラーにはしない（後方互換性のため）
+      console.warn(`⚠️ Unknown fields passed through: ${extraFields.join(', ')}`);
+      // 未定義フィールドもそのまま通す
+      extraFields.forEach(field => {
+        validated[field] = data[field];
+      });
     }
 
     if (errors.length > 0) {
@@ -350,13 +368,18 @@ export class InputValidator {
     try {
       switch (apiType) {
         case 'generation':
+          // フォームデータ検証（必須）
           if (data.formData) {
             validated.formData = this.validateFormData(data.formData);
           }
-          if (data.sessionId || data.action) {
-            const commonData = { sessionId: data.sessionId, action: data.action };
-            Object.assign(validated, this.validateCommon(commonData));
-          }
+          
+          // 共通パラメータ検証（action, sessionId, continueFromなど）
+          const commonData = { 
+            sessionId: data.sessionId, 
+            action: data.action,
+            continueFrom: data.continueFrom
+          };
+          Object.assign(validated, this.validateCommon(commonData));
           break;
 
         case 'micro':
@@ -450,7 +473,9 @@ export class InputValidator {
         // セキュリティチェック
         this.performSecurityChecks(req.body);
 
-        // API別検証
+        // API別検証（エラーを詳細にログ出力）
+        console.log(`🔍 Validating ${apiType} API request:`, JSON.stringify(req.body, null, 2));
+        
         const validatedData = this.validateApiRequest(apiType, req.body);
         
         // 検証済みデータを req.validated に設定
@@ -460,7 +485,12 @@ export class InputValidator {
         next?.();
         
       } catch (error) {
-        console.error(`❌ Input validation failed for ${apiType} API:`, error.message);
+        console.error(`❌ Input validation failed for ${apiType} API:`, {
+          error: error.message,
+          field: error.field,
+          code: error.code,
+          requestBody: req.body
+        });
         
         const statusCode = error.code === 'SECURITY_VIOLATION' ? 403 : 400;
         
@@ -469,7 +499,8 @@ export class InputValidator {
           error: 'Input validation failed',
           message: error.message,
           field: error.field,
-          code: error.code
+          code: error.code,
+          details: process.env.NODE_ENV === 'development' ? req.body : undefined
         });
       }
     };
