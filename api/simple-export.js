@@ -3,10 +3,7 @@
  * PDF複雑さを排除し、シンプルなテキスト出力に特化
  */
 
-import './startup.js';
 import JSZip from 'jszip';
-import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
-import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 60,
@@ -332,7 +329,13 @@ function extractBasicInfo(concept) {
 export default async function handler(req, res) {
   console.log('🚀 Simple Export System called:', req.method);
   
-  setSecurityHeaders(res);
+  // セキュリティヘッダー設定（直接実装）
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -349,7 +352,10 @@ export default async function handler(req, res) {
     const { sessionData } = req.body;
     
     if (!sessionData) {
-      throw new AppError('Session data is required', ErrorTypes.VALIDATION_ERROR);
+      return res.status(400).json({
+        success: false,
+        error: 'Session data is required'
+      });
     }
     
     console.log('🔄 Generating text files export...');
