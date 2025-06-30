@@ -48,13 +48,8 @@ class UltraIntegratedApp {
     }
 
     // 結果画面のボタン
-    const downloadPdfBtn = document.getElementById('download-pdf');
     const downloadZipBtn = document.getElementById('download-zip');
     const newScenarioBtn = document.getElementById('new-scenario');
-
-    if (downloadPdfBtn) {
-      downloadPdfBtn.addEventListener('click', () => this.downloadFile('pdf'));
-    }
 
     if (downloadZipBtn) {
       downloadZipBtn.addEventListener('click', () => this.downloadFile('zip'));
@@ -387,12 +382,8 @@ class UltraIntegratedApp {
           <h4>📥 ダウンロード可能な形式</h4>
           <div class="download-options">
             <div class="download-option">
-              <strong>📄 完全PDFパッケージ</strong>
-              <p>すべてのフェーズを含む完全なシナリオドキュメント</p>
-            </div>
-            <div class="download-option">
               <strong>📦 ZIPアーカイブ</strong>
-              <p>PDF + 個別テキストファイル + 画像 + 設定ファイル</p>
+              <p>完全なシナリオテキストファイル + ゲームマスターガイド + プレイヤー配布資料</p>
             </div>
           </div>
         </div>
@@ -414,25 +405,23 @@ class UltraIntegratedApp {
     return names[phaseNum] || `フェーズ${phaseNum}`;
   }
 
-  // ファイルダウンロード
-  async downloadFile(format) {
+  // ZIPファイルダウンロード（PDF廃止）
+  async downloadFile(format = 'zip') {
     if (!this.sessionData) {
       this.showError('ダウンロード用のデータがありません');
       return;
     }
 
     try {
-      console.log(`📥 Downloading ${format.toUpperCase()} file...`);
+      console.log('📦 Downloading ZIP scenario package...');
       
-      const response = await fetch('/api/ultra-export-system', {
+      const response = await fetch('/api/simple-export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          action: `export_${format}`,
-          sessionData: this.sessionData,
-          format: format
+          sessionData: this.sessionData
         }),
       });
 
@@ -441,18 +430,18 @@ class UltraIntegratedApp {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `murder_mystery_complete.${format}`;
+        a.download = 'murder_mystery_scenario.zip';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
         
-        console.log(`✅ ${format.toUpperCase()} download completed`);
+        console.log('✅ ZIP download completed');
       } else {
         throw new Error(`Download failed: ${response.statusText}`);
       }
     } catch (error) {
-      console.error(`❌ Download failed:`, error);
+      console.error('❌ Download failed:', error);
       this.showError(`ダウンロードに失敗しました: ${error.message}`);
     }
   }
