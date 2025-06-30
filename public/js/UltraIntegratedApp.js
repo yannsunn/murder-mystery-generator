@@ -3,6 +3,22 @@
  * 完全統合型フロントエンド - 自動フェーズ実行対応
  */
 
+// スケルトンローダーのインポート（モジュール対応）
+let SkeletonLoader, skeletonLoader;
+try {
+  if (typeof module !== 'undefined' && module.exports) {
+    // Node.js環境
+    ({ SkeletonLoader, skeletonLoader } = require('./SkeletonLoader.js'));
+  } else {
+    // ブラウザ環境 - 動的インポート
+    if (typeof SkeletonLoader !== 'undefined') {
+      skeletonLoader = new SkeletonLoader();
+    }
+  }
+} catch (error) {
+  console.warn('SkeletonLoader not available:', error.message);
+}
+
 class UltraIntegratedApp {
   constructor() {
     this.currentStep = 1;
@@ -427,6 +443,27 @@ class UltraIntegratedApp {
     this.hideElement('main-card');
     this.showElement('loading-container');
     
+    // スケルトンローディング表示
+    if (skeletonLoader) {
+      skeletonLoader.show('loading-container', 'generation', {
+        className: 'generation-skeleton'
+      });
+      
+      // 少し遅らせて実際のUIに切り替え
+      setTimeout(() => {
+        this.showActualGenerationUI();
+      }, 800);
+    } else {
+      this.showActualGenerationUI();
+    }
+  }
+
+  // 実際の生成UI表示
+  showActualGenerationUI() {
+    if (skeletonLoader) {
+      skeletonLoader.hide('loading-container');
+    }
+    
     // プログレス初期化
     this.updateProgressBar(0);
     
@@ -470,8 +507,21 @@ class UltraIntegratedApp {
     
     const contentEl = document.getElementById('scenario-content');
     if (contentEl && sessionData.phases) {
-      const summaryHtml = this.generateResultSummary(sessionData);
-      contentEl.innerHTML = summaryHtml;
+      // スケルトンローディングで段階的に表示
+      if (skeletonLoader) {
+        skeletonLoader.show('scenario-content', 'result');
+        
+        // 段階的にコンテンツを表示
+        setTimeout(() => {
+          skeletonLoader.hide('scenario-content');
+          const summaryHtml = this.generateResultSummary(sessionData);
+          contentEl.innerHTML = summaryHtml;
+          contentEl.classList.add('skeleton-fade-in');
+        }, 600);
+      } else {
+        const summaryHtml = this.generateResultSummary(sessionData);
+        contentEl.innerHTML = summaryHtml;
+      }
     }
   }
 
@@ -585,13 +635,18 @@ class UltraIntegratedApp {
 
   // エラー表示
   showError(message) {
+    // スケルトンローディングを停止
+    if (skeletonLoader) {
+      skeletonLoader.hideAll();
+    }
+    
     this.hideElement('loading-container');
     this.showElement('error-container');
     
     const errorEl = document.getElementById('error-message');
     if (errorEl) {
       errorEl.innerHTML = `
-        <div class="error-content">
+        <div class="error-content skeleton-fade-in">
           <h3>⚠️ エラーが発生しました</h3>
           <p>${message}</p>
           <div class="error-actions">

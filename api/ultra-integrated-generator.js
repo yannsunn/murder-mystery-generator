@@ -7,6 +7,9 @@
 import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
+import { createSecurityMiddleware } from './middleware/rate-limiter.js';
+import { createPerformanceMiddleware } from './middleware/performance-monitor.js';
+import { createValidationMiddleware } from './middleware/input-validator.js';
 
 export const config = {
   maxDuration: 60, // 1分の最大実行時間（段階的実行用）
@@ -478,6 +481,7 @@ async function generateImages(imagePrompts) {
 export default async function handler(req, res) {
   console.log('🚀 Ultra Integrated Generator called:', req.method);
   
+  // セキュリティヘッダー設定
   setSecurityHeaders(res);
   
   if (req.method === 'OPTIONS') {
@@ -489,6 +493,27 @@ export default async function handler(req, res) {
       success: false, 
       error: 'Method not allowed. Use POST.' 
     });
+  }
+
+  // セキュリティ・パフォーマンス・バリデーション統合チェック
+  const middlewares = [
+    createPerformanceMiddleware(),
+    createSecurityMiddleware('generation'),
+    createValidationMiddleware('generation')
+  ];
+
+  for (const middleware of middlewares) {
+    try {
+      await new Promise((resolve, reject) => {
+        middleware(req, res, (error) => {
+          if (error) reject(error);
+          else resolve();
+        });
+      });
+    } catch (middlewareError) {
+      // Middleware already sent response
+      return;
+    }
   }
 
   try {

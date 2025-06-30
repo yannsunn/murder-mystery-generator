@@ -6,6 +6,7 @@
 import JSZip from 'jszip';
 import { setSecurityHeaders } from './security-utils.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 
 export const config = {
   maxDuration: 60,
@@ -285,6 +286,20 @@ export default withErrorHandler(async function handler(req, res) {
 
   if (req.method !== 'POST') {
     throw new AppError('Method not allowed. Use POST.', ErrorTypes.VALIDATION_ERROR);
+  }
+
+  // レート制限チェック（APIタイプ - 中程度の制限）
+  const securityMiddleware = createSecurityMiddleware('api');
+  try {
+    await new Promise((resolve, reject) => {
+      securityMiddleware(req, res, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  } catch (securityError) {
+    // Rate limiter already sent response
+    return;
   }
 
   const { sessionData } = req.body;

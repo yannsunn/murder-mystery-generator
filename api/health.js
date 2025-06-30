@@ -1,10 +1,25 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
 
 import { setSecurityHeaders } from './security-utils.js';
+import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   setSecurityHeaders(res);
   res.setHeader('Content-Type', 'application/json');
+
+  // レート制限チェック（ヘルスチェック用 - 高頻度OK）
+  const securityMiddleware = createSecurityMiddleware('health');
+  try {
+    await new Promise((resolve, reject) => {
+      securityMiddleware(req, res, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  } catch (securityError) {
+    // Rate limiter already sent response
+    return;
+  }
   
   // 環境変数チェック
   const envChecks = {

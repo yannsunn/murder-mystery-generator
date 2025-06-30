@@ -6,6 +6,7 @@
 import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
+import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 
 export const config = {
   maxDuration: 30, // 30秒の短時間実行
@@ -405,6 +406,20 @@ export default withErrorHandler(async function handler(req, res) {
   
   if (req.method !== 'POST') {
     throw new AppError('Method not allowed', ErrorTypes.VALIDATION_ERROR);
+  }
+
+  // レート制限チェック（APIタイプ - 中程度の制限）
+  const securityMiddleware = createSecurityMiddleware('api');
+  try {
+    await new Promise((resolve, reject) => {
+      securityMiddleware(req, res, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+  } catch (securityError) {
+    // Rate limiter already sent response
+    return;
   }
   
   const { action, taskId, formData, context = {}, sessionId } = req.body;
