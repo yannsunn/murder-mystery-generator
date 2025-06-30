@@ -8,6 +8,9 @@
     "api/simple-export.js": {
       "maxDuration": 60
     },
+    "api/export.js": {
+      "maxDuration": 60
+    },
     "api/scenario-storage.js": {
       "maxDuration": 30
     },
