@@ -415,7 +415,7 @@ class UltraIntegratedApp {
     try {
       console.log('📦 Downloading ZIP scenario package...');
       
-      const response = await fetch('/api/simple-export', {
+      const response = await fetch('/api/export', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
