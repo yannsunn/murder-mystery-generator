@@ -20,7 +20,7 @@ async function generateTextFiles(sessionData) {
   
   // タイトル抽出
   const concept = sessionData.phases?.phase1?.concept || '';
-  const titleMatch = concept.match(/## 作品タイトル[\\s\\S]*?\\n([^\\n]+)/);
+  const titleMatch = concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
   const title = titleMatch ? titleMatch[1].trim() : 'マーダーミステリーシナリオ';
   const sanitizedTitle = title.replace(/[^a-zA-Z0-9\\-_]/g, '_');
   
@@ -325,7 +325,7 @@ function extractBasicInfo(concept) {
     section.includes('舞台詳細')
   );
   
-  return basicSections.join('\\n\\n## ').trim() || concept.substring(0, 500) + '...';
+  return basicSections.join('\n\n## ').trim() || concept.substring(0, 500) + '...';
 }
 
 // メインハンドラー
@@ -370,7 +370,7 @@ export default async function handler(req, res) {
       sessionData.generatedImages.forEach((img, index) => {
         if (img.status === 'success' && img.url) {
           imageFolder.file(`image_${index + 1}_info.txt`, 
-            `画像URL: ${img.url}\\nプロンプト: ${img.prompt}\\n\\n※この画像は別途ダウンロードが必要です`);
+            `画像URL: ${img.url}\nプロンプト: ${img.prompt}\n\n※この画像は別途ダウンロードが必要です`);
         }
       });
     }
