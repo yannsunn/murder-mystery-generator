@@ -31,10 +31,16 @@ async function generateTextFiles(sessionData) {
   
   const sanitizedTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
   
-  // メインファイル生成
+  // 5時間対応メインファイル生成
   files[`${sanitizedTitle}_complete_scenario.txt`] = generateCompleteScenario(sessionData, title);
   files[`${sanitizedTitle}_gamemaster_guide.txt`] = generateGameMasterGuide(sessionData, title);
-  files[`${sanitizedTitle}_player_handout.txt`] = generatePlayerHandout(sessionData, title);
+  files[`${sanitizedTitle}_introduction_handout.txt`] = generateIntroductionHandout(sessionData, title);
+  
+  // 参加者別個別ハンドアウト生成
+  const participantCount = parseInt(sessionData.formData?.participants || 5);
+  for (let i = 1; i <= participantCount; i++) {
+    files[`${sanitizedTitle}_player${i}_handout.txt`] = generatePlayerHandout(sessionData, title, i);
+  }
   
   // 統合マイクロ生成の個別ステップファイル
   const steps = {
@@ -175,34 +181,117 @@ ${sessionData.phases?.phase8?.gamemaster || '詳細なGM指示は個別ファイ
 /**
  * プレイヤー配布資料生成
  */
-function generatePlayerHandout(sessionData, title) {
-  const concept = sessionData.phases?.phase1?.concept || '';
-  const basicInfo = extractBasicInfo(concept);
+/**
+ * 個別プレイヤーハンドアウト生成（5時間対応）
+ */
+function generatePlayerHandout(sessionData, title, playerNumber) {
+  const characters = sessionData.phases?.step2?.content?.characters || '';
+  
+  // キャラクター情報から特定プレイヤーの情報を抽出
+  const playerPattern = new RegExp(`プレイヤー${playerNumber}[\\s\\S]*?(?=プレイヤー${playerNumber + 1}|$)`, 'i');
+  let playerContent = characters.match(playerPattern)?.[0] || '';
+  
+  if (!playerContent) {
+    // 代替パターンで検索
+    const altPattern = new RegExp(`キャラクター${playerNumber}[\\s\\S]*?(?=キャラクター${playerNumber + 1}|$)`, 'i');
+    playerContent = characters.match(altPattern)?.[0] || '';
+  }
   
   return `
 ================================================================================
                         ${title}
-                    プレイヤー配布資料
+                プレイヤー${playerNumber} 専用ハンドアウト
 ================================================================================
 
-【重要】これはプレイヤー用の資料です。
-ゲームマスター専用ファイルは絶対に見ないでください。
+【重要警告】
+これはプレイヤー${playerNumber}専用の資料です。
+他のプレイヤーや他のハンドアウトファイルは絶対に見ないでください！
 
-${basicInfo}
+${playerContent || `プレイヤー${playerNumber}の詳細情報を生成中...`}
 
-【ゲームの流れ】
-1. キャラクター紹介
-2. 事件発生の説明
-3. 調査・情報収集
-4. 議論・推理
-5. 最終推理発表
-6. 真相公開
+【5時間セッション専用ガイド】
+
+■ 第1時間 (0-60分): 導入・キャラクター紹介
+- あなたのキャラクターを他のプレイヤーに紹介
+- 初期の関係性を確認
+- 事件発生時の行動を決定
+
+■ 第2時間 (60-120分): 初期調査
+- 基本的な証拠収集
+- 他キャラクターからの初期証言聴取
+- あなたの秘密情報を活用
+
+■ 第3時間 (120-180分): 詳細調査
+- より深い調査を実行
+- 隠された情報の発見
+- 他プレイヤーとの情報交換
+
+■ 第4時間 (180-240分): 推理・議論
+- これまでの情報を整理
+- 仮説を構築して発表
+- 他プレイヤーの推理を検証
+
+■ 第5時間 (240-300分): 最終推理・真相
+- 最終的な犯人推理
+- 投票・決定
+- 真相公開・エピローグ
+
+【重要な注意事項】
+- あなたの秘密は絶対に守る
+- 目標達成のために戦略的に行動
+- 他プレイヤーとの会話・交渉を活用
+- 最後まで諦めずに推理を続ける
+`;
+}
+
+/**
+ * 導入ハンドアウト生成（全プレイヤー配布用）
+ */
+function generateIntroductionHandout(sessionData, title) {
+  const concept = sessionData.phases?.step1?.content?.concept || '';
+  
+  // 導入シナリオを抽出
+  const introPattern = /## 導入シナリオ[^\n]*\n([\s\S]*?)(?=##|$)/;
+  const introContent = concept.match(introPattern)?.[1] || '';
+  
+  return `
+================================================================================
+                        ${title}
+                    導入シナリオ（全員配布用）
+================================================================================
+
+【これは全プレイヤーに配布される共通資料です】
+
+${introContent || '魅力的な導入ストーリーを準備中...'}
+
+【ゲームセッション概要】
+プレイ時間: 5時間（300分）
+参加人数: ${sessionData.formData?.participants || 5}人
+複雑さ: ${sessionData.formData?.complexity || '標準'}
+トーン: ${sessionData.formData?.tone || 'シリアス'}
+
+【5時間の流れ】
+第1時間: 導入・キャラクター紹介・事件発生
+第2時間: 初期調査・基本証拠収集
+第3時間: 詳細調査・深層情報収集
+第4時間: 推理・議論・仮説構築
+第5時間: 最終推理・真相公開・エピローグ
+
+【基本ルール】
+1. 自分のキャラクターになりきってプレイ
+2. 他プレイヤーとの会話・交渉は自由
+3. 嘘をつくことも戦略として有効
+4. 個別ハンドアウトの情報は秘密を守る
+5. 最終的に真犯人を推理して投票
 
 【注意事項】
-- 自分のキャラクターになりきってプレイしてください
-- 他のプレイヤーとの会話や交渉を楽しんでください
-- 嘘をつくことも戦略の一部です
-- 最後まで楽しんでください
+- 他プレイヤーの個別ハンドアウトは見てはいけません
+- ゲームマスター専用資料も見てはいけません
+- 分からないことはゲームマスターに質問
+- 楽しみながら最後まで参加してください
+
+準備はよろしいでしょうか？
+それでは、${title}の世界へようこそ！
 `;
 }
 
