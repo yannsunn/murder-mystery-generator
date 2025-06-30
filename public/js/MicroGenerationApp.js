@@ -50,6 +50,128 @@ export class MicroGenerationApp {
       });
     }
   }
+
+  /**
+   * UI初期化
+   */
+  initializeUI() {
+    console.log('🔬 Initializing Micro Generation UI...');
+    
+    // マイクロ生成専用UIコンテナを作成（必要に応じて）
+    this.createMicroGenerationContainer();
+    
+    // 既存のプログレス表示を拡張
+    this.enhanceProgressDisplay();
+    
+    console.log('✅ Micro Generation UI initialized');
+  }
+
+  /**
+   * マイクロ生成専用UIコンテナ作成
+   */
+  createMicroGenerationContainer() {
+    // 既存のローディングコンテナを拡張してマイクロ生成対応
+    const loadingContainer = document.getElementById('loading-container');
+    if (loadingContainer && !document.getElementById('micro-task-list')) {
+      const microTaskList = document.createElement('div');
+      microTaskList.id = 'micro-task-list';
+      microTaskList.className = 'micro-task-list';
+      microTaskList.innerHTML = `
+        <div class="micro-tasks-header">
+          <h4>🔬 マイクロタスク進行状況</h4>
+        </div>
+        <div class="micro-tasks-content" id="micro-tasks-content">
+          <!-- タスクが動的に追加される -->
+        </div>
+      `;
+      loadingContainer.appendChild(microTaskList);
+    }
+  }
+
+  /**
+   * プログレス表示の拡張
+   */
+  enhanceProgressDisplay() {
+    // 既存のプログレス表示にマイクロタスク用の要素を追加
+    const phaseInfo = document.querySelector('.phase-info');
+    if (phaseInfo && !document.getElementById('micro-task-current')) {
+      const microTaskInfo = document.createElement('div');
+      microTaskInfo.id = 'micro-task-info';
+      microTaskInfo.className = 'micro-task-info';
+      microTaskInfo.innerHTML = `
+        <div class="micro-task-current" id="micro-task-current">
+          準備中...
+        </div>
+        <div class="micro-task-details" id="micro-task-details">
+          マイクロタスクシステム初期化中
+        </div>
+      `;
+      phaseInfo.appendChild(microTaskInfo);
+    }
+  }
+
+  /**
+   * フォームデータ収集
+   */
+  collectFormData() {
+    const form = document.getElementById('scenario-form');
+    if (!form) return;
+
+    const formData = new FormData(form);
+    this.formData = {};
+
+    for (const [key, value] of formData.entries()) {
+      this.formData[key] = value;
+    }
+
+    // チェックボックス
+    const checkboxes = ['red_herring', 'twist_ending', 'secret_roles'];
+    checkboxes.forEach(name => {
+      const checkbox = document.getElementById(name);
+      if (checkbox) {
+        this.formData[name] = checkbox.checked;
+      }
+    });
+    
+    console.log('📋 Form data collected:', this.formData);
+  }
+
+  /**
+   * マイクロ生成UI表示
+   */
+  showMicroGenerationUI() {
+    console.log('🔬 Showing micro generation UI...');
+    
+    // メインカードを隠す
+    const mainCard = document.getElementById('main-card');
+    if (mainCard) {
+      mainCard.classList.add('hidden');
+    }
+    
+    // ローディングコンテナを表示
+    const loadingContainer = document.getElementById('loading-container');
+    if (loadingContainer) {
+      loadingContainer.classList.remove('hidden');
+    }
+    
+    // マイクロタスクリストを表示
+    const microTaskList = document.getElementById('micro-task-list');
+    if (microTaskList) {
+      microTaskList.style.display = 'block';
+    }
+    
+    // ヘッダーをマイクロ生成用に更新
+    const loadingHeader = document.querySelector('.loading-header h3');
+    if (loadingHeader) {
+      loadingHeader.textContent = '🔬 マイクロAI生成実行中...';
+    }
+    
+    // 生成方式を更新
+    const generationMethod = document.getElementById('generation-method');
+    if (generationMethod) {
+      generationMethod.textContent = 'マイクロ生成（超詳細）';
+    }
+  }
   
   /**
    * マイクロ生成開始
