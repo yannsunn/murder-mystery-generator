@@ -382,19 +382,36 @@ class UltraIntegratedApp {
     const currentPhaseEl = document.getElementById('current-phase');
     const phaseDetails = document.getElementById('phase-details');
     const estimatedTime = document.getElementById('estimated-time');
+    const generationMethod = document.getElementById('generation-method');
     
     if (phaseNumber) phaseNumber.textContent = `${currentPhase}/${totalPhases}`;
     if (currentPhaseEl) currentPhaseEl.textContent = `🔄 ${phaseName}`;
     if (phaseDetails) phaseDetails.textContent = `フェーズ ${currentPhase} を処理中...`;
     
-    // 推定残り時間（各フェーズ約10秒と仮定）
+    // 推定残り時間の動的計算
     const remainingPhases = totalPhases - currentPhase;
-    const estimatedSeconds = remainingPhases * 10;
+    const timePerPhase = this.generationMode === 'micro' ? 5 : 15; // マイクロモードは短時間
+    const estimatedSeconds = remainingPhases * timePerPhase;
+    
     if (estimatedTime) {
       if (estimatedSeconds > 0) {
-        estimatedTime.textContent = `約 ${estimatedSeconds} 秒`;
+        if (estimatedSeconds > 60) {
+          const minutes = Math.ceil(estimatedSeconds / 60);
+          estimatedTime.textContent = `約 ${minutes} 分`;
+        } else {
+          estimatedTime.textContent = `約 ${estimatedSeconds} 秒`;
+        }
       } else {
         estimatedTime.textContent = '完了間近';
+      }
+    }
+    
+    // 生成方式の説明を更新（モード別）
+    if (generationMethod) {
+      if (this.generationMode === 'micro') {
+        generationMethod.textContent = 'マイクロ生成（超詳細）';
+      } else {
+        generationMethod.textContent = '段階的生成（高速）';
       }
     }
   }
@@ -412,16 +429,37 @@ class UltraIntegratedApp {
     
     // プログレス初期化
     this.updateProgressBar(0);
-    this.updatePhaseInfo(0, 8, 'システム初期化中...');
     
-    // 初期表示設定
+    // 初期表示設定（正しい情報で）
     const currentPhase = document.getElementById('current-phase');
     const phaseDetails = document.getElementById('phase-details');
+    const phaseNumber = document.getElementById('current-phase-number');
+    const estimatedTime = document.getElementById('estimated-time');
     const generationMethod = document.getElementById('generation-method');
     
     if (currentPhase) currentPhase.textContent = '🚀 AI生成エンジン起動中...';
     if (phaseDetails) phaseDetails.textContent = 'マーダーミステリー生成を開始します';
-    if (generationMethod) generationMethod.textContent = '段階的生成（1フェーズずつ）';
+    if (phaseNumber) phaseNumber.textContent = '1/8';
+    
+    // 初期推定時間設定
+    if (estimatedTime) {
+      const totalTime = this.generationMode === 'micro' ? 40 : 120; // 秒
+      if (totalTime > 60) {
+        const minutes = Math.ceil(totalTime / 60);
+        estimatedTime.textContent = `約 ${minutes} 分`;
+      } else {
+        estimatedTime.textContent = `約 ${totalTime} 秒`;
+      }
+    }
+    
+    // モード別の生成方式表示
+    if (generationMethod) {
+      if (this.generationMode === 'micro') {
+        generationMethod.textContent = 'マイクロ生成（超詳細）';
+      } else {
+        generationMethod.textContent = '段階的生成（高速）';
+      }
+    }
   }
 
 
