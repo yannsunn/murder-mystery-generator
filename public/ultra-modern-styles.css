@@ -135,6 +135,8 @@ header p {
   transition: all var(--animation-slow);
   position: relative;
   overflow: hidden;
+  /* レイアウト安定化 */
+  min-height: 600px;
 }
 
 .card::before {
@@ -277,6 +279,8 @@ header p {
   transition: all var(--animation-slow);
   position: relative;
   z-index: 1;
+  /* コンテンツ高さ固定でボタン位置安定化 */
+  min-height: 350px;
 }
 
 .step.active {
@@ -613,9 +617,11 @@ header p {
   padding-top: var(--space-xl);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: var(--space-md);
-  /* ボタン位置完全固定 */
+  /* ボタン位置完全固定 - 強化版 */
   position: relative;
-  min-height: 60px;
+  min-height: 80px;
+  height: 80px;
+  overflow: hidden;
 }
 
 .btn-spacer {
