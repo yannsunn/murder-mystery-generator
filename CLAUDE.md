@@ -7,6 +7,7 @@
 - 限界突破思考で最適解を追求
 - 実装前に必ず詳細計画を立案
 - 定期的なリファクタリングで品質維持
+- **🚀 PUSH必須ルール: 全ての変更作業完了後は必ずgit pushを実行**
 
 ---
 
@@ -260,6 +261,12 @@ ALWAYS start with:
    - Optimized implementation
    - Best practices applied
    - Future-proof architecture
+
+4. 📤 **MANDATORY PUSH PROTOCOL**
+   - git add . (全変更をステージング)
+   - git commit -m "詳細なコミットメッセージ"
+   - git push origin main (必須実行)
+   - プッシュ完了の確認・報告
 ```
 
 ---
