@@ -508,7 +508,7 @@ export default async function handler(req, res) {
       };
       
       const progressUpdates = [];
-      const maxPhasesPerRequest = 2; // 一度に2フェーズまで実行
+      const maxPhasesPerRequest = 1; // 一度に1フェーズずつ確実に実行
       const startPhase = sessionData.currentPhase;
       const endPhase = Math.min(startPhase + maxPhasesPerRequest - 1, 8);
       

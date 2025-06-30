@@ -270,20 +270,69 @@ class UltraIntegratedApp {
     }
   }
 
-  // 進捗更新表示
+  // 進捗更新表示 - 完全実装
   updateProgress(progressUpdates) {
     if (!progressUpdates || progressUpdates.length === 0) return;
     
     progressUpdates.forEach(update => {
       console.log(`📈 Phase ${update.phase}: ${update.name} - ${update.status}`);
       
-      // 進捗UI更新（存在する場合）
-      const progressElement = document.getElementById(`phase-${update.phase}-progress`);
-      if (progressElement) {
-        progressElement.textContent = `${update.status === 'completed' ? '✅' : '🔄'} ${update.name}`;
-        progressElement.className = `progress-item ${update.status}`;
+      if (update.status === 'completed') {
+        // 完了したフェーズ数から進捗率を計算
+        const completedPhase = update.phase;
+        const totalPhases = 8;
+        const percentage = Math.round((completedPhase / totalPhases) * 100);
+        
+        // 進捗バーの更新
+        this.updateProgressBar(percentage);
+        
+        // フェーズ情報の更新
+        this.updatePhaseInfo(completedPhase, totalPhases, update.name);
+        
+        // 現在フェーズ表示の更新
+        this.updateCurrentPhase(update.phase, update.name, update.status);
       }
     });
+  }
+  
+  // 進捗バー更新
+  updateProgressBar(percentage) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercentage = document.getElementById('progress-percentage');
+    const progressText = document.getElementById('progress-text');
+    
+    if (progressFill) progressFill.style.width = `${percentage}%`;
+    if (progressPercentage) progressPercentage.textContent = `${percentage}%`;
+    if (progressText) progressText.textContent = `生成中... ${percentage}%`;
+  }
+  
+  // フェーズ情報更新
+  updatePhaseInfo(currentPhase, totalPhases, phaseName) {
+    const phaseNumber = document.getElementById('current-phase-number');
+    const currentPhaseEl = document.getElementById('current-phase');
+    const phaseDetails = document.getElementById('phase-details');
+    const estimatedTime = document.getElementById('estimated-time');
+    
+    if (phaseNumber) phaseNumber.textContent = `${currentPhase}/${totalPhases}`;
+    if (currentPhaseEl) currentPhaseEl.textContent = `🔄 ${phaseName}`;
+    if (phaseDetails) phaseDetails.textContent = `フェーズ ${currentPhase} を処理中...`;
+    
+    // 推定残り時間（各フェーズ約10秒と仮定）
+    const remainingPhases = totalPhases - currentPhase;
+    const estimatedSeconds = remainingPhases * 10;
+    if (estimatedTime) {
+      if (estimatedSeconds > 0) {
+        estimatedTime.textContent = `約 ${estimatedSeconds} 秒`;
+      } else {
+        estimatedTime.textContent = '完了間近';
+      }
+    }
+  }
+  
+  // 現在フェーズ更新
+  updateCurrentPhase(phaseNum, phaseName, status) {
+    const statusEmoji = status === 'completed' ? '✅' : '🔄';
+    console.log(`${statusEmoji} Phase ${phaseNum}: ${phaseName}`);
   }
 
   // 生成UI表示
@@ -292,81 +341,19 @@ class UltraIntegratedApp {
     this.showElement('loading-container');
     
     // プログレス初期化
-    this.updateProgress(0, '🚀 ウルトラ統合生成開始...');
+    this.updateProgressBar(0);
+    this.updatePhaseInfo(0, 8, 'システム初期化中...');
     
-    // プログレス更新シミュレーション
-    this.simulateProgress();
+    // 初期表示設定
+    const currentPhase = document.getElementById('current-phase');
+    const phaseDetails = document.getElementById('phase-details');
+    const generationMethod = document.getElementById('generation-method');
+    
+    if (currentPhase) currentPhase.textContent = '🚀 AI生成エンジン起動中...';
+    if (phaseDetails) phaseDetails.textContent = 'マーダーミステリー生成を開始します';
+    if (generationMethod) generationMethod.textContent = '段階的生成（1フェーズずつ）';
   }
 
-  simulateProgress() {
-    const phases = [
-      { name: 'コンセプト・世界観生成', time: 2000 },
-      { name: 'キャラクター詳細設計', time: 3000 },
-      { name: '人物関係マトリクス構築', time: 2500 },
-      { name: '事件・謎・仕掛け構築', time: 4000 },
-      { name: '手がかり・証拠システム', time: 3000 },
-      { name: 'タイムライン構築', time: 2000 },
-      { name: '真相・解決編構築', time: 3500 },
-      { name: 'ゲームマスターガイド', time: 2000 },
-      { name: '画像生成・統合処理', time: 5000 }
-    ];
-    
-    let currentPhase = 0;
-    let totalTime = 0;
-    
-    const updatePhase = () => {
-      if (currentPhase < phases.length && this.isGenerating) {
-        const phase = phases[currentPhase];
-        const progress = ((currentPhase + 1) / phases.length) * 100;
-        
-        this.updateProgress(progress, `${phase.name}中...`);
-        this.updatePhaseInfo(currentPhase + 1, phases.length, phase.name);
-        
-        currentPhase++;
-        totalTime += phase.time;
-        
-        setTimeout(updatePhase, phase.time);
-      }
-    };
-    
-    updatePhase();
-  }
-
-  updateProgress(percentage, message) {
-    const progressFill = document.getElementById('progress-fill');
-    const progressText = document.getElementById('progress-text');
-    const progressPercentage = document.getElementById('progress-percentage');
-    
-    if (progressFill) {
-      progressFill.style.width = `${percentage}%`;
-    }
-    
-    if (progressText) {
-      progressText.textContent = message;
-    }
-    
-    if (progressPercentage) {
-      progressPercentage.textContent = `${Math.round(percentage)}%`;
-    }
-  }
-
-  updatePhaseInfo(current, total, phaseName) {
-    const currentPhaseEl = document.getElementById('current-phase');
-    const phaseDetailsEl = document.getElementById('phase-details');
-    const phaseNumberEl = document.getElementById('current-phase-number');
-    
-    if (currentPhaseEl) {
-      currentPhaseEl.textContent = `🔄 ${phaseName}`;
-    }
-    
-    if (phaseDetailsEl) {
-      phaseDetailsEl.textContent = 'AI エンジンが最適化処理中...';
-    }
-    
-    if (phaseNumberEl) {
-      phaseNumberEl.textContent = `${current}/${total}`;
-    }
-  }
 
   // 結果表示
   showResults(sessionData) {
