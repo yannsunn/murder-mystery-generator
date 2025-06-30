@@ -135,8 +135,8 @@ header p {
   transition: all var(--animation-slow);
   position: relative;
   overflow: hidden;
-  /* レイアウト安定化 */
-  min-height: 600px;
+  /* レイアウト安定化 - コンパクト化 */
+  min-height: 500px;
 }
 
 .card::before {
@@ -157,7 +157,7 @@ header p {
 
 .card-header {
   text-align: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-md);
 }
 
 .card-header h2 {
@@ -167,7 +167,7 @@ header p {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
   letter-spacing: -0.025em;
 }
 
@@ -183,7 +183,7 @@ header p {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-2xl);
+  margin-bottom: var(--space-md);
   gap: var(--space-md);
   flex-wrap: wrap;
 }
@@ -269,7 +269,7 @@ header p {
 /* ========== フォーム ========== */
 .form-container {
   position: relative;
-  min-height: 400px;
+  min-height: 300px;
 }
 
 .step {
@@ -280,7 +280,7 @@ header p {
   position: relative;
   z-index: 1;
   /* コンテンツ高さ固定でボタン位置安定化 */
-  min-height: 350px;
+  min-height: 280px;
 }
 
 .step.active {
