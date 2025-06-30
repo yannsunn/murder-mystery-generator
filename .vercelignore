@@ -5,8 +5,4 @@ node_modules/
 .env.production
 .git/
 *.log
-*.md
-!README.md
 .vercel-trigger
-CLAUDE.md
-STAGED_GENERATION_GUIDE.md
