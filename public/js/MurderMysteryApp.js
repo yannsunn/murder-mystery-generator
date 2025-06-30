@@ -406,11 +406,32 @@ class MurderMysteryApp {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || `Phase ${phaseId} failed`);
+      let errorMessage = `Phase ${phaseId} failed`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.details || errorMessage;
+      } catch (parseError) {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();
+  }
+
+  async getSessionData(sessionId) {
+    try {
+      const response = await fetch(`/api/scenario-storage?action=get&sessionId=${sessionId}`);
+      if (response.ok) {
+        const data = await response.json();
+        return data.success ? data.scenario : null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Session data取得エラー:', error);
+      return null;
+    }
   }
 
   async createGenerationSession() {
@@ -961,7 +982,20 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
   }
 
   async downloadPDF() {
-    if (!this.generatedScenario && !this.currentSessionId) return;
+    // PDF生成の前提条件チェック
+    if (!this.generatedScenario && !this.currentSessionId) {
+      alert('シナリオが生成されていません。まずシナリオを生成してください。');
+      return;
+    }
+
+    // 段階的生成の場合、最低限のフェーズ完了をチェック
+    if (this.currentSessionId) {
+      const sessionData = await this.getSessionData(this.currentSessionId);
+      if (!sessionData || !sessionData.phases || Object.keys(sessionData.phases).length < 4) {
+        alert('PDF生成には少なくとも4つのフェーズが完了している必要があります。');
+        return;
+      }
+    }
 
     try {
       // 段階的生成モードの場合
@@ -1106,13 +1140,26 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
   }
 
   async downloadZIP() {
-    if (!this.generatedScenario) return;
+    // ZIP生成の前提条件チェック
+    if (!this.generatedScenario && !this.currentSessionId) {
+      alert('シナリオが生成されていません。まずシナリオを生成してください。');
+      return;
+    }
 
     try {
       console.log('📦 ZIP パッケージ生成開始...');
       
       // シナリオデータを正しく構造化
-      const scenarioData = this.generatedScenario;
+      let scenarioData = this.generatedScenario;
+      
+      // 段階的生成の場合はセッションからデータ取得
+      if (this.currentSessionId && !scenarioData) {
+        scenarioData = await this.getSessionData(this.currentSessionId);
+      }
+      
+      if (!scenarioData) {
+        throw new Error('シナリオデータが見つかりません');
+      }
       const requestData = {
         scenario: scenarioData.phases?.phase1?.content || scenarioData.content || JSON.stringify(scenarioData),
         characters: scenarioData.phases?.phase2 || null,

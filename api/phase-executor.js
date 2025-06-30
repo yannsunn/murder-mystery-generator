@@ -1,8 +1,10 @@
 /**
- * フェーズ別実行API - 完全分離型
+ * フェーズ別実行API - 完全分離型（Ultra Sync修正版）
  * 各フェーズを個別に実行し、手動で次のステップへ
  */
 
+import './startup.js'; // 環境変数初期化
+import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
 
@@ -10,20 +12,93 @@ export const config = {
   maxDuration: 30, // 短時間制限
 };
 
-// フェーズ定義
+// フェーズ定義（直接実行版）
 const PHASES = {
-  1: { name: 'コンセプト生成', endpoint: '/api/phase1-concept', maxTime: 25 },
-  2: { name: 'キャラクター設定', endpoint: '/api/phase2-characters', maxTime: 25 },
-  3: { name: '人物関係', endpoint: '/api/phase3-relationships', maxTime: 25 },
-  4: { name: '事件詳細', endpoint: '/api/phase4-incident', maxTime: 25 },
-  5: { name: '証拠・手がかり', endpoint: '/api/phase5-clues', maxTime: 25 },
-  6: { name: 'タイムライン', endpoint: '/api/phase6-timeline', maxTime: 25 },
-  7: { name: '真相解決', endpoint: '/api/phase7-solution', maxTime: 25 },
-  8: { name: 'GMガイド', endpoint: '/api/phase8-gamemaster', maxTime: 25 }
+  1: { 
+    name: 'コンセプト生成', 
+    handler: async (formData, previousPhases) => {
+      const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。与えられた設定に基づいて、魅力的なコンセプトを生成してください。`;
+      const userPrompt = `設定: ${JSON.stringify(formData, null, 2)}\n\n魅力的なマーダーミステリーのコンセプトを日本語で生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { concept: result.content };
+    }
+  },
+  2: { 
+    name: 'キャラクター設定',
+    handler: async (formData, previousPhases) => {
+      const concept = previousPhases?.phase1?.concept || '基本設定';
+      const systemPrompt = `マーダーミステリーのキャラクター設定を作成する専門家として、魅力的なキャラクターを生成してください。`;
+      const userPrompt = `コンセプト: ${concept}\n参加者数: ${formData.participants}\n\nキャラクター設定を生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { characters: result.content };
+    }
+  },
+  3: { 
+    name: '人物関係',
+    handler: async (formData, previousPhases) => {
+      const characters = previousPhases?.phase2?.characters || '';
+      const systemPrompt = `キャラクター間の複雑な関係性を設計する専門家として、魅力的な人間関係を構築してください。`;
+      const userPrompt = `キャラクター: ${characters}\n\n人物関係図を生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { relationships: result.content };
+    }
+  },
+  4: { 
+    name: '事件詳細',
+    handler: async (formData, previousPhases) => {
+      const characters = previousPhases?.phase2?.characters || '';
+      const relationships = previousPhases?.phase3?.relationships || '';
+      const systemPrompt = `事件の詳細を設計する専門家として、論理的で魅力的な事件を構築してください。`;
+      const userPrompt = `キャラクター: ${characters}\n関係性: ${relationships}\n\n事件詳細を生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { incident: result.content };
+    }
+  },
+  5: { 
+    name: '証拠・手がかり',
+    handler: async (formData, previousPhases) => {
+      const incident = previousPhases?.phase4?.incident || '';
+      const systemPrompt = `推理ゲームの証拠と手がかりを設計する専門家として、適切な難易度の証拠を生成してください。`;
+      const userPrompt = `事件: ${incident}\n\n証拠・手がかりを生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { clues: result.content };
+    }
+  },
+  6: { 
+    name: 'タイムライン',
+    handler: async (formData, previousPhases) => {
+      const incident = previousPhases?.phase4?.incident || '';
+      const clues = previousPhases?.phase5?.clues || '';
+      const systemPrompt = `事件のタイムラインを詳細に構築する専門家として、論理的な時系列を作成してください。`;
+      const userPrompt = `事件: ${incident}\n証拠: ${clues}\n\nタイムラインを生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { timeline: result.content };
+    }
+  },
+  7: { 
+    name: '真相解決',
+    handler: async (formData, previousPhases) => {
+      const allData = JSON.stringify(previousPhases, null, 2);
+      const systemPrompt = `マーダーミステリーの解決編を作成する専門家として、すべての伏線を回収した完璧な解決を生成してください。`;
+      const userPrompt = `全データ: ${allData}\n\n真相と解決を生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { solution: result.content };
+    }
+  },
+  8: { 
+    name: 'GMガイド',
+    handler: async (formData, previousPhases) => {
+      const allData = JSON.stringify(previousPhases, null, 2);
+      const systemPrompt = `ゲームマスター向けのガイドを作成する専門家として、進行しやすい実用的なガイドを生成してください。`;
+      const userPrompt = `全データ: ${allData}\n\nGMガイドを生成してください。`;
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      return { gamemaster: result.content };
+    }
+  }
 };
 
 /**
- * 単一フェーズ実行（最適化版）
+ * 単一フェーズ実行（直接実行版）
  */
 export async function executeSinglePhase(req, res) {
   const startTime = Date.now();
@@ -50,93 +125,56 @@ export async function executeSinglePhase(req, res) {
 
   console.log(`🚀 Phase ${phaseId} 実行開始: ${phase.name}`);
 
-  // 前のフェーズの結果を並列で取得
-  const [previousResults] = await Promise.all([
-    getFromStorageOptimized(sessionId, req)
-  ]);
-  
-  // 並列でフェーズ実行とタイムアウト管理
-  const phaseResult = await executePhaseWithTimeout(phase, formData, previousResults, req);
-  
-  // 結果の非同期保存（レスポンス速度向上）
-  const savePromise = saveResultsOptimized(sessionId, phaseResult, phaseId, formData, previousResults, req);
-  
-  // 次のフェーズ情報
-  const nextPhaseId = parseInt(phaseId) + 1;
-  const nextPhase = PHASES[nextPhaseId];
-  
-  // レスポンス送信（保存完了を待たない）
-  const response = {
-    success: true,
-    phaseId: parseInt(phaseId),
-    phaseName: phase.name,
-    sessionId,
-    result: phaseResult,
-    nextPhase: nextPhase ? {
-      id: nextPhaseId,
-      name: nextPhase.name
-    } : null,
-    isComplete: !nextPhase,
-    progress: Math.round((parseInt(phaseId) / 8) * 100),
-    executionTime: Date.now() - startTime,
-    timestamp: new Date().toISOString()
-  };
-  
-  // 保存完了を確認（エラーのみログ）
-  savePromise.catch(error => {
-    console.error(`🚨 Phase ${phaseId} 保存エラー:`, error);
-  });
-  
-  return res.status(200).json(response);
+  try {
+    // 前のフェーズの結果を取得
+    const previousResults = await getFromStorageOptimized(sessionId, req);
+    
+    // フェーズを直接実行
+    const phaseResult = await phase.handler(formData, previousResults?.phases || {});
+    
+    // 結果を保存
+    await saveResultsOptimized(sessionId, phaseResult, phaseId, formData, previousResults, req);
+    
+    // 次のフェーズ情報
+    const nextPhaseId = parseInt(phaseId) + 1;
+    const nextPhase = PHASES[nextPhaseId];
+    
+    // レスポンス送信
+    const response = {
+      success: true,
+      phaseId: parseInt(phaseId),
+      phaseName: phase.name,
+      sessionId,
+      result: phaseResult,
+      nextPhase: nextPhase ? {
+        id: nextPhaseId,
+        name: nextPhase.name
+      } : null,
+      isComplete: !nextPhase,
+      progress: Math.round((parseInt(phaseId) / 8) * 100),
+      executionTime: Date.now() - startTime,
+      timestamp: new Date().toISOString()
+    };
+    
+    return res.status(200).json(response);
+
+  } catch (error) {
+    console.error(`❌ Phase ${phaseId} 実行エラー:`, error);
+    throw new AppError(
+      `Phase ${phaseId} 実行失敗: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
+    );
+  }
 }
 
 /**
- * 最適化されたフェーズ実行
+ * ベースURL取得ユーティリティ
  */
-async function executePhaseWithTimeout(phase, formData, previousResults, req) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), phase.maxTime * 1000);
-
-  try {
-    // 並列でベースURL取得と内部API呼び出し
-    const baseUrl = getBaseUrl(req);
-    
-    const response = await fetch(`${baseUrl}${phase.endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Phase-Executor/1.0'
-      },
-      body: JSON.stringify({
-        ...formData,
-        previousPhases: previousResults?.phases || {}
-      }),
-      signal: controller.signal
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new AppError(
-        `Phase ${phase.name} failed: ${response.status} - ${errorText}`,
-        ErrorTypes.API,
-        response.status
-      );
-    }
-
-    return await response.json();
-
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new AppError(
-        `Phase ${phase.name} タイムアウト (${phase.maxTime}秒)`,
-        ErrorTypes.TIMEOUT,
-        504
-      );
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
+function getBaseUrl(req) {
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers.host || 'localhost:3000';
+  return `${protocol}://${host}`;
 }
 
 /**
@@ -148,7 +186,6 @@ async function getFromStorageOptimized(sessionId, req) {
     const response = await fetch(`${baseUrl}/api/scenario-storage?action=get&sessionId=${sessionId}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'User-Agent': 'Phase-Executor/1.0'
       }
     });

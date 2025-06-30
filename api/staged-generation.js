@@ -1,7 +1,11 @@
 /**
- * 段階的シナリオ生成API
+ * 段階的シナリオ生成API（Ultra Sync修正版）
  * 処理を分割して実行し、タイムアウトを回避
  */
+
+import './startup.js'; // 環境変数初期化
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 60,
