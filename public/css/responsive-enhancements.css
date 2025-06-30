@@ -1,0 +1,461 @@
+/**
+ * 📱 Responsive Design Enhancements
+ * モバイルファースト・レスポンシブデザイン強化
+ */
+
+/* モバイルファーストアプローチ */
+
+/* ========== ベースモバイルスタイル (320px+) ========== */
+.main-container {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+.card {
+  margin: 0;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+/* フォームレイアウト */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  width: 100%;
+}
+
+.form-select,
+.form-input {
+  width: 100%;
+  min-height: 48px; /* タッチターゲット最小サイズ */
+  font-size: 16px; /* iOS zoom prevention */
+}
+
+/* ボタンレイアウト */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* ステップインジケーター */
+.step-indicator {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+}
+
+.step-indicator-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.step-indicator-item span {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.step-title {
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--primary-400);
+  white-space: nowrap;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--primary-600);
+  margin: 0 0.5rem;
+  min-width: 20px;
+}
+
+/* プログレスバー */
+.progress-bar-container {
+  margin: 1.5rem 0;
+}
+
+.progress-bar {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* ローディング統計 */
+.loading-stats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--primary-300);
+}
+
+.stat-value {
+  font-weight: 600;
+  color: var(--primary-100);
+}
+
+/* チェックボックスとラジオボタン */
+.checkbox-group,
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.checkbox-label,
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px; /* タッチターゲット */
+}
+
+.checkbox-label:hover,
+.radio-label:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.checkbox-input,
+.radio-input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* ========== タブレット (768px+) ========== */
+@media (min-width: 768px) {
+  .main-container {
+    padding: 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .card {
+    padding: 2rem;
+    border-radius: 16px;
+  }
+
+  /* 2カラムフォーム */
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  .form-grid .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* ボタン横並び */
+  .button-container {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .btn {
+    width: auto;
+    min-width: 120px;
+  }
+
+  .btn-spacer {
+    flex: 1;
+  }
+
+  /* ステップインジケーター改善 */
+  .step-indicator-item span {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+
+  .step-title {
+    font-size: 0.875rem;
+  }
+
+  /* ローディング統計 */
+  .loading-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* チェックボックス・ラジオボタン横並び */
+  .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* ========== デスクトップ (1024px+) ========== */
+@media (min-width: 1024px) {
+  .main-container {
+    max-width: 1000px;
+    padding: 3rem 2rem;
+  }
+
+  .card {
+    padding: 3rem;
+    border-radius: 20px;
+  }
+
+  /* 3カラムフォーム */
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  /* ヘッダー改善 */
+  header {
+    padding: 4rem 2rem 3rem;
+  }
+
+  header h1 {
+    font-size: 3rem;
+  }
+
+  /* より大きなステップインジケーター */
+  .step-indicator-item span {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+
+  .step-title {
+    font-size: 1rem;
+  }
+}
+
+/* ========== 大画面 (1280px+) ========== */
+@media (min-width: 1280px) {
+  .main-container {
+    max-width: 1200px;
+  }
+
+  .card {
+    padding: 4rem;
+  }
+
+  /* 4カラムフォーム（必要に応じて） */
+  .form-grid.wide {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========== 超大画面 (1536px+) ========== */
+@media (min-width: 1536px) {
+  .main-container {
+    max-width: 1400px;
+  }
+}
+
+/* ========== 横向きモバイル ========== */
+@media (max-width: 767px) and (orientation: landscape) {
+  .step-indicator {
+    margin-bottom: 1rem;
+  }
+
+  .step-title {
+    display: none; /* 横向きではタイトル非表示 */
+  }
+
+  .loading-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .stat-item {
+    padding: 0.5rem;
+  }
+
+  .stat-label,
+  .stat-value {
+    font-size: 0.75rem;
+  }
+}
+
+/* ========== ダークモード対応 ========== */
+@media (prefers-color-scheme: dark) {
+  .form-select,
+  .form-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--primary-100);
+  }
+
+  .form-select:focus,
+  .form-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* ========== アクセシビリティ ========== */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .step-indicator-item span {
+    border: 2px solid currentColor;
+  }
+
+  .btn {
+    border: 2px solid currentColor;
+  }
+
+  .form-select,
+  .form-input {
+    border-width: 2px;
+  }
+}
+
+/* ========== 印刷対応 ========== */
+@media print {
+  .button-container,
+  .loading-container,
+  .step-indicator {
+    display: none;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* ========== フォーカス管理 ========== */
+.keyboard-navigation *:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ========== タッチデバイス最適化 ========== */
+@media (hover: none) and (pointer: coarse) {
+  /* タッチデバイス専用スタイル */
+  .btn {
+    min-height: 52px; /* より大きなタッチターゲット */
+  }
+
+  .checkbox-label,
+  .radio-label {
+    min-height: 52px;
+    padding: 1rem;
+  }
+
+  .form-select,
+  .form-input {
+    min-height: 52px;
+    padding: 1rem;
+  }
+
+  /* ホバー効果を無効化 */
+  .btn:hover,
+  .checkbox-label:hover,
+  .radio-label:hover {
+    transform: none;
+  }
+}
+
+/* ========== 高dpi画面対応 ========== */
+@media (-webkit-min-device-pixel-ratio: 2),
+       (min-resolution: 192dpi) {
+  .progress-bar {
+    height: 10px;
+  }
+
+  .step-line {
+    height: 3px;
+  }
+}
+
+/* ========== カスタムスクロールバー ========== */
+@media (min-width: 768px) {
+  .step-indicator::-webkit-scrollbar {
+    display: none;
+  }
+
+  .step-indicator {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* ========== Safari iOS対応 ========== */
+@supports (-webkit-touch-callout: none) {
+  .form-select,
+  .form-input {
+    font-size: 16px; /* iOS zoomを防ぐ */
+  }
+
+  .btn {
+    -webkit-appearance: none;
+  }
+}

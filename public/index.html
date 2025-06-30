@@ -2,13 +2,25 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Murder Mystery Generator - Professional Edition</title>
   <meta name="description" content="プロフェッショナル品質のマーダーミステリー生成システム">
+  <meta name="theme-color" content="#6d28d9">
+  <meta name="color-scheme" content="dark light">
+  
+  <!-- PWA対応 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Murder Mystery Generator">
+  
+  <!-- アクセシビリティ -->
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Murder Mystery Generator Team">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="ultra-modern-styles.css">
+  <link rel="stylesheet" href="css/responsive-enhancements.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
 <body>
@@ -25,29 +37,29 @@
       </div>
       
       <!-- ステップインジケーター -->
-      <div class="step-indicator" id="step-indicator">
-        <div class="step-indicator-item active" data-step="1">
-          <span>1</span>
+      <nav class="step-indicator" id="step-indicator" aria-label="生成ステップナビゲーション">
+        <div class="step-indicator-item active" data-step="1" role="button" aria-current="step" aria-label="ステップ1: 基本設定">
+          <span aria-hidden="true">1</span>
           <div class="step-title">基本設定</div>
         </div>
-        <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="2">
-          <span>2</span>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step-indicator-item" data-step="2" role="button" aria-label="ステップ2: 世界観">
+          <span aria-hidden="true">2</span>
           <div class="step-title">世界観</div>
         </div>
-        <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="3">
-          <span>3</span>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step-indicator-item" data-step="3" role="button" aria-label="ステップ3: 事件設定">
+          <span aria-hidden="true">3</span>
           <div class="step-title">事件設定</div>
         </div>
-        <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="4">
-          <span>4</span>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step-indicator-item" data-step="4" role="button" aria-label="ステップ4: 詳細設定">
+          <span aria-hidden="true">4</span>
           <div class="step-title">詳細</div>
         </div>
-        <div class="step-line"></div>
-        <div class="step-indicator-item" data-step="5">
-          <span>5</span>
+        <div class="step-line" aria-hidden="true"></div>
+        <div class="step-indicator-item" data-step="5" role="button" aria-label="ステップ5: 生成実行">
+          <span aria-hidden="true">5</span>
           <div class="step-title">生成</div>
         </div>
       </div>
@@ -231,16 +243,16 @@
         </div>
         
         <!-- ナビゲーションボタン -->
-        <div class="button-container">
-          <button type="button" id="prev-btn" class="btn btn-secondary" disabled>
-            <span>←</span> 前へ
+        <div class="button-container" role="navigation" aria-label="ステップナビゲーション">
+          <button type="button" id="prev-btn" class="btn btn-secondary" disabled aria-label="前のステップに戻る">
+            <span aria-hidden="true">←</span> 前へ
           </button>
           <div class="btn-spacer"></div>
-          <button type="button" id="next-btn" class="btn btn-primary">
-            次へ <span>→</span>
+          <button type="button" id="next-btn" class="btn btn-primary" aria-label="次のステップに進む">
+            次へ <span aria-hidden="true">→</span>
           </button>
-          <button type="button" id="generate-btn" class="btn btn-success" style="display: none;">
-            <span>🚀</span> 生成開始
+          <button type="button" id="generate-btn" class="btn btn-success" style="display: none;" aria-label="マーダーミステリー生成を開始">
+            <span aria-hidden="true">🚀</span> 生成開始
           </button>
         </div>
         
@@ -343,6 +355,8 @@
   </footer>
 
   <!-- メインアプリケーション -->
+  <script type="module" src="js/SkeletonLoader.js"></script>
+  <script type="module" src="js/UXEnhancer.js"></script>
   <script type="module" src="js/UltraIntegratedApp.js"></script>
   <script type="module" src="js/MicroGenerationApp.js"></script>
 </body>

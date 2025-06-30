@@ -3,20 +3,24 @@
  * 完全統合型フロントエンド - 自動フェーズ実行対応
  */
 
-// スケルトンローダーのインポート（モジュール対応）
-let SkeletonLoader, skeletonLoader;
+// スケルトンローダーとUXエンハンサーのインポート（モジュール対応）
+let SkeletonLoader, skeletonLoader, UXEnhancer, uxEnhancer;
 try {
   if (typeof module !== 'undefined' && module.exports) {
     // Node.js環境
     ({ SkeletonLoader, skeletonLoader } = require('./SkeletonLoader.js'));
+    ({ UXEnhancer, uxEnhancer } = require('./UXEnhancer.js'));
   } else {
     // ブラウザ環境 - 動的インポート
     if (typeof SkeletonLoader !== 'undefined') {
       skeletonLoader = new SkeletonLoader();
     }
+    if (typeof UXEnhancer !== 'undefined') {
+      uxEnhancer = new UXEnhancer();
+    }
   }
 } catch (error) {
-  console.warn('SkeletonLoader not available:', error.message);
+  console.warn('Modules not available:', error.message);
 }
 
 class UltraIntegratedApp {
@@ -38,6 +42,7 @@ class UltraIntegratedApp {
 
   init() {
     this.setupEventListeners();
+    this.setupUXEnhancements();
     this.updateStepDisplay();
     this.updateButtonStates();
     this.restoreFormData();
@@ -47,6 +52,45 @@ class UltraIntegratedApp {
     this.microApp = null;
     
     console.log('✅ Ultra Integrated App - 初期化完了');
+  }
+
+  setupUXEnhancements() {
+    if (!uxEnhancer) return;
+
+    // インタラクティブ要素にエフェクトを追加
+    uxEnhancer.addInteractiveEffect('.btn');
+    uxEnhancer.addInteractiveEffect('.checkbox-label');
+    uxEnhancer.addInteractiveEffect('.radio-label');
+
+    // ツールチップを追加
+    this.addTooltips();
+
+    // スワイプジェスチャーのハンドリング
+    document.addEventListener('swipeLeft', () => this.goToNextStep());
+    document.addEventListener('swipeRight', () => this.goToPreviousStep());
+
+    // 成功通知の表示
+    uxEnhancer.showToast('🚀 アプリケーション初期化完了', 'success', 3000);
+  }
+
+  addTooltips() {
+    // ツールチップデータを追加
+    const tooltipData = {
+      'participants': '参加人数を選択してください。5-6人が最も楽しめます。',
+      'era': '物語の時代背景を設定します。現代設定が推奨です。',
+      'setting': '事件が発生する場所を選択します。',
+      'complexity': 'シナリオの複雑さを設定します。初回は標準がおすすめです。',
+      'red_herring': '偽の手がかりを追加して推理を困難にします。',
+      'twist_ending': '意外な真相でプレイヤーを驚かせます。',
+      'secret_roles': 'プレイヤーに秘密の役割を与えます。'
+    };
+
+    Object.entries(tooltipData).forEach(([id, text]) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.setAttribute('data-tooltip', text);
+      }
+    });
   }
 
   setupEventListeners() {
@@ -104,19 +148,52 @@ class UltraIntegratedApp {
       this.currentStep--;
       this.updateStepDisplay();
       this.updateButtonStates();
+      
+      // UX強化: ステップ変更の通知
+      if (uxEnhancer) {
+        uxEnhancer.showToast(`ステップ ${this.currentStep} に戻りました`, 'info', 2000);
+      }
     }
   }
 
   goToNextStep() {
     if (this.currentStep < this.totalSteps) {
+      // バリデーション
+      if (!this.validateCurrentStep()) {
+        return;
+      }
+      
       this.collectFormData();
       this.currentStep++;
       this.updateStepDisplay();
       this.updateButtonStates();
+      
       if (this.currentStep === this.totalSteps) {
         this.updateSummary();
+        if (uxEnhancer) {
+          uxEnhancer.showToast('🎯 設定完了！生成の準備ができました', 'success', 3000);
+        }
+      } else if (uxEnhancer) {
+        uxEnhancer.showToast(`ステップ ${this.currentStep} に進みました`, 'info', 2000);
       }
     }
+  }
+
+  validateCurrentStep() {
+    const currentStepElement = document.getElementById(`step-${this.currentStep}`);
+    const requiredFields = currentStepElement.querySelectorAll('[required]');
+    
+    for (const field of requiredFields) {
+      if (!field.value.trim()) {
+        if (uxEnhancer) {
+          const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
+          uxEnhancer.showToast(`⚠️ ${label}を選択してください`, 'warning', 3000);
+        }
+        field.focus();
+        return false;
+      }
+    }
+    return true;
   }
 
   updateStepDisplay() {
@@ -294,6 +371,11 @@ class UltraIntegratedApp {
     this.collectFormData();
     console.log('🔥 Ultra Generation starting with data:', this.formData);
 
+    // UX強化: 生成開始通知
+    if (uxEnhancer) {
+      uxEnhancer.showToast('🚀 マーダーミステリー生成を開始します', 'info', 3000);
+    }
+
     try {
       this.isGenerating = true;
       this.showGenerationUI();
@@ -343,6 +425,12 @@ class UltraIntegratedApp {
       if (sessionData) {
         console.log('🎉 Ultra Generation completed successfully!');
         this.sessionData = sessionData;
+        
+        // UX強化: 生成完了通知
+        if (uxEnhancer) {
+          uxEnhancer.showToast('🎉 マーダーミステリー生成が完了しました！', 'success', 5000);
+        }
+        
         this.showResults(sessionData);
       } else {
         throw new Error('No session data received');
@@ -350,6 +438,12 @@ class UltraIntegratedApp {
       
     } catch (error) {
       console.error('❌ Ultra Generation failed:', error);
+      
+      // UX強化: エラー通知
+      if (uxEnhancer) {
+        uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
+      }
+      
       this.showError(error.message);
     } finally {
       this.isGenerating = false;
