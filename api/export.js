@@ -18,10 +18,17 @@ export const config = {
 async function generateTextFiles(sessionData) {
   const files = {};
   
-  // タイトル抽出
-  const concept = sessionData.phases?.phase1?.concept || '';
-  const titleMatch = concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
-  const title = titleMatch ? titleMatch[1].trim() : 'マーダーミステリーシナリオ';
+  // 統合マイクロ生成のデータ構造に対応
+  let concept = '';
+  let title = 'マーダーミステリーシナリオ';
+  
+  // 新しいstep構造からデータを抽出
+  if (sessionData.phases?.step1?.content?.concept) {
+    concept = sessionData.phases.step1.content.concept;
+    const titleMatch = concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
+    title = titleMatch ? titleMatch[1].trim() : 'マーダーミステリーシナリオ';
+  }
+  
   const sanitizedTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
   
   // メインファイル生成
@@ -29,19 +36,16 @@ async function generateTextFiles(sessionData) {
   files[`${sanitizedTitle}_gamemaster_guide.txt`] = generateGameMasterGuide(sessionData, title);
   files[`${sanitizedTitle}_player_handout.txt`] = generatePlayerHandout(sessionData, title);
   
-  // 個別フェーズファイル
-  const phases = {
-    '01_concept.txt': sessionData.phases?.phase1?.concept,
-    '02_characters.txt': sessionData.phases?.phase2?.characters,
-    '03_relationships.txt': sessionData.phases?.phase3?.relationships,
-    '04_incident.txt': sessionData.phases?.phase4?.incident,
-    '05_clues.txt': sessionData.phases?.phase5?.clues,
-    '06_timeline.txt': sessionData.phases?.phase6?.timeline,
-    '07_solution.txt': sessionData.phases?.phase7?.solution,
-    '08_gamemaster.txt': sessionData.phases?.phase8?.gamemaster
+  // 統合マイクロ生成の個別ステップファイル
+  const steps = {
+    '01_concept_and_title.txt': sessionData.phases?.step1?.content?.concept,
+    '02_characters.txt': sessionData.phases?.step2?.content?.characters,
+    '03_incident_truth.txt': sessionData.phases?.step3?.content?.incident_and_truth,
+    '04_timeline.txt': sessionData.phases?.step4?.content?.timeline,
+    '05_gamemaster_guide.txt': sessionData.phases?.step5?.content?.gamemaster_guide
   };
   
-  Object.entries(phases).forEach(([filename, content]) => {
+  Object.entries(steps).forEach(([filename, content]) => {
     if (content) {
       files[filename] = content;
     }
@@ -85,30 +89,26 @@ function generateCompleteScenario(sessionData, title) {
 
 `;
 
-  // 各フェーズの内容を追加
-  const phaseNames = {
-    phase1: '1. コンセプト・世界観',
-    phase2: '2. キャラクター設定', 
-    phase3: '3. 人物関係',
-    phase4: '4. 事件・謎の構造',
-    phase5: '5. 手がかり・証拠',
-    phase6: '6. タイムライン',
-    phase7: '7. 真相・解決編',
-    phase8: '8. ゲームマスターガイド'
+  // 統合マイクロ生成の各ステップ内容を追加
+  const stepNames = {
+    step1: '1. 作品タイトル・コンセプト',
+    step2: '2. キャラクター完全設計', 
+    step3: '3. 事件・謎・真相構築',
+    step4: '4. タイムライン・進行管理',
+    step5: '5. ゲームマスター完全ガイド'
   };
-  
-  Object.entries(phaseNames).forEach(([phaseKey, phaseName]) => {
-    const phaseContent = Object.values(phases[phaseKey] || {}).find(v => v) || '';
-    
-    if (phaseContent) {
-      content += `
-================================================================================
-${phaseName}
-================================================================================
 
-${phaseContent}
-
-`;
+  Object.entries(stepNames).forEach(([stepKey, stepTitle]) => {
+    const stepData = phases[stepKey];
+    if (stepData && stepData.content) {
+      content += `\n${'='.repeat(80)}\n${stepTitle}\n${'='.repeat(80)}\n\n`;
+      
+      // コンテンツの各プロパティを追加
+      Object.entries(stepData.content).forEach(([key, value]) => {
+        if (value && typeof value === 'string') {
+          content += `${value}\n\n`;
+        }
+      });
     }
   });
   
