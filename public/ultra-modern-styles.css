@@ -613,10 +613,30 @@ header p {
   padding-top: var(--space-xl);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: var(--space-md);
+  /* ボタン位置完全固定 */
+  position: relative;
+  min-height: 60px;
 }
 
 .btn-spacer {
   flex: 1;
+}
+
+/* ボタン位置完全固定 */
+#prev-btn {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+#next-btn, #generate-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
 }
 
 .btn {
@@ -1168,12 +1188,32 @@ footer {
   }
   
   .button-container {
-    flex-direction: column;
+    /* モバイルでもボタン位置固定を維持 */
+    flex-direction: row;
+    justify-content: space-between;
     gap: var(--space-md);
+    min-height: 50px;
   }
   
   .btn-spacer {
-    display: none;
+    flex: 1;
+  }
+  
+  /* モバイルでもボタン位置固定 */
+  #prev-btn {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+  }
+
+  #next-btn, #generate-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
   }
   
   .action-buttons-modern {
