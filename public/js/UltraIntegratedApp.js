@@ -238,12 +238,23 @@ class UltraIntegratedApp {
       this.formData[key] = value;
     }
 
+    // デフォルト値を設定
+    this.formData.participants = this.formData.participants || '5';
+    this.formData.era = this.formData.era || 'modern';
+    this.formData.setting = this.formData.setting || 'closed-space';
+    this.formData.worldview = this.formData.worldview || 'realistic';
+    this.formData.tone = this.formData.tone || 'serious';
+    this.formData.incident_type = this.formData.incident_type || 'murder';
+    this.formData.complexity = this.formData.complexity || 'standard';
+
     // チェックボックス
     const checkboxes = ['red_herring', 'twist_ending', 'secret_roles'];
     checkboxes.forEach(name => {
       const checkbox = document.getElementById(name);
       if (checkbox) {
         this.formData[name] = checkbox.checked;
+      } else {
+        this.formData[name] = false;
       }
     });
     
@@ -251,6 +262,8 @@ class UltraIntegratedApp {
     const generationMode = document.querySelector('input[name="generation_mode"]:checked');
     if (generationMode) {
       this.formData.generation_mode = generationMode.value;
+    } else {
+      this.formData.generation_mode = 'staged';
     }
   }
 
@@ -335,6 +348,8 @@ class UltraIntegratedApp {
     // フォームデータを収集
     this.collectFormData();
     
+    console.log('📋 Collected formData:', this.formData);
+    
     // UX強化: 生成開始通知
     if (uxEnhancer) {
       uxEnhancer.showToast('🔬 統合マイクロ生成を開始します', 'info', 3000);
@@ -358,6 +373,12 @@ class UltraIntegratedApp {
           sessionId: sessionId
         }),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API Response Error:', response.status, errorText);
+        throw new Error(`API Error ${response.status}: ${errorText}`);
+      }
 
       const result = await response.json();
       

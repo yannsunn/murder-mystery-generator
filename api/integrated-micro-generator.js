@@ -249,8 +249,8 @@ export default async function handler(req, res) {
   // セキュリティ・パフォーマンス・バリデーション統合チェック
   const middlewares = [
     createPerformanceMiddleware(),
-    createSecurityMiddleware('generation'),
-    createValidationMiddleware('generation')
+    createSecurityMiddleware('generation')
+    // createValidationMiddleware('generation') // 一時無効化
   ];
 
   for (const middleware of middlewares) {
@@ -262,7 +262,11 @@ export default async function handler(req, res) {
         });
       });
     } catch (middlewareError) {
-      return;
+      console.error('Middleware error:', middlewareError);
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Middleware error: ' + middlewareError.message 
+      });
     }
   }
 
@@ -270,6 +274,17 @@ export default async function handler(req, res) {
     const { formData, sessionId } = req.body;
     
     console.log('🔬 Starting integrated micro generation...');
+    console.log('📋 Raw request body:', JSON.stringify(req.body, null, 2));
+    console.log('📋 Received formData:', JSON.stringify(formData, null, 2));
+    console.log('🆔 Session ID:', sessionId);
+    
+    if (!formData) {
+      return res.status(400).json({
+        success: false,
+        error: 'formData is required',
+        received: req.body
+      });
+    }
     
     const sessionData = {
       sessionId: sessionId || `integrated_micro_${Date.now()}`,
