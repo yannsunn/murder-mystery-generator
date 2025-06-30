@@ -247,7 +247,7 @@ UI Update ← EventEmitter ← State Change ← Processing ← Validation ←┘
 - 静的解析
 
 ### デプロイメント
-- Vercel/Netlify対応
+- Vercel/Vercel対応
 - 環境変数管理
 - ヘルスチェック
 

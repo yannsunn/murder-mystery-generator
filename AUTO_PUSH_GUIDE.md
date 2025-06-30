@@ -156,7 +156,7 @@ chmod +x scripts/auto-push.sh
 
 #### **2. Not in Git Repository**
 ```bash
-cd /path/to/murder-mystery-netlify
+cd /path/to/murder-mystery-vercel
 npm run push
 ```
 

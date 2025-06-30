@@ -87,7 +87,7 @@ public/js/
 1. **Clone & Setup**
    ```bash
    git clone <repository-url>
-   cd murder-mystery-netlify
+   cd murder-mystery-vercel
    npm install
    ```
 
@@ -106,13 +106,13 @@ public/js/
 
 ### Production Deployment
 
-#### Netlify Deployment
+#### Vercel Deployment
 
 1. Connect GitHub repository
 2. Automatic build settings:
    - Build command: `npm run build`
    - Publish directory: `public`
-3. Add environment variables in Netlify dashboard:
+3. Add environment variables in Vercel dashboard:
    - `GROQ_API_KEY`
    - `OPENAI_API_KEY` (optional fallback)
 
@@ -444,7 +444,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Credits
 - **🧠 AI Models**: Groq, OpenAI
-- **☁️ Infrastructure**: Vercel, Netlify
+- **☁️ Infrastructure**: Vercel, Vercel
 - **🎨 Design**: Modern CSS, CSS Grid/Flexbox
 - **🔧 Development**: ES6+, Web APIs
 - **🧪 Testing**: Custom test framework

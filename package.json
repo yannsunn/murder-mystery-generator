@@ -5,15 +5,16 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "netlify dev",
-    "build": "npm run test && echo '✅ Build successful'",
-    "start": "netlify serve",
+    "dev": "vercel dev",
+    "build": "echo '✅ Build successful - Vercel deployment'",
+    "start": "vercel dev --listen 3000",
     "test": "node tests/basic-test-suite.js",
     "test:env": "node -e \"import('./api/config/env-manager.js').then(m => m.envManager.initialize())\"",
     "test:security": "node -e \"import('./tests/basic-test-suite.js').then(m => m.runBasicTests())\"",
     "test:download": "node tests/download-test.js",
-    "validate": "npm run test:env && npm run test",
-    "deploy": "npm run validate && netlify deploy --prod",
+    "test:full": "npm run test:env && npm run test",
+    "validate": "npm run test:full",
+    "deploy": "vercel --prod",
     "clean": "rm -rf node_modules package-lock.json && npm install",
     "audit": "npm audit fix",
     "env:example": "node -e \"import('./api/config/env-manager.js').then(m => console.log(m.envManager.generateEnvExample()))\""
@@ -23,7 +24,7 @@
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
-    "netlify-cli": "^17.0.0"
+    "@vercel/node": "^3.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

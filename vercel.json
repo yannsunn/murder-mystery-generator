@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
   "functions": {
     "api/enhanced-pdf-generator.js": {
       "maxDuration": 90
@@ -9,6 +10,54 @@
     },
     "api/scenario-storage.js": {
       "maxDuration": 30
+    },
+    "api/phase-executor.js": {
+      "maxDuration": 30
+    },
+    "api/enhanced-export-system.js": {
+      "maxDuration": 120
+    },
+    "api/ultra-integrated-generator.js": {
+      "maxDuration": 180
+    },
+    "api/ultra-export-system.js": {
+      "maxDuration": 120
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ]
 }

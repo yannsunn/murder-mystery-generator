@@ -2,7 +2,7 @@
 
 **Professional-grade AI-powered Murder Mystery scenario generator optimized for commercial deployment**
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/your-badge-id/deploy-status)](https://app.netlify.com/sites/your-site-name/deploys)
+[![Deployed on Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-repo)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-repo)
 
@@ -40,7 +40,7 @@
 
 ### Prerequisites
 - Node.js 16.0 or higher
-- Netlify CLI (optional for local development)
+- Vercel CLI (optional for local development)
 - Groq API key (required)
 
 ### Installation
@@ -97,7 +97,7 @@ npm run test
 # Build for production
 npm run build
 
-# Deploy to Netlify
+# Deploy to Vercel
 npm run deploy
 ```
 
@@ -111,9 +111,9 @@ npm run deploy
 | `NODE_ENV` | ❌ | Environment (development/production) |
 | `BUILD_ID` | ❌ | Build identifier for tracking |
 
-### Netlify Configuration
+### Vercel Configuration
 
-The application is optimized for Netlify deployment with:
+The application is optimized for Vercel deployment with:
 - **Function timeout**: 60 seconds
 - **Build command**: `npm run build`
 - **Publish directory**: `public`
@@ -155,7 +155,7 @@ graph TB
 ### File Structure
 
 ```
-├── api/                      # Netlify Functions
+├── api/                      # Vercel Functions
 │   ├── security-utils.js     # Security middleware
 │   ├── phase1-concept.js     # Scenario concept generation
 │   ├── phase2-characters.js  # Character generation
@@ -175,7 +175,7 @@ graph TB
 │   ├── pre-build-checks.js   # Quality assurance
 │   ├── validate-config.js    # Configuration validation
 │   └── production-deploy.sh  # Deployment automation
-└── netlify.toml             # Netlify configuration
+└── vercel.toml             # Vercel configuration
 ```
 
 ## 🔒 Security Features
@@ -275,10 +275,10 @@ npm run build
 #### Deployment Issues
 ```bash
 # Check deployment status
-netlify status
+vercel status
 
 # View deployment logs
-netlify logs
+vercel logs
 ```
 
 ### Error Codes
@@ -365,7 +365,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Groq AI** - Fast AI inference engine
-- **Netlify** - Serverless deployment platform
+- **Vercel** - Serverless deployment platform
 - **Claude Code** - Development assistance and optimization
 
 ## 📞 Support

@@ -36,9 +36,9 @@ RATE_LIMIT_WINDOW_MINUTES=15
 OPENAI_API_KEY=your_openai_key_backup
 ```
 
-#### Netlify環境変数設定:
+#### Vercel環境変数設定:
 ```bash
-# 同じ環境変数をNetlify管理画面で設定
+# 同じ環境変数をVercel管理画面で設定
 Site settings > Environment variables
 ```
 

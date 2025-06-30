@@ -192,10 +192,10 @@ function cleanupOldestRateLimits() {
 }
 
 /**
- * セキュアなレスポンスヘッダーの設定
+ * セキュアなレスポンスヘッダーの設定 (Vercel最適化版)
  */
 export function setSecurityHeaders(res) {
-  // より安全なCORS設定（必要に応じて特定のオリジンに限定）
+  // Vercel環境のCORS設定
   const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
     process.env.ALLOWED_ORIGINS.split(',') : ['*'];
   
