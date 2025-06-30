@@ -8,6 +8,9 @@
     "api/micro-generation-system.js": {
       "maxDuration": 30
     },
+    "api/integrated-micro-generator.js": {
+      "maxDuration": 300
+    },
     "api/export.js": {
       "maxDuration": 60
     },

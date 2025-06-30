@@ -32,7 +32,7 @@ class UltraIntegratedApp {
     this.isGenerating = false;
     this.generationProgress = {
       currentPhase: 0,
-      totalPhases: 8,
+      totalPhases: 5,
       status: 'waiting'
     };
     
@@ -47,8 +47,8 @@ class UltraIntegratedApp {
     this.updateButtonStates();
     this.restoreFormData();
     
-    // 生成モード初期化
-    this.generationMode = 'normal';
+    // 生成モード初期化 - マイクロモードを標準に
+    this.generationMode = 'micro';
     this.microApp = null;
     
     console.log('✅ Ultra Integrated App - 初期化完了');
@@ -111,17 +111,8 @@ class UltraIntegratedApp {
       generateBtn.addEventListener('click', () => this.handleGenerationStart());
     }
     
-    // 生成モード選択
-    const normalMode = document.getElementById('normal-mode');
-    const microMode = document.getElementById('micro-mode');
-    
-    if (normalMode) {
-      normalMode.addEventListener('change', () => this.onModeChange('normal'));
-    }
-    
-    if (microMode) {
-      microMode.addEventListener('change', () => this.onModeChange('micro'));
-    }
+    // 統合マイクロ生成のみ対応（モード選択は無し）
+    console.log('🔬 Integrated micro generation mode only');
 
     // 結果画面のボタン
     const downloadZipBtn = document.getElementById('download-zip');
@@ -228,10 +219,10 @@ class UltraIntegratedApp {
       generateBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
     }
     
-    // モード選択を最終ステップで表示
-    const modeSelector = document.getElementById('mode-selector');
-    if (modeSelector) {
-      modeSelector.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+    // モード説明を最終ステップで表示
+    const modeInfo = document.getElementById('mode-info');
+    if (modeInfo) {
+      modeInfo.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
     }
   }
 
@@ -316,128 +307,76 @@ class UltraIntegratedApp {
     return value || '未設定';
   }
 
-  // 🎯 生成モード変更ハンドラー
+  // 🎯 統合マイクロ生成モード固定
   onModeChange(mode) {
-    this.generationMode = mode;
-    console.log(`🔄 Generation mode changed to: ${mode}`);
+    // 統合マイクロモード固定（他のモードはなし）
+    this.generationMode = 'micro';
+    console.log(`🔄 Generation mode: integrated micro (only option)`);
     
-    // モード別の説明更新
+    // ボタンテキスト更新
     const generateBtn = document.getElementById('generate-btn');
     if (generateBtn) {
-      if (mode === 'micro') {
-        generateBtn.innerHTML = '<span>🔬</span> マイクロ生成開始';
-      } else {
-        generateBtn.innerHTML = '<span>🚀</span> 生成開始';
-      }
+      generateBtn.innerHTML = '<span>🔬</span> 詳細生成開始';
     }
   }
   
-  // 🎯 生成開始ハンドラー（モード別振り分け）
+  // 🎯 生成開始ハンドラー（マイクロモード専用）
   async handleGenerationStart() {
-    if (this.generationMode === 'micro') {
-      await this.startMicroGeneration();
-    } else {
-      await this.startUltraGeneration();
-    }
+    // マイクロモード専用に統一
+    await this.startMicroGeneration();
   }
   
-  // 🔬 マイクロ生成開始
+  // 🔬 統合マイクロ生成開始
   async startMicroGeneration() {
-    console.log('🔬 Starting Micro Generation...');
-    
-    // MicroGenerationAppを初期化（まだない場合）
-    if (!this.microApp) {
-      // インポートして初期化
-      if (typeof MicroGenerationApp !== 'undefined') {
-        this.microApp = new MicroGenerationApp();
-      } else {
-        console.error('MicroGenerationApp is not loaded');
-        this.showError('マイクロ生成システムの初期化に失敗しました');
-        return;
-      }
-    }
+    if (this.isGenerating) return;
+
+    console.log('🔬 Starting Integrated Micro Generation...');
     
     // フォームデータを収集
     this.collectFormData();
     
-    // マイクロ生成開始（フォームデータを渡す）
-    await this.microApp.startMicroGeneration(this.formData);
-  }
-
-  // 🚀 ウルトラ統合生成開始 - 段階的実行対応
-  async startUltraGeneration() {
-    if (this.isGenerating) return;
-
-    this.collectFormData();
-    console.log('🔥 Ultra Generation starting with data:', this.formData);
-
     // UX強化: 生成開始通知
     if (uxEnhancer) {
-      uxEnhancer.showToast('🚀 マーダーミステリー生成を開始します', 'info', 3000);
+      uxEnhancer.showToast('🔬 統合マイクロ生成を開始します', 'info', 3000);
     }
 
     try {
       this.isGenerating = true;
       this.showGenerationUI();
       
-      const sessionId = `ultra_${Date.now()}`;
-      let currentPhase = 1;
-      let sessionData = null;
+      const sessionId = `integrated_micro_${Date.now()}`;
       
-      // 段階的実行ループ
-      while (currentPhase <= 8) {
-        console.log(`🔄 Starting phase batch from ${currentPhase}`);
-        
-        const response = await fetch('/api/ultra-integrated-generator', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'generate_complete',
-            formData: this.formData,
-            sessionId: sessionId,
-            continueFrom: currentPhase
-          }),
-        });
+      console.log('🔬 Calling integrated micro generator...');
+      
+      const response = await fetch('/api/integrated-micro-generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formData: this.formData,
+          sessionId: sessionId
+        }),
+      });
 
-        const result = await response.json();
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Generation failed');
-        }
-        
-        sessionData = result.sessionData;
-        
-        // 進捗更新表示
-        this.updateProgress(result.progressUpdates || []);
-        
-        if (result.isComplete) {
-          console.log('🎉 All phases completed!');
-          break;
-        }
-        
-        // 次のフェーズに進む
-        currentPhase = result.nextPhase;
-        if (!currentPhase) break;
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Integrated micro generation failed');
       }
       
-      if (sessionData) {
-        console.log('🎉 Ultra Generation completed successfully!');
-        this.sessionData = sessionData;
-        
-        // UX強化: 生成完了通知
-        if (uxEnhancer) {
-          uxEnhancer.showToast('🎉 マーダーミステリー生成が完了しました！', 'success', 5000);
-        }
-        
-        this.showResults(sessionData);
-      } else {
-        throw new Error('No session data received');
+      console.log('🎉 Integrated Micro Generation completed successfully!');
+      this.sessionData = result.sessionData;
+      
+      // UX強化: 生成完了通知
+      if (uxEnhancer) {
+        uxEnhancer.showToast('🎉 統合マイクロ生成が完了しました！', 'success', 5000);
       }
+      
+      this.showResults(result.sessionData);
       
     } catch (error) {
-      console.error('❌ Ultra Generation failed:', error);
+      console.error('❌ Integrated Micro Generation failed:', error);
       
       // UX強化: エラー通知
       if (uxEnhancer) {
@@ -450,29 +389,20 @@ class UltraIntegratedApp {
     }
   }
 
-  // 進捗更新表示 - 完全実装
-  updateProgress(progressUpdates) {
-    if (!progressUpdates || progressUpdates.length === 0) return;
-    
-    progressUpdates.forEach(update => {
-      console.log(`📈 Phase ${update.phase}: ${update.name} - ${update.status}`);
-      
-      if (update.status === 'completed') {
-        // 完了したフェーズ数から進捗率を計算
-        const completedPhase = update.phase;
-        const totalPhases = 8;
-        const percentage = Math.round((completedPhase / totalPhases) * 100);
-        
-        // 進捗バーの更新
-        this.updateProgressBar(percentage);
-        
-        // フェーズ情報の更新
-        this.updatePhaseInfo(completedPhase, totalPhases, update.name);
-        
-        // 現在フェーズ表示の更新
-        this.updateCurrentPhase(update.phase, update.name, update.status);
-      }
-    });
+  // 🚀 旧ウルトラ生成メソッド - 統合マイクロ生成に統合されました
+  async startUltraGeneration() {
+    // 統合マイクロ生成にリダイレクト
+    console.log('🔄 Redirecting to integrated micro generation...');
+    await this.startMicroGeneration();
+  }
+
+  // 進捗更新表示 - 統合マイクロ生成用
+  updateProgress(progressData) {
+    // 統合生成では進捗は簡単なパーセンテージ表示のみ
+    if (progressData && progressData.percentage !== undefined) {
+      this.updateProgressBar(progressData.percentage);
+      console.log(`📈 Integrated micro generation: ${progressData.percentage}%`);
+    }
   }
   
   // 進捗バー更新
@@ -498,9 +428,9 @@ class UltraIntegratedApp {
     if (currentPhaseEl) currentPhaseEl.textContent = `🔄 ${phaseName}`;
     if (phaseDetails) phaseDetails.textContent = `フェーズ ${currentPhase} を処理中...`;
     
-    // 推定残り時間の動的計算
+    // 推定残り時間の動的計算（統合マイクロ生成用）
     const remainingPhases = totalPhases - currentPhase;
-    const timePerPhase = this.generationMode === 'micro' ? 5 : 15; // マイクロモードは短時間
+    const timePerPhase = 60; // 統合生成では各ステップが約1分
     const estimatedSeconds = remainingPhases * timePerPhase;
     
     if (estimatedTime) {
@@ -516,13 +446,9 @@ class UltraIntegratedApp {
       }
     }
     
-    // 生成方式の説明を更新（モード別）
+    // 生成方式の説明を更新（統合マイクロ生成）
     if (generationMethod) {
-      if (this.generationMode === 'micro') {
-        generationMethod.textContent = 'マイクロ生成（超詳細）';
-      } else {
-        generationMethod.textContent = '段階的生成（高速）';
-      }
+      generationMethod.textContent = '統合マイクロ生成（超詳細）';
     }
   }
   
@@ -570,26 +496,18 @@ class UltraIntegratedApp {
     
     if (currentPhase) currentPhase.textContent = '🚀 AI生成エンジン起動中...';
     if (phaseDetails) phaseDetails.textContent = 'マーダーミステリー生成を開始します';
-    if (phaseNumber) phaseNumber.textContent = '1/8';
+    if (phaseNumber) phaseNumber.textContent = '1/5';
     
-    // 初期推定時間設定
+    // 初期推定時間設定（統合マイクロ生成用）
     if (estimatedTime) {
-      const totalTime = this.generationMode === 'micro' ? 40 : 120; // 秒
-      if (totalTime > 60) {
-        const minutes = Math.ceil(totalTime / 60);
-        estimatedTime.textContent = `約 ${minutes} 分`;
-      } else {
-        estimatedTime.textContent = `約 ${totalTime} 秒`;
-      }
+      const totalTime = 300; // 5分（統合生成のため十分な時間）
+      const minutes = Math.ceil(totalTime / 60);
+      estimatedTime.textContent = `最大 ${minutes} 分`;
     }
     
-    // モード別の生成方式表示
+    // 統合マイクロ生成方式表示
     if (generationMethod) {
-      if (this.generationMode === 'micro') {
-        generationMethod.textContent = 'マイクロ生成（超詳細）';
-      } else {
-        generationMethod.textContent = '段階的生成（高速）';
-      }
+      generationMethod.textContent = '統合マイクロ生成（超詳細）';
     }
   }
 
@@ -621,35 +539,47 @@ class UltraIntegratedApp {
 
   generateResultSummary(sessionData) {
     const phases = sessionData.phases || {};
-    const concept = phases.phase1?.concept || '';
-    const titleMatch = concept.match(/## 作品タイトル[\\s\\S]*?\\n([^\\n]+)/);
-    const title = titleMatch ? titleMatch[1].trim() : 'マーダーミステリーシナリオ';
+    
+    // 統合マイクロ生成の結果からタイトルを抽出
+    let title = 'マーダーミステリーシナリオ';
+    
+    // step1のコンセプトからタイトルを探す
+    const step1 = phases.step1;
+    if (step1 && step1.content && step1.content.concept) {
+      const titleMatch = step1.content.concept.match(/## 作品タイトル[\\s\\S]*?\\n([^\\n]+)/);
+      if (titleMatch) {
+        title = titleMatch[1].trim();
+      }
+    }
+    
+    const completedSteps = Object.values(phases).filter(p => p.status === 'completed').length;
+    const totalSteps = Object.keys(phases).length;
     
     return `
       <div class="result-summary">
         <h3 class="scenario-title">${title}</h3>
         <div class="generation-stats">
           <div class="stat-card">
-            <span class="stat-number">${Object.keys(phases).length}</span>
-            <span class="stat-label">生成フェーズ完了</span>
+            <span class="stat-number">${completedSteps}</span>
+            <span class="stat-label">統合ステップ完了</span>
           </div>
           <div class="stat-card">
             <span class="stat-number">${sessionData.formData?.participants || 5}</span>
             <span class="stat-label">参加者用</span>
           </div>
           <div class="stat-card">
-            <span class="stat-number">${sessionData.generatedImages?.length || 0}</span>
-            <span class="stat-label">生成画像</span>
+            <span class="stat-number">${sessionData.generationType || '統合マイクロ'}</span>
+            <span class="stat-label">生成モード</span>
           </div>
         </div>
         
         <div class="result-phases">
           ${Object.entries(phases).map(([key, data]) => {
-            const phaseNum = key.replace('phase', '');
-            const phaseName = this.getPhaseName(phaseNum);
+            const stepNum = key.replace('step', '');
+            const stepName = data.name || `ステップ${stepNum}`;
             return `
               <div class="phase-result">
-                <h4>フェーズ ${phaseNum}: ${phaseName}</h4>
+                <h4>ステップ ${stepNum}: ${stepName}</h4>
                 <div class="phase-status">
                   ${data.status === 'completed' ? '✅ 完了' : 
                     data.status === 'error' ? '❌ エラー' : '⏳ 処理中'}
@@ -663,8 +593,8 @@ class UltraIntegratedApp {
           <h4>📥 ダウンロード可能な形式</h4>
           <div class="download-options">
             <div class="download-option">
-              <strong>📦 ZIPアーカイブ</strong>
-              <p>完全なシナリオテキストファイル + ゲームマスターガイド + プレイヤー配布資料</p>
+              <strong>📦 統合マイクロ生成ZIP</strong>
+              <p>超詳細シナリオテキスト + ゲームマスター完全ガイド + プレイヤー配布資料</p>
             </div>
           </div>
         </div>
@@ -672,18 +602,15 @@ class UltraIntegratedApp {
     `;
   }
 
-  getPhaseName(phaseNum) {
+  getPhaseName(stepNum) {
     const names = {
-      '1': 'コンセプト・世界観',
-      '2': 'キャラクター設定',
-      '3': '人物関係',
-      '4': '事件・謎',
-      '5': '手がかり・証拠',
-      '6': 'タイムライン',
-      '7': '真相・解決',
-      '8': 'ゲームマスター'
+      '1': '作品タイトル・コンセプト',
+      '2': 'キャラクター完全設計',
+      '3': '事件・謎・真相構築',
+      '4': 'タイムライン・進行管理',
+      '5': 'ゲームマスター完全ガイド'
     };
-    return names[phaseNum] || `フェーズ${phaseNum}`;
+    return names[stepNum] || `ステップ${stepNum}`;
   }
 
   // ZIPファイルダウンロード（PDF廃止）

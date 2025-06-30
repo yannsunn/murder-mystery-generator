@@ -201,25 +201,12 @@
             </div>
             
             <div class="form-section" style="margin-top: 2rem;">
-              <h4 style="color: #6366f1; margin-bottom: 1rem;">🚀 生成モード設定</h4>
-              <div class="radio-group">
-                <label class="radio-label" style="display: flex; align-items: center; margin-bottom: 0.5rem; cursor: pointer;">
-                  <input type="radio" name="generation_mode" value="staged" checked style="margin-right: 0.5rem;">
-                  <span>
-                    <strong>段階的生成モード</strong> 
-                    <span style="color: #10b981;">（推奨）</span>
-                    <br>
-                    <small style="color: #6b7280;">処理を分割して実行し、タイムアウトを回避します</small>
-                  </span>
-                </label>
-                <label class="radio-label" style="display: flex; align-items: center; cursor: pointer;">
-                  <input type="radio" name="generation_mode" value="standard" style="margin-right: 0.5rem;">
-                  <span>
-                    <strong>標準生成モード</strong>
-                    <br>
-                    <small style="color: #6b7280;">従来の一括処理（高速ですがタイムアウトリスクあり）</small>
-                  </span>
-                </label>
+              <h4 style="color: #6366f1; margin-bottom: 1rem;">🔬 統合マイクロ生成システム</h4>
+              <div style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                <p style="margin: 0; color: var(--primary-100); font-size: 0.9rem;">
+                  <strong>🎯 最高品質モード</strong>のみを提供しています。<br>
+                  <small style="color: var(--primary-200);">各要素を最小単位まで分解し、一度のリクエストで超詳細シナリオを生成します。</small>
+                </p>
               </div>
             </div>
           </div>
@@ -251,27 +238,20 @@
           <button type="button" id="next-btn" class="btn btn-primary" aria-label="次のステップに進む">
             次へ <span aria-hidden="true">→</span>
           </button>
-          <button type="button" id="generate-btn" class="btn btn-success" style="display: none;" aria-label="マーダーミステリー生成を開始">
-            <span aria-hidden="true">🚀</span> 生成開始
+          <button type="button" id="generate-btn" class="btn btn-success" style="display: none;" aria-label="マーダーミステリー詳細生成を開始">
+            <span aria-hidden="true">🔬</span> 詳細生成開始
           </button>
         </div>
         
-        <!-- 生成モード選択 -->
-        <div class="generation-mode-selector" style="margin-top: 1rem; text-align: center;" id="mode-selector">
+        <!-- 生成モード説明 -->
+        <div class="generation-mode-info" style="margin-top: 1rem; text-align: center;" id="mode-info">
           <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
-            <h4 style="margin-bottom: 0.5rem; color: var(--primary-100);">🎯 生成モード選択</h4>
-            <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
-              <label style="color: var(--primary-200); cursor: pointer;">
-                <input type="radio" name="generation-mode" id="normal-mode" value="normal" checked style="margin-right: 0.5rem;">
-                ⚡ 通常モード（高速・8フェーズ）
-              </label>
-              <label style="color: var(--primary-200); cursor: pointer;">
-                <input type="radio" name="generation-mode" id="micro-mode" value="micro" style="margin-right: 0.5rem;">
-                🔬 マイクロモード（詳細・30+ステップ）
-              </label>
-            </div>
-            <p style="font-size: 0.8rem; color: var(--primary-400); margin-top: 0.5rem;">
-              マイクロモードは各要素を最小単位まで分解して段階的に生成します
+            <h4 style="margin-bottom: 0.5rem; color: var(--primary-100);">🔬 詳細生成システム</h4>
+            <p style="font-size: 0.9rem; color: var(--primary-200); margin-bottom: 0.5rem;">
+              各要素を最小単位まで分解して、段階的に高品質なシナリオを生成します
+            </p>
+            <p style="font-size: 0.8rem; color: var(--primary-400);">
+              ⏱️ 時間はかかりますが、最高品質の結果を保証します
             </p>
           </div>
         </div>
