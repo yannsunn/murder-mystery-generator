@@ -9,7 +9,7 @@ import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js
 import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
-  maxDuration: 180, // 3分の最大実行時間
+  maxDuration: 60, // 1分の最大実行時間（段階的実行用）
 };
 
 // フェーズ定義 - 完全自動化
@@ -508,9 +508,12 @@ export default async function handler(req, res) {
       };
       
       const progressUpdates = [];
+      const maxPhasesPerRequest = 2; // 一度に2フェーズまで実行
+      const startPhase = sessionData.currentPhase;
+      const endPhase = Math.min(startPhase + maxPhasesPerRequest - 1, 8);
       
-      // 全フェーズを自動実行
-      for (let phaseNum = sessionData.currentPhase; phaseNum <= 8; phaseNum++) {
+      // 制限された範囲でフェーズ実行
+      for (let phaseNum = startPhase; phaseNum <= endPhase; phaseNum++) {
         const phase = GENERATION_PHASES[phaseNum];
         if (!phase) continue;
         
@@ -607,13 +610,22 @@ export default async function handler(req, res) {
         }
       }
       
-      sessionData.status = 'completed';
-      sessionData.completedAt = new Date().toISOString();
+      // 完了状況判定
+      const isComplete = endPhase >= 8;
+      const nextPhase = isComplete ? null : endPhase + 1;
+      
+      sessionData.status = isComplete ? 'completed' : 'partial';
+      sessionData.currentPhase = nextPhase;
+      if (isComplete) {
+        sessionData.completedAt = new Date().toISOString();
+      }
       sessionData.generatedImages = generatedImages;
       sessionData.progressUpdates = progressUpdates;
       
       return res.status(200).json({
         success: true,
+        isComplete,
+        nextPhase,
         sessionData,
         message: '🎉 Complete generation finished successfully!',
         downloadReady: true,

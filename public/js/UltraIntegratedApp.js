@@ -201,7 +201,7 @@ class UltraIntegratedApp {
     return value || '未設定';
   }
 
-  // 🚀 ウルトラ統合生成開始
+  // 🚀 ウルトラ統合生成開始 - 段階的実行対応
   async startUltraGeneration() {
     if (this.isGenerating) return;
 
@@ -213,27 +213,53 @@ class UltraIntegratedApp {
       this.showGenerationUI();
       
       const sessionId = `ultra_${Date.now()}`;
+      let currentPhase = 1;
+      let sessionData = null;
       
-      const response = await fetch('/api/ultra-integrated-generator', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'generate_complete',
-          formData: this.formData,
-          sessionId: sessionId
-        }),
-      });
+      // 段階的実行ループ
+      while (currentPhase <= 8) {
+        console.log(`🔄 Starting phase batch from ${currentPhase}`);
+        
+        const response = await fetch('/api/ultra-integrated-generator', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'generate_complete',
+            formData: this.formData,
+            sessionId: sessionId,
+            continueFrom: currentPhase
+          }),
+        });
 
-      const result = await response.json();
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Generation failed');
+        }
+        
+        sessionData = result.sessionData;
+        
+        // 進捗更新表示
+        this.updateProgress(result.progressUpdates || []);
+        
+        if (result.isComplete) {
+          console.log('🎉 All phases completed!');
+          break;
+        }
+        
+        // 次のフェーズに進む
+        currentPhase = result.nextPhase;
+        if (!currentPhase) break;
+      }
       
-      if (result.success) {
+      if (sessionData) {
         console.log('🎉 Ultra Generation completed successfully!');
-        this.sessionData = result.sessionData;
-        this.showResults(result.sessionData);
+        this.sessionData = sessionData;
+        this.showResults(sessionData);
       } else {
-        throw new Error(result.error || 'Generation failed');
+        throw new Error('No session data received');
       }
       
     } catch (error) {
@@ -242,6 +268,22 @@ class UltraIntegratedApp {
     } finally {
       this.isGenerating = false;
     }
+  }
+
+  // 進捗更新表示
+  updateProgress(progressUpdates) {
+    if (!progressUpdates || progressUpdates.length === 0) return;
+    
+    progressUpdates.forEach(update => {
+      console.log(`📈 Phase ${update.phase}: ${update.name} - ${update.status}`);
+      
+      // 進捗UI更新（存在する場合）
+      const progressElement = document.getElementById(`phase-${update.phase}-progress`);
+      if (progressElement) {
+        progressElement.textContent = `${update.status === 'completed' ? '✅' : '🔄'} ${update.name}`;
+        progressElement.className = `progress-item ${update.status}`;
+      }
+    });
   }
 
   // 生成UI表示
