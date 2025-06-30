@@ -1,8 +1,12 @@
 # 🚀 Claude Code Development Rules - Ultra Advanced Next.js/React Edition
 
+## ⚡ **MANDATORY ULTRA SYNC LIMIT BREAKTHROUGH**
+**🔥 各指示ごとに必ず実行: ウルトラシンク分析による限界突破**
+
 ## 🎯 **CORE DEVELOPMENT PHILOSOPHY**
 
 **ULTRA SYNC + LIMIT BREAKTHROUGH METHODOLOGY:**
+- **⚡ 各指示ごとに必ずウルトラシンク分析を実行し限界を突破する**
 - 必ず全体構造をウルトラシンクで完全把握
 - 限界突破思考で最適解を追求
 - 実装前に必ず詳細計画を立案
@@ -12,6 +16,16 @@
 ---
 
 ## 📋 **PRE-IMPLEMENTATION PLANNING PROTOCOL**
+
+### **⚡ Phase 0: MANDATORY ULTRA SYNC LIMIT BREAKTHROUGH**
+```
+🔥 各指示受信時に必ず実行する限界突破プロトコル:
+1. 即座にプロジェクト全体の現状をウルトラシンク分析
+2. 指示の背景・真の目的・隠れた要求を限界突破思考で把握
+3. 最適解の探索範囲を既存の枠を超えて拡張
+4. 革新的アプローチの可能性を徹底検討
+5. 実装前の完全理解状態を確立
+```
 
 ### **🔍 Phase 1: Ultra Sync Analysis**
 ```
