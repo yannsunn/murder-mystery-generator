@@ -3,7 +3,7 @@
  * 自動フェーズ実行 + OpenAI画像生成 + エラー分離 + 完全統合
  */
 
-import './startup.js';
+// Startup initialization removed for reliability
 import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
