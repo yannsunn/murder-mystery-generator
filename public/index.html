@@ -245,11 +245,23 @@
         </div>
         
         <!-- 生成モード選択 -->
-        <div class="generation-mode-selector" style="margin-top: 1rem; text-align: center; display: none;" id="mode-selector">
-          <label style="color: var(--primary-300); font-size: 0.9rem;">
-            <input type="checkbox" id="micro-mode-toggle" style="margin-right: 0.5rem;">
-            🔬 マイクロ生成モード（詳細な段階的生成）
-          </label>
+        <div class="generation-mode-selector" style="margin-top: 1rem; text-align: center;" id="mode-selector">
+          <div style="background: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <h4 style="margin-bottom: 0.5rem; color: var(--primary-100);">🎯 生成モード選択</h4>
+            <div style="display: flex; gap: 1rem; justify-content: center; align-items: center;">
+              <label style="color: var(--primary-200); cursor: pointer;">
+                <input type="radio" name="generation-mode" id="normal-mode" value="normal" checked style="margin-right: 0.5rem;">
+                ⚡ 通常モード（高速・8フェーズ）
+              </label>
+              <label style="color: var(--primary-200); cursor: pointer;">
+                <input type="radio" name="generation-mode" id="micro-mode" value="micro" style="margin-right: 0.5rem;">
+                🔬 マイクロモード（詳細・30+ステップ）
+              </label>
+            </div>
+            <p style="font-size: 0.8rem; color: var(--primary-400); margin-top: 0.5rem;">
+              マイクロモードは各要素を最小単位まで分解して段階的に生成します
+            </p>
+          </div>
         </div>
       </form>
     </div>

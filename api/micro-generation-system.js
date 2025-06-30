@@ -124,7 +124,7 @@ export const MICRO_TASKS = {
       const characters = collectCharacters(context);
       const prompt = `
 キャラクター: ${characters.map(c => c.name).join(', ')}
-基本的な関係性マトリクスを生成してください（各関係を1行で）。
+基本的な関係性マトリクス（各キャラクター間の関係）を50文字程度で生成してください。
 `;
       const result = await aiClient.generateWithRetry(
         '人間関係の専門家として',
@@ -135,7 +135,145 @@ export const MICRO_TASKS = {
     }
   },
   
-  // さらに続く...
+  'phase3_motives': {
+    name: '動機・利害関係',
+    estimatedTime: 10,
+    dependencies: ['phase3_matrix'],
+    handler: async (formData, context) => {
+      const characters = collectCharacters(context);
+      const matrix = context.phase3_matrix?.matrix || '';
+      const prompt = `
+キャラクター: ${characters.map(c => c.name).join(', ')}
+関係性: ${matrix}
+各キャラクターの根本的動機と利害関係を100文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        '心理分析の専門家として',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { motives: result.content };
+    }
+  },
+  
+  'phase3_past': {
+    name: '過去の出来事',
+    estimatedTime: 8,
+    dependencies: ['phase3_motives'],
+    handler: async (formData, context) => {
+      const motives = context.phase3_motives?.motives || '';
+      const prompt = `
+動機・関係: ${motives}
+重要な過去の出来事（共通体験、秘密、恨み）を80文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        'ストーリーテラーとして',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { past: result.content };
+    }
+  },
+  
+  'phase3_present': {
+    name: '現在の状況',
+    estimatedTime: 6,
+    dependencies: ['phase3_past'],
+    handler: async (formData, context) => {
+      const past = context.phase3_past?.past || '';
+      const prompt = `
+過去の出来事: ${past}
+事件発生時の関係状態と緊張・対立ポイントを60文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        '状況分析の専門家として',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { present: result.content };
+    }
+  },
+  
+  // フェーズ4: 事件構造を細分化
+  'phase4_incident': {
+    name: '事件概要',
+    estimatedTime: 8,
+    dependencies: ['phase3_present'],
+    handler: async (formData, context) => {
+      const present = context.phase3_present?.present || '';
+      const prompt = `
+現在の状況: ${present}
+事件種類: ${formData.incident_type}
+事件の基本概要を80文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        'ミステリー作家として',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { incident: result.content };
+    }
+  },
+  
+  'phase4_method': {
+    name: '犯行手法',
+    estimatedTime: 10,
+    dependencies: ['phase4_incident'],
+    handler: async (formData, context) => {
+      const incident = context.phase4_incident?.incident || '';
+      const prompt = `
+事件概要: ${incident}
+具体的な犯行手法・トリックを100文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        'トリック専門家として',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { method: result.content };
+    }
+  },
+  
+  'phase4_motive': {
+    name: '犯行動機',
+    estimatedTime: 8,
+    dependencies: ['phase4_method'],
+    handler: async (formData, context) => {
+      const method = context.phase4_method?.method || '';
+      const prompt = `
+犯行手法: ${method}
+決定的な犯行動機を70文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        '心理プロファイラーとして',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { motive: result.content };
+    }
+  },
+  
+  'phase4_alibis': {
+    name: 'アリバイ・証拠',
+    estimatedTime: 8,
+    dependencies: ['phase4_motive'],
+    handler: async (formData, context) => {
+      const motive = context.phase4_motive?.motive || '';
+      const prompt = `
+犯行動機: ${motive}
+各キャラクターのアリバイと重要な証拠を80文字程度で生成してください。
+`;
+      const result = await aiClient.generateWithRetry(
+        '捜査専門家として',
+        prompt,
+        { maxRetries: 1 }
+      );
+      return { alibis: result.content };
+    }
+  },
+  
+  // フェーズ5-8も同様に細分化...
+  // 実装を継続
 };
 
 /**

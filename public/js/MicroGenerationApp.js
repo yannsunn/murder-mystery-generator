@@ -54,11 +54,17 @@ export class MicroGenerationApp {
   /**
    * マイクロ生成開始
    */
-  async startMicroGeneration() {
+  async startMicroGeneration(externalFormData = null) {
     if (this.isGenerating) return;
     
     console.log('🔬 Starting micro generation...');
-    this.collectFormData();
+    
+    // 外部からのフォームデータを使用（UltraIntegratedAppから）
+    if (externalFormData) {
+      this.formData = externalFormData;
+    } else {
+      this.collectFormData();
+    }
     
     try {
       this.isGenerating = true;
@@ -501,7 +507,10 @@ ${this.context.phase1_plot?.plot || ''}
   }
 }
 
-// アプリ初期化
+// アプリ初期化 - グローバル公開
+window.MicroGenerationApp = MicroGenerationApp;
+
 document.addEventListener('DOMContentLoaded', () => {
-  window.microGenApp = new MicroGenerationApp();
+  // UltraIntegratedAppが管理するので、ここでは初期化しない
+  console.log('🔬 MicroGenerationApp class loaded');
 });

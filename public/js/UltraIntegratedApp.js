@@ -26,6 +26,10 @@ class UltraIntegratedApp {
     this.updateButtonStates();
     this.restoreFormData();
     
+    // 生成モード初期化
+    this.generationMode = 'normal';
+    this.microApp = null;
+    
     console.log('✅ Ultra Integrated App - 初期化完了');
   }
 
@@ -44,7 +48,19 @@ class UltraIntegratedApp {
     }
 
     if (generateBtn) {
-      generateBtn.addEventListener('click', () => this.startUltraGeneration());
+      generateBtn.addEventListener('click', () => this.handleGenerationStart());
+    }
+    
+    // 生成モード選択
+    const normalMode = document.getElementById('normal-mode');
+    const microMode = document.getElementById('micro-mode');
+    
+    if (normalMode) {
+      normalMode.addEventListener('change', () => this.onModeChange('normal'));
+    }
+    
+    if (microMode) {
+      microMode.addEventListener('change', () => this.onModeChange('micro'));
     }
 
     // 結果画面のボタン
@@ -117,6 +133,12 @@ class UltraIntegratedApp {
 
     if (generateBtn) {
       generateBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+    }
+    
+    // モード選択を最終ステップで表示
+    const modeSelector = document.getElementById('mode-selector');
+    if (modeSelector) {
+      modeSelector.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
     }
   }
 
@@ -199,6 +221,54 @@ class UltraIntegratedApp {
       return option ? option.textContent : value;
     }
     return value || '未設定';
+  }
+
+  // 🎯 生成モード変更ハンドラー
+  onModeChange(mode) {
+    this.generationMode = mode;
+    console.log(`🔄 Generation mode changed to: ${mode}`);
+    
+    // モード別の説明更新
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) {
+      if (mode === 'micro') {
+        generateBtn.innerHTML = '<span>🔬</span> マイクロ生成開始';
+      } else {
+        generateBtn.innerHTML = '<span>🚀</span> 生成開始';
+      }
+    }
+  }
+  
+  // 🎯 生成開始ハンドラー（モード別振り分け）
+  async handleGenerationStart() {
+    if (this.generationMode === 'micro') {
+      await this.startMicroGeneration();
+    } else {
+      await this.startUltraGeneration();
+    }
+  }
+  
+  // 🔬 マイクロ生成開始
+  async startMicroGeneration() {
+    console.log('🔬 Starting Micro Generation...');
+    
+    // MicroGenerationAppを初期化（まだない場合）
+    if (!this.microApp) {
+      // インポートして初期化
+      if (typeof MicroGenerationApp !== 'undefined') {
+        this.microApp = new MicroGenerationApp();
+      } else {
+        console.error('MicroGenerationApp is not loaded');
+        this.showError('マイクロ生成システムの初期化に失敗しました');
+        return;
+      }
+    }
+    
+    // フォームデータを収集
+    this.collectFormData();
+    
+    // マイクロ生成開始（フォームデータを渡す）
+    await this.microApp.startMicroGeneration(this.formData);
   }
 
   // 🚀 ウルトラ統合生成開始 - 段階的実行対応
