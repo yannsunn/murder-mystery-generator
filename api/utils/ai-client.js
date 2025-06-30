@@ -16,17 +16,42 @@ export const AI_CONFIG = {
  */
 export class UnifiedAIClient {
   constructor() {
-    // 環境変数マネージャーを初期化してから取得
-    if (!envManager.initialized) {
-      envManager.initialize();
-    }
-    
-    // 環境変数マネージャーから取得
-    this.groqKey = envManager.get('GROQ_API_KEY');
-    this.openaiKey = envManager.get('OPENAI_API_KEY');
+    // プロダクション環境での確実な初期化
+    this.initializeEnvironment();
     
     // 設定値もenvManagerから取得
-    this.timeout = envManager.get('MAX_GENERATION_TIME') || AI_CONFIG.timeout;
+    this.timeout = this.groqKey || this.openaiKey ? 
+      (envManager.get('MAX_GENERATION_TIME') || AI_CONFIG.timeout) : 
+      AI_CONFIG.timeout;
+  }
+
+  /**
+   * 環境変数の確実な初期化
+   */
+  initializeEnvironment() {
+    try {
+      if (!envManager.initialized) {
+        envManager.initialize();
+      }
+      
+      // envManagerから取得を試みる
+      this.groqKey = envManager.get('GROQ_API_KEY');
+      this.openaiKey = envManager.get('OPENAI_API_KEY');
+    } catch (error) {
+      // envManagerが失敗した場合、直接process.envから取得
+      console.warn('EnvManager failed, using direct process.env access:', error.message);
+      this.groqKey = process.env.GROQ_API_KEY;
+      this.openaiKey = process.env.OPENAI_API_KEY;
+    }
+
+    // 最終確認とログ
+    console.log('🔑 AI Client Environment Check:');
+    console.log(`   GROQ: ${this.groqKey ? '✅ Configured' : '❌ Missing'}`);
+    console.log(`   OpenAI: ${this.openaiKey ? '✅ Configured' : '❌ Missing'}`);
+    
+    if (!this.groqKey && !this.openaiKey) {
+      console.error('❌ No AI providers configured! Please set GROQ_API_KEY or OPENAI_API_KEY');
+    }
   }
 
   /**
@@ -154,17 +179,36 @@ export class UnifiedAIClient {
   }
 
   /**
-   * フォールバック付きAI呼び出し
+   * フォールバック付きAI呼び出し - 環境変数チェック改善
    */
   async generateContent(systemPrompt, userPrompt, preferredProvider = 'groq') {
-    const providers = preferredProvider === 'groq' ? ['groq', 'openai'] : ['openai', 'groq'];
+    // 利用可能なプロバイダーのみ使用
+    const availableProviders = [];
+    
+    if (this.groqKey) {
+      availableProviders.push('groq');
+    }
+    if (this.openaiKey) {
+      availableProviders.push('openai');
+    }
+    
+    if (availableProviders.length === 0) {
+      throw new Error('No AI providers configured. Please set GROQ_API_KEY or OPENAI_API_KEY');
+    }
+    
+    // 優先順位を設定
+    const providers = preferredProvider === 'groq' && availableProviders.includes('groq') 
+      ? availableProviders 
+      : availableProviders.reverse();
+    
     let lastError;
     
     for (const provider of providers) {
       try {
+        console.log(`🤖 Trying ${provider.toUpperCase()} provider...`);
         return await this.makeAPICall(provider, systemPrompt, userPrompt);
       } catch (error) {
-        console.warn(`${provider} failed, trying next provider:`, error.message);
+        console.warn(`❌ ${provider.toUpperCase()} failed:`, error.message);
         lastError = error;
         continue;
       }
