@@ -243,6 +243,14 @@
             <span>🚀</span> 生成開始
           </button>
         </div>
+        
+        <!-- 生成モード選択 -->
+        <div class="generation-mode-selector" style="margin-top: 1rem; text-align: center; display: none;" id="mode-selector">
+          <label style="color: var(--primary-300); font-size: 0.9rem;">
+            <input type="checkbox" id="micro-mode-toggle" style="margin-right: 0.5rem;">
+            🔬 マイクロ生成モード（詳細な段階的生成）
+          </label>
+        </div>
       </form>
     </div>
     
@@ -324,5 +332,6 @@
 
   <!-- メインアプリケーション -->
   <script type="module" src="js/UltraIntegratedApp.js"></script>
+  <script type="module" src="js/MicroGenerationApp.js"></script>
 </body>
 </html>

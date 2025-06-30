@@ -3,7 +3,10 @@
   "buildCommand": "npm run build",
   "functions": {
     "api/ultra-integrated-generator.js": {
-      "maxDuration": 180
+      "maxDuration": 60
+    },
+    "api/micro-generation-system.js": {
+      "maxDuration": 30
     },
     "api/export.js": {
       "maxDuration": 60
