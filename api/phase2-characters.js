@@ -1,210 +1,135 @@
-// Groq Phase 2: キャラクター超高速生成
-// 処理時間: 8-12秒保証
+/**
+ * Phase 2: キャラクター生成 - 統一AIクライアント版
+ * 処理時間: 8-12秒保証
+ */
+
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 90,
 };
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/**
+ * キャラクター生成プロンプト作成
+ */
+function generateCharacterPrompt(concept, participants) {
+  return `あなたは経験豊富なマーダーミステリー作家です。以下のコンセプトに基づいて、${participants || 4}人のキャラクターを生成してください。
 
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+【コンセプト】
+${JSON.stringify(concept, null, 2)}
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
-  }
+【要件】
+1. 各キャラクターは独特で魅力的な個性を持つ
+2. 全員が事件に関わる動機を持つ
+3. 複雑な人間関係を形成する
+4. ミステリーの解決に必要な情報を分散して持つ
 
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
+【出力形式】
+JSON形式で以下の構造：
+{
+  "characters": [
+    {
+      "id": "character_1",
+      "name": "名前",
+      "age": 年齢,
+      "occupation": "職業",
+      "appearance": "外見の特徴",
+      "personality": "性格・特徴",
+      "background": "背景・経歴",
+      "secrets": ["秘密1", "秘密2"],
+      "motives": ["動機1", "動機2"],
+      "relationships": {
+        "character_2": "関係性の説明",
+        "character_3": "関係性の説明"
+      }
+    }
+  ]
+}`;
+}
+
+/**
+ * キャラクター生成メインハンドラー
+ */
+async function generateCharacters(req, res) {
+  const { concept, participants = 4, previousPhases = {} } = req.body;
+
+  if (!concept && !previousPhases.phase1) {
+    throw new AppError(
+      'コンセプトデータが提供されていません',
+      ErrorTypes.VALIDATION,
+      400
     );
   }
+
+  const actualConcept = concept || previousPhases.phase1?.concept;
+  console.log('Phase 2: キャラクター生成開始...');
 
   try {
-    const body = await request.json();
-    const { concept, participants } = body;
+    const prompt = generateCharacterPrompt(actualConcept, participants);
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。
+商業品質の魅力的なキャラクターを生成してください。
+必ずJSON形式で回答してください。`;
 
-    if (!concept) {
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'コンセプトデータが提供されていません' 
-        }),
-        { status: 400, headers }
-      );
-    }
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
+    });
 
-    console.log('Groq Phase 2: Starting ultra-fast character generation...');
-
-    const prompt = generateCharacterPrompt(concept, participants);
-    
-    // Groq優先、フォールバック付き
+    // JSON解析を試みる
+    let characters;
     try {
-      if (GROQ_API_KEY) {
-        const result = await callGroq(prompt);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            phase: 'characters',
-            content: result.content,
-            next_phase: 'relationships',
-            estimated_cost: '$0.003',
-            progress: 25,
-            provider: 'Groq (Ultra-Fast)',
-            processing_time: result.time
-          }),
-          { status: 200, headers }
-        );
+      characters = JSON.parse(result.content);
+    } catch (parseError) {
+      // JSONでない場合は構造化する
+      characters = {
+        characters: [{
+          id: "character_1",
+          name: "解析エラー",
+          description: result.content
+        }]
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      phase: 2,
+      phaseName: 'キャラクター設定',
+      characters: characters.characters || characters,
+      metadata: {
+        participantCount: participants,
+        provider: result.provider,
+        generatedAt: new Date().toISOString()
       }
-    } catch (groqError) {
-      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
-    }
-
-    // OpenAI フォールバック
-    if (OPENAI_API_KEY) {
-      const result = await callOpenAI(prompt);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          phase: 'characters',
-          content: result.content,
-          next_phase: 'relationships',
-          estimated_cost: '$0.008',
-          progress: 25,
-          provider: 'OpenAI (Fallback)',
-          processing_time: result.time
-        }),
-        { status: 200, headers }
-      );
-    }
-
-    throw new Error('APIキーが設定されていません');
+    });
 
   } catch (error) {
-    console.error('Character generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `キャラクター生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
+    throw new AppError(
+      `キャラクター生成エラー: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
     );
   }
 }
 
-async function callGroq(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
-      messages: [
-        { role: 'system', content: '世界クラスのキャラクター設計専門家として、商業出版レベルの詳細で魅力的なキャラクターを創造してください。心理的深み、複雑な動機、リアルな人間関係を持つキャラクターを設計し、読者が感情移入できる立体的な人物像を構築してください。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 4000,
-    })
-  });
+/**
+ * エクスポート: エラーハンドリング付きハンドラー
+ */
+export default withErrorHandler(async (req, res) => {
+  setSecurityHeaders(res);
 
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (Groq超高速)`
-  };
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-async function callOpenAI(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'キャラクター設計専門家として魅力的なキャラクターを作成。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000,
-    })
-  });
+  if (req.method !== 'POST') {
+    throw new AppError(
+      'Method not allowed',
+      ErrorTypes.VALIDATION,
+      405
+    );
+  }
 
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (OpenAI標準)`
-  };
-}
-
-function generateCharacterPrompt(concept, participants) {
-  return `【顧客要求レベル: 商業出版品質】
-以下のコンセプトに基づいて、${participants}人の商業レベル高品質キャラクターを詳細設計：
-
-【シナリオコンセプト】
-${concept}
-
-【要求クオリティ】
-- 商業出版レベルの深いキャラクター造形
-- 心理的リアリティと複雑な動機構造
-- プレイヤーが感情移入できる立体的人物像
-- マーダーミステリーに最適化された役割設計
-
-【詳細キャラクター設計】
-${participants}名の最高品質キャラクターを以下詳細形式で：
-
-## キャラクター1: [フルネーム]
-### 基本情報
-- 年齢・性別・職業（具体的な役職まで）
-- 社会的地位・経済状況
-- 出身地・学歴・家族構成
-
-### 外見・特徴
-- 詳細な外見描写（身長・体型・髪・服装スタイル）
-- 特徴的な癖・仕草・話し方
-- 第一印象と内面のギャップ
-
-### 性格・心理
-- 表面的性格と深層心理
-- 価値観・信念・恐れ
-- 隠された欲求・コンプレックス
-- 他者との関係性パターン
-
-### 背景ストーリー
-- 重要な人生経験・トラウマ
-- 現在の悩み・目標
-- 秘密・隠し事
-- 事件との関わり可能性
-
-### ゲーム的役割
-- 推理における重要度
-- 持っている情報・証拠
-- 他キャラクターとの利害関係
-- プレイしやすさ配慮
-
-## キャラクター2～${participants}: [同様の詳細形式]
-
-3500文字で商業品質の詳細キャラクター設計を完成させてください。`;
-}
+  return generateCharacters(req, res);
+}, 'phase2-characters');

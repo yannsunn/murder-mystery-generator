@@ -1,191 +1,167 @@
-// Groq Phase 8: ゲームマスター資料超高速生成
-// 処理時間: 6-10秒保証
+/**
+ * Phase 8: ゲームマスター資料生成 - 統一AIクライアント版
+ * 処理時間: 6-10秒保証
+ */
+
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 90,
 };
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/**
+ * ゲームマスター資料生成プロンプト作成
+ */
+function generateGamemasterPrompt(allPhases) {
+  return `以下のシナリオ情報に基づいて、ゲームマスター用の進行ガイドを生成してください。
 
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+【全シナリオ情報】
+${JSON.stringify(allPhases, null, 2)}
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+【要件】
+1. セッション運営の具体的な流れ
+2. 重要な演出ポイント
+3. プレイヤーサポートの方法
+4. トラブルシューティング
+5. 盛り上げ方のコツ
+
+【出力形式】
+JSON形式で以下の構造：
+{
+  "gamemaster": {
+    "preparation": {
+      "checklist": ["準備項目リスト"],
+      "materials": ["必要な資料・小道具"],
+      "setup": "会場セッティング方法",
+      "briefing": "事前説明のポイント"
+    },
+    "phases": [
+      {
+        "phase": "フェーズ名",
+        "duration": "推奨時間",
+        "objectives": ["目的"],
+        "keyPoints": ["重要ポイント"],
+        "facilitation": "ファシリテーション方法",
+        "commonIssues": ["よくある問題と対処法"]
+      }
+    ],
+    "hints": {
+      "timing": "ヒントを出すタイミング",
+      "levels": [
+        {
+          "level": 1,
+          "hint": "軽いヒント",
+          "condition": "出す条件"
+        }
+      ]
+    },
+    "climax": {
+      "setup": "クライマックスの演出方法",
+      "reveal": "真相発表の進め方",
+      "impact": "インパクトを与える方法"
+    },
+    "troubleshooting": [
+      {
+        "issue": "問題状況",
+        "solution": "対処法",
+        "prevention": "予防策"
+      }
+    ],
+    "closure": {
+      "debriefing": "振り返りの進め方",
+      "feedback": "フィードバック収集方法",
+      "appreciation": "参加者への感謝の伝え方"
+    }
   }
+}`;
+}
 
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
+/**
+ * ゲームマスター資料生成メインハンドラー
+ */
+async function generateGamemaster(req, res) {
+  const { previousPhases = {} } = req.body;
+
+  // すべてのフェーズデータが必要
+  const requiredPhases = ['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6', 'phase7'];
+  const missingPhases = requiredPhases.filter(phase => !previousPhases[phase]);
+
+  if (missingPhases.length > 0) {
+    throw new AppError(
+      `GM資料生成に必要なフェーズが不足しています: ${missingPhases.join(', ')}`,
+      ErrorTypes.VALIDATION,
+      400
     );
   }
+
+  console.log('Phase 8: ゲームマスター資料生成開始...');
 
   try {
-    const body = await request.json();
-    const { concept, characters, relationships, incident, clues, timeline, solution } = body;
+    const prompt = generateGamemasterPrompt(previousPhases);
+    const systemPrompt = `あなたは経験豊富なマーダーミステリーのゲームマスターです。
+初心者GMでも成功できる詳細な進行ガイドを作成してください。
+必ずJSON形式で回答してください。`;
 
-    console.log('Groq Phase 8: Starting ultra-fast gamemaster guide generation...');
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
+    });
 
-    const prompt = generateGamemasterPrompt(concept, characters, relationships, incident, clues, timeline, solution);
-    
-    // Groq優先実行
+    // JSON解析を試みる
+    let gamemaster;
     try {
-      if (GROQ_API_KEY) {
-        const result = await callGroq(prompt);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            phase: 'gamemaster',
-            content: result.content,
-            estimated_cost: '$0.002',
-            progress: 100,
-            provider: 'Groq (Ultra-Fast)',
-            processing_time: result.time,
-            completion_message: '🎉 完璧なマーダーミステリーシナリオが完成しました！'
-          }),
-          { status: 200, headers }
-        );
+      gamemaster = JSON.parse(result.content);
+    } catch (parseError) {
+      // JSONでない場合は構造化する
+      gamemaster = {
+        gamemaster: {
+          description: result.content,
+          preparation: { checklist: [] },
+          phases: []
+        }
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      phase: 8,
+      phaseName: 'ゲームマスターガイド',
+      gamemaster: gamemaster.gamemaster || gamemaster,
+      metadata: {
+        provider: result.provider,
+        generatedAt: new Date().toISOString(),
+        isComplete: true // 最終フェーズ
       }
-    } catch (groqError) {
-      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
-    }
-
-    // OpenAI フォールバック
-    if (OPENAI_API_KEY) {
-      const result = await callOpenAI(prompt);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          phase: 'gamemaster',
-          content: result.content,
-          estimated_cost: '$0.006',
-          progress: 100,
-          provider: 'OpenAI (Fallback)',
-          processing_time: result.time,
-          completion_message: '🎉 マーダーミステリーシナリオが完成しました！'
-        }),
-        { status: 200, headers }
-      );
-    }
-
-    throw new Error('APIキーが設定されていません');
+    });
 
   } catch (error) {
-    console.error('Gamemaster generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `ゲームマスター資料生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
+    throw new AppError(
+      `ゲームマスター資料生成エラー: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
     );
   }
 }
 
-async function callGroq(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
-      messages: [
-        { role: 'system', content: 'ゲーム運営専門家として効率的で実用的な進行資料を作成。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.6,
-      max_tokens: 3500,
-    })
-  });
+/**
+ * エクスポート: エラーハンドリング付きハンドラー
+ */
+export default withErrorHandler(async (req, res) => {
+  setSecurityHeaders(res);
 
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (Groq超高速)`
-  };
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-async function callOpenAI(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: 'ゲーム運営専門家として実用的な進行資料を作成。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.6,
-      max_tokens: 3500,
-    })
-  });
+  if (req.method !== 'POST') {
+    throw new AppError(
+      'Method not allowed',
+      ErrorTypes.VALIDATION,
+      405
+    );
+  }
 
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (OpenAI標準)`
-  };
-}
-
-function generateGamemasterPrompt(concept, characters, relationships, incident, clues, timeline, solution) {
-  return `以下の完成シナリオの実用的なゲームマスター進行資料を効率的に作成：
-
-【完成シナリオ概要】
-コンセプト: ${concept}
-キャラクター: ${characters}
-関係性: ${relationships}
-事件: ${incident}
-証拠: ${clues}
-タイムライン: ${timeline}
-解決編: ${solution}
-
-【ゲームマスター資料】
-以下形式で進行ガイドを：
-
-## ゲーム概要
-- プレイ時間: 約○時間
-- 推奨人数: ○名
-- 難易度: ★★★☆☆
-
-## 進行手順
-### 1. 開始前準備
-- 役割配布方法
-- 初期情報提供
-
-### 2. ゲーム進行
-- フェーズ1: [時間・内容]
-- フェーズ2: [時間・内容]
-- フェーズ3: [時間・内容]
-
-### 3. 解決フェーズ
-- 推理発表順序
-- 答え合わせ手順
-
-## 重要ポイント
-- 進行時の注意点
-- よくある質問対応
-
-800文字で効率的に実用的作成。`;
-}
+  return generateGamemaster(req, res);
+}, 'phase8-gamemaster');

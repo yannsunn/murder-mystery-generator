@@ -1,196 +1,148 @@
-// Groq Phase 7: 解決編超高速生成
-// 処理時間: 8-12秒保証
+/**
+ * Phase 7: 真相・解決編生成 - 統一AIクライアント版
+ * 処理時間: 8-12秒保証
+ */
+
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 90,
 };
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/**
+ * 真相・解決編生成プロンプト作成
+ */
+function generateSolutionPrompt(allPhases) {
+  return `以下のすべての情報を統合して、事件の完全な真相と解決を生成してください。
 
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+【全フェーズ情報】
+${JSON.stringify(allPhases, null, 2)}
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+【要件】
+1. 論理的で矛盾のない真相
+2. すべての証拠と整合する説明
+3. 犯人の動機と心理の深い描写
+4. トリックの詳細な説明
+5. 推理の決定的ポイント
+
+【出力形式】
+JSON形式で以下の構造：
+{
+  "solution": {
+    "culprit": {
+      "name": "真犯人の名前",
+      "motive": "動機の詳細",
+      "psychology": "心理状態の分析",
+      "triggerEvent": "犯行のきっかけ"
+    },
+    "method": {
+      "preparation": "事前準備",
+      "execution": "犯行の実行方法",
+      "trick": "使用されたトリック",
+      "alibiCreation": "アリバイ工作の方法"
+    },
+    "evidence": {
+      "decisive": ["決定的証拠"],
+      "supporting": ["補強証拠"],
+      "overlooked": ["見落とされがちな証拠"]
+    },
+    "reasoning": {
+      "keyPoints": ["推理の重要ポイント"],
+      "logicalFlow": "論理的な推理の流れ",
+      "revelationMoment": "真相判明の瞬間"
+    },
+    "epilogue": {
+      "aftermath": "事件後の展開",
+      "charactersEnd": "各キャラクターの結末",
+      "moralMessage": "物語のメッセージ"
+    }
   }
+}`;
+}
 
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
+/**
+ * 真相・解決編生成メインハンドラー
+ */
+async function generateSolution(req, res) {
+  const { previousPhases = {} } = req.body;
+
+  // すべてのフェーズデータが必要
+  const requiredPhases = ['phase1', 'phase2', 'phase3', 'phase4', 'phase5', 'phase6'];
+  const missingPhases = requiredPhases.filter(phase => !previousPhases[phase]);
+
+  if (missingPhases.length > 0) {
+    throw new AppError(
+      `真相生成に必要なフェーズが不足しています: ${missingPhases.join(', ')}`,
+      ErrorTypes.VALIDATION,
+      400
     );
   }
+
+  console.log('Phase 7: 真相・解決編生成開始...');
 
   try {
-    const body = await request.json();
-    const { concept, characters, relationships, incident, clues, timeline } = body;
+    const prompt = generateSolutionPrompt(previousPhases);
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。
+すべての伏線を回収し、論理的で感動的な真相を創造してください。
+必ずJSON形式で回答してください。`;
 
-    console.log('Groq Phase 7: Starting ultra-fast solution generation...');
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
+    });
 
-    const prompt = generateSolutionPrompt(concept, characters, relationships, incident, clues, timeline);
-    
-    // Groq優先実行
+    // JSON解析を試みる
+    let solution;
     try {
-      if (GROQ_API_KEY) {
-        const result = await callGroq(prompt);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            phase: 'solution',
-            content: result.content,
-            next_phase: 'gamemaster',
-            estimated_cost: '$0.003',
-            progress: 87.5,
-            provider: 'Groq (Ultra-Fast)',
-            processing_time: result.time
-          }),
-          { status: 200, headers }
-        );
+      solution = JSON.parse(result.content);
+    } catch (parseError) {
+      // JSONでない場合は構造化する
+      solution = {
+        solution: {
+          description: result.content
+        }
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      phase: 7,
+      phaseName: '真相・解決',
+      solution: solution.solution || solution,
+      metadata: {
+        provider: result.provider,
+        generatedAt: new Date().toISOString()
       }
-    } catch (groqError) {
-      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
-    }
-
-    // OpenAI フォールバック
-    if (OPENAI_API_KEY) {
-      const result = await callOpenAI(prompt);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          phase: 'solution',
-          content: result.content,
-          next_phase: 'gamemaster',
-          estimated_cost: '$0.008',
-          progress: 87.5,
-          provider: 'OpenAI (Fallback)',
-          processing_time: result.time
-        }),
-        { status: 200, headers }
-      );
-    }
-
-    throw new Error('APIキーが設定されていません');
+    });
 
   } catch (error) {
-    console.error('Solution generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `解決編生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
+    throw new AppError(
+      `真相・解決編生成エラー: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
     );
   }
 }
 
-async function callGroq(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
-      messages: [
-        { role: 'system', content: '世界クラスの推理小説専門家として、読者を感動させる完璧な解決編を創造してください。論理的整合性、意外性、感動的なカタルシス、キャラクターの成長を含む、商業出版レベルの圧倒的な真相解明シーンを構築してください。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3500,
-    })
-  });
+/**
+ * エクスポート: エラーハンドリング付きハンドラー
+ */
+export default withErrorHandler(async (req, res) => {
+  setSecurityHeaders(res);
 
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (Groq超高速)`
-  };
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-async function callOpenAI(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: '推理小説専門家として感動的な解決編を作成。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3500,
-    })
-  });
+  if (req.method !== 'POST') {
+    throw new AppError(
+      'Method not allowed',
+      ErrorTypes.VALIDATION,
+      405
+    );
+  }
 
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (OpenAI標準)`
-  };
-}
-
-function generateSolutionPrompt(concept, characters, relationships, incident, clues, timeline) {
-  return `以下の全要素を統合した感動的な解決編を効率的に作成：
-
-【コンセプト】
-${concept}
-
-【キャラクター】
-${characters}
-
-【関係性】
-${relationships}
-
-【事件詳細】
-${incident}
-
-【証拠・手がかり】
-${clues}
-
-【タイムライン】
-${timeline}
-
-【解決編作成】
-以下形式で事件の完全解決を：
-
-## 真相解明
-- 犯人の正体と動機
-- 完全な犯行手順
-- トリックの解説
-
-## 推理過程
-- 重要手がかりの解釈
-- 証拠の組み合わせ方
-- 真実への道筋
-
-## 感動の結末
-- キャラクターの感情
-- 事件の影響
-- 物語の締めくくり
-
-## 答え合わせ
-- 各証拠の意味
-- ミスリードの解説
-
-1000文字で効率的に高品質作成。`;
-}
+  return generateSolution(req, res);
+}, 'phase7-solution');

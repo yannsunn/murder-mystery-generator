@@ -10,6 +10,8 @@ class MurderMysteryApp {
     this.totalSteps = 5;
     this.formData = {};
     this.generatedScenario = null;
+    this.lastPhaseId = null;
+    this.lastSessionId = null;
     
     console.log('🎭 Murder Mystery Generator - 初期化開始');
     this.init();
@@ -619,6 +621,7 @@ class MurderMysteryApp {
 
       } catch (error) {
         console.warn(`⚠️ フェーズ${phase.id} エラー:`, error);
+        this.handleError(error, `phase${phase.id}_generation`);
         // フェールバック処理
         scenario.phases[`phase${phase.id}`] = await this.generateFallbackContent(phase, this.formData);
       }
@@ -974,6 +977,8 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
         this.hidePDFGenerationProgress();
       } else {
         // 強化版PDF生成を使用
+        console.log('📄 PDF生成開始...');
+        
         const response = await fetch('/api/enhanced-pdf-generator', {
           method: 'POST',
           headers: {
@@ -985,7 +990,10 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
           })
         });
 
-        if (!response.ok) throw new Error('PDF生成に失敗しました');
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`PDF生成に失敗しました: ${response.status} - ${errorText}`);
+        }
 
         const blob = await response.blob();
         this.downloadBlob(blob, `murder_mystery_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -1101,29 +1109,40 @@ ${formData.secret_roles ? '- 秘密の役割が真相に関わります' : ''}
     if (!this.generatedScenario) return;
 
     try {
+      console.log('📦 ZIP パッケージ生成開始...');
+      
+      // シナリオデータを正しく構造化
+      const scenarioData = this.generatedScenario;
+      const requestData = {
+        scenario: scenarioData.phases?.phase1?.content || scenarioData.content || JSON.stringify(scenarioData),
+        characters: scenarioData.phases?.phase2 || null,
+        relationships: scenarioData.phases?.phase3 || null,
+        incident: scenarioData.phases?.phase4 || null,
+        clues: scenarioData.phases?.phase5 || null,
+        timeline: scenarioData.phases?.phase6 || null,
+        solution: scenarioData.phases?.phase7 || null,
+        gamemaster: scenarioData.phases?.phase8 || null,
+        handouts: scenarioData.handouts || null,
+        title: `マーダーミステリー_${this.formData.participants}人用`,
+        quality: 'PREMIUM',
+        generationStats: scenarioData.metadata || null
+      };
+
       const response = await fetch('/api/generate-zip-package', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          scenario: this.generatedScenario,
-          title: `マーダーミステリー_${this.formData.participants}人用`,
-          settings: this.formData
-        })
+        body: JSON.stringify(requestData)
       });
 
-      if (!response.ok) throw new Error('ZIPパッケージ生成に失敗しました');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`ZIPパッケージ生成に失敗しました: ${response.status} - ${errorText}`);
+      }
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `murder_mystery_package_${new Date().toISOString().split('T')[0]}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      this.downloadBlob(blob, `murder_mystery_package_${new Date().toISOString().split('T')[0]}.zip`);
 
       console.log('✅ ZIP パッケージダウンロード完了');
     } catch (error) {

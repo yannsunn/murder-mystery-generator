@@ -15,7 +15,6 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
-  res.setHeader('Content-Type', 'application/json');
 
   if (req.method === 'OPTIONS') {
     console.log('✅ OPTIONS preflight handled');
@@ -149,7 +148,6 @@ export default async function handler(req, res) {
       compressionOptions: { level: 6 }
     });
     
-    const zipBase64 = Buffer.from(zipBuffer).toString('base64');
     const processingTime = Date.now() - startTime;
     
     console.log(`✅ ZIP package generation successful!`);
@@ -158,25 +156,12 @@ export default async function handler(req, res) {
 
     const packageName = `murder_mystery_complete_${timestamp}.zip`;
 
-    return res.status(200).json({
-      success: true,
-      zipPackage: zipBase64,
-      packageName,
-      size: zipBuffer.length,
-      processingTime,
-      contents: {
-        pdfs: ['scenario_overview.pdf'],
-        textFiles: [
-          'README.txt', 'scenario.txt', 'phase2_characters.txt', 
-          'phase3_relationships.txt', 'phase4_incident.txt', 'phase5_clues.txt', 
-          'phase6_timeline.txt', 'phase7_solution.txt', 'phase8_gamemaster.txt', 
-          'character_handouts.txt', 'complete_data.json'
-        ],
-        totalFiles: 12,
-        guaranteedFiles: 'All 12 files generated with fallback content if needed'
-      },
-      timestamp: new Date().toISOString()
-    });
+    // ZIPファイルを直接送信（バイナリレスポンス）
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${packageName}"`);
+    res.setHeader('Content-Length', zipBuffer.length);
+    
+    return res.status(200).send(zipBuffer);
 
   } catch (error) {
     console.error('❌ ZIP package generation error:', error.message);

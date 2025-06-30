@@ -3,6 +3,7 @@
  * 重複コード削除、統一AI クライアント使用
  */
 
+import './startup.js'; // 環境変数初期化
 import { aiClient, AI_CONFIG } from './utils/ai-client.js';
 import { withStandardHandler, createSuccessResponse, sendResponse, validateRequiredFields } from './utils/response-handler.js';
 import { validateAndSanitizeInput } from './security-utils.js';

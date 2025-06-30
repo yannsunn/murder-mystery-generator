@@ -1,178 +1,140 @@
-// Groq Phase 3: 関係性超高速生成
-// 処理時間: 6-10秒保証
+/**
+ * Phase 3: 人物関係生成 - 統一AIクライアント版
+ * 処理時間: 8-12秒保証
+ */
+
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 90,
 };
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+/**
+ * 人物関係生成プロンプト作成
+ */
+function generateRelationshipPrompt(characters) {
+  const characterList = Array.isArray(characters) ? characters : characters.characters;
+  const names = characterList.map(c => c.name).join('、');
+  
+  return `以下のキャラクター間の複雑な人間関係を詳細に生成してください。
 
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
+【キャラクター一覧】
+${JSON.stringify(characterList, null, 2)}
 
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
+【要件】
+1. 全員が互いに何らかの関係を持つ
+2. 表向きの関係と裏の関係を含む
+3. 事件の動機につながる関係性
+4. ミステリーの複雑さを増す秘密の関係
+
+【出力形式】
+JSON形式で以下の構造：
+{
+  "relationships": [
+    {
+      "character1": "キャラクター1の名前",
+      "character2": "キャラクター2の名前",
+      "publicRelation": "表向きの関係",
+      "secretRelation": "秘密の関係",
+      "tension": "緊張・対立要素",
+      "history": "過去の出来事",
+      "importance": "high/medium/low"
+    }
+  ],
+  "relationshipMap": {
+    "キャラクター名": {
+      "キャラクター名2": "関係の要約",
+      "キャラクター名3": "関係の要約"
+    }
   }
+}`;
+}
 
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
+/**
+ * 人物関係生成メインハンドラー
+ */
+async function generateRelationships(req, res) {
+  const { characters, previousPhases = {} } = req.body;
+
+  if (!characters && !previousPhases.phase2) {
+    throw new AppError(
+      'キャラクターデータが提供されていません',
+      ErrorTypes.VALIDATION,
+      400
     );
   }
+
+  const actualCharacters = characters || previousPhases.phase2?.characters;
+  console.log('Phase 3: 人物関係生成開始...');
 
   try {
-    const body = await request.json();
-    const { concept, characters } = body;
+    const prompt = generateRelationshipPrompt(actualCharacters);
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。
+複雑で魅力的な人間関係を構築してください。
+必ずJSON形式で回答してください。`;
 
-    console.log('Groq Phase 3: Starting ultra-fast relationship generation...');
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
+    });
 
-    const prompt = generateRelationshipPrompt(concept, characters);
-    
-    // Groq優先実行
+    // JSON解析を試みる
+    let relationships;
     try {
-      if (GROQ_API_KEY) {
-        const result = await callGroq(prompt);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            phase: 'relationships',
-            content: result.content,
-            next_phase: 'incident',
-            estimated_cost: '$0.002',
-            progress: 37.5,
-            provider: 'Groq (Ultra-Fast)',
-            processing_time: result.time
-          }),
-          { status: 200, headers }
-        );
+      relationships = JSON.parse(result.content);
+    } catch (parseError) {
+      // JSONでない場合は構造化する
+      relationships = {
+        relationships: [{
+          character1: "不明",
+          character2: "不明",
+          description: result.content
+        }],
+        relationshipMap: {}
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      phase: 3,
+      phaseName: '人物関係',
+      relationships: relationships.relationships || relationships,
+      relationshipMap: relationships.relationshipMap || {},
+      metadata: {
+        characterCount: actualCharacters?.length || 0,
+        provider: result.provider,
+        generatedAt: new Date().toISOString()
       }
-    } catch (groqError) {
-      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
-    }
-
-    // OpenAI フォールバック
-    if (OPENAI_API_KEY) {
-      const result = await callOpenAI(prompt);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          phase: 'relationships',
-          content: result.content,
-          next_phase: 'incident',
-          estimated_cost: '$0.006',
-          progress: 37.5,
-          provider: 'OpenAI (Fallback)',
-          processing_time: result.time
-        }),
-        { status: 200, headers }
-      );
-    }
-
-    throw new Error('APIキーが設定されていません');
+    });
 
   } catch (error) {
-    console.error('Relationship generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `関係性生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
+    throw new AppError(
+      `人物関係生成エラー: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
     );
   }
 }
 
-async function callGroq(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
-      messages: [
-        { role: 'system', content: '商業出版レベルの人間関係設計専門家として、心理学的に深く、複雑で現実的な人物間の関係網を構築してください。各関係には歴史的背景、感情の機微、利害関係の複雑さを含め、読者が納得できるリアルな人間ドラマを創造してください。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 3500,
-    })
-  });
+/**
+ * エクスポート: エラーハンドリング付きハンドラー
+ */
+export default withErrorHandler(async (req, res) => {
+  setSecurityHeaders(res);
 
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (Groq超高速)`
-  };
-}
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
 
-async function callOpenAI(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: '人間関係設計専門家として複雑な関係網を作成。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 3500,
-    })
-  });
+  if (req.method !== 'POST') {
+    throw new AppError(
+      'Method not allowed',
+      ErrorTypes.VALIDATION,
+      405
+    );
+  }
 
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (OpenAI標準)`
-  };
-}
-
-function generateRelationshipPrompt(concept, characters) {
-  return `以下のキャラクターたちの複雑で魅力的な関係性を効率的に設計：
-
-【コンセプト】
-${concept}
-
-【キャラクター】
-${characters}
-
-【関係性設計】
-以下形式で各キャラクター間の関係を：
-
-## 関係性マップ
-- [名前A] ↔ [名前B]: 関係性の詳細
-- [名前A] ↔ [名前C]: 関係性の詳細
-（全ての重要な関係性）
-
-## 秘密の関係
-- 隠された関係性や秘密
-- 過去の出来事
-
-## 動機構造
-- 各キャラクターの主要動機
-- 対立要素
-
-800文字で効率的に高品質作成。`;
-}
+  return generateRelationships(req, res);
+}, 'phase3-relationships');

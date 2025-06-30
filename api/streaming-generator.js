@@ -1,12 +1,12 @@
 // ストリーミング生成API - タイムアウト完全回避
 // 長時間処理をチャンク分割して段階的に配信
 
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+
 export const config = {
   maxDuration: 300, // Vercel Pro最大制限
 };
-
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export default async function handler(request) {
   const headers = {
@@ -269,7 +269,7 @@ async function generateCharacters(params) {
 
 形式：各キャラクター200-300文字の詳細設定`;
 
-  return await callGroqAPI(prompt, params, 'キャラクター生成');
+  return await generateWithAI(prompt, 'キャラクター生成');
 }
 
 async function generateRelationships(params) {
@@ -284,7 +284,7 @@ async function generateRelationships(params) {
 
 形式：関係図とそれぞれの詳細説明`;
 
-  return await callGroqAPI(prompt, params, '人間関係生成');
+  return await generateWithAI(prompt, '人間関係生成');
 }
 
 async function generateIncident(params) {
@@ -300,7 +300,7 @@ async function generateIncident(params) {
 
 形式：500-700文字の詳細な事件描写`;
 
-  return await callGroqAPI(prompt, params, '事件詳細生成');
+  return await generateWithAI(prompt, '事件詳細生成');
 }
 
 async function generateClues(params) {
@@ -314,7 +314,7 @@ async function generateClues(params) {
 
 各手がかりに重要度レベルと発見タイミングを設定してください。`;
 
-  return await callGroqAPI(prompt, params, '手がかり生成');
+  return await generateWithAI(prompt, '手がかり生成');
 }
 
 async function generateTimeline(params) {
@@ -329,7 +329,7 @@ async function generateTimeline(params) {
 
 各時間帯で全キャラクターの位置と行動を明記してください。`;
 
-  return await callGroqAPI(prompt, params, 'タイムライン生成');
+  return await generateWithAI(prompt, 'タイムライン生成');
 }
 
 async function generateSolution(params) {
@@ -346,7 +346,7 @@ async function generateSolution(params) {
 
 形式：800-1000文字の完全な真相解明`;
 
-  return await callGroqAPI(prompt, params, '真相・解決生成');
+  return await generateWithAI(prompt, '真相・解決生成');
 }
 
 async function generateGamemaster(params) {
@@ -362,26 +362,31 @@ async function generateGamemaster(params) {
 
 形式：実用的な進行マニュアル`;
 
-  return await callGroqAPI(prompt, params, 'ゲームマスター指南生成');
+  return await generateWithAI(prompt, 'ゲームマスター指南生成');
 }
 
-// タイムアウト対応のfetch
-async function fetchWithTimeout(url, options, timeoutMs = 30000) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  
+/**
+ * 統一AI生成関数
+ */
+async function generateWithAI(prompt, operation) {
   try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。
+プロフェッショナル品質の内容を生成してください。
+具体的で詳細な内容を日本語で提供してください。`;
+
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
     });
-    clearTimeout(timeoutId);
-    return response;
+
+    return result.content;
+
   } catch (error) {
-    clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      throw new Error(`Request timeout after ${timeoutMs}ms`);
-    }
-    throw error;
+    throw new AppError(
+      `${operation}中にエラーが発生しました: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500,
+      { operation, originalError: error.message }
+    );
   }
 }

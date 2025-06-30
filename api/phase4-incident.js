@@ -1,190 +1,147 @@
-// Groq Phase 4: 事件詳細超高速生成
-// 処理時間: 8-12秒保証
+/**
+ * Phase 4: 事件詳細生成 - 統一AIクライアント版
+ * 処理時間: 8-12秒保証
+ */
+
+import { aiClient } from './utils/ai-client.js';
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
 
 export const config = {
   maxDuration: 90,
 };
 
-const GROQ_API_KEY = process.env.GROQ_API_KEY;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-
-export default async function handler(request) {
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Content-Type': 'application/json',
-  };
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers });
-  }
-
-  if (request.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed' }),
-      { status: 405, headers }
-    );
-  }
-
-  try {
-    const body = await request.json();
-    const { concept, characters, relationships } = body;
-
-    console.log('Groq Phase 4: Starting ultra-fast incident generation...');
-
-    const prompt = generateIncidentPrompt(concept, characters, relationships);
-    
-    // Groq優先実行
-    try {
-      if (GROQ_API_KEY) {
-        const result = await callGroq(prompt);
-        return new Response(
-          JSON.stringify({
-            success: true,
-            phase: 'incident',
-            content: result.content,
-            next_phase: 'clues',
-            estimated_cost: '$0.003',
-            progress: 50,
-            provider: 'Groq (Ultra-Fast)',
-            processing_time: result.time
-          }),
-          { status: 200, headers }
-        );
-      }
-    } catch (groqError) {
-      console.log('Groq failed, trying OpenAI fallback:', groqError.message);
-    }
-
-    // OpenAI フォールバック
-    if (OPENAI_API_KEY) {
-      const result = await callOpenAI(prompt);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          phase: 'incident',
-          content: result.content,
-          next_phase: 'clues',
-          estimated_cost: '$0.008',
-          progress: 50,
-          provider: 'OpenAI (Fallback)',
-          processing_time: result.time
-        }),
-        { status: 200, headers }
-      );
-    }
-
-    throw new Error('APIキーが設定されていません');
-
-  } catch (error) {
-    console.error('Incident generation error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: `事件生成エラー: ${error.message}` 
-      }),
-      { status: 500, headers }
-    );
-  }
-}
-
-async function callGroq(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'llama-3.1-70b-versatile',
-      messages: [
-        { role: 'system', content: '事件構築専門家として効率的で意外性ある事件を設計。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 3500,
-    })
-  });
-
-  if (!response.ok) throw new Error(`Groq error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (Groq超高速)`
-  };
-}
-
-async function callOpenAI(prompt) {
-  const startTime = Date.now();
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: '事件構築専門家として意外性ある事件を設計。' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 3500,
-    })
-  });
-
-  if (!response.ok) throw new Error(`OpenAI error: ${response.status}`);
-  
-  const data = await response.json();
-  const endTime = Date.now();
-  
-  return {
-    content: data.choices[0].message.content,
-    time: `${endTime - startTime}ms (OpenAI標準)`
-  };
-}
-
+/**
+ * 事件詳細生成プロンプト作成
+ */
 function generateIncidentPrompt(concept, characters, relationships) {
-  return `以下の設定で意外性ある事件詳細を効率的に構築：
+  return `以下の設定に基づいて、マーダーミステリーの事件詳細を生成してください。
 
 【コンセプト】
-${concept}
+${JSON.stringify(concept, null, 2)}
 
 【キャラクター】
-${characters}
+${JSON.stringify(characters, null, 2)}
 
-【関係性】
-${relationships}
+【人間関係】
+${JSON.stringify(relationships, null, 2)}
 
-【事件詳細設計】
-以下形式で事件の全貌を：
+【要件】
+1. 衝撃的で記憶に残る事件
+2. 全キャラクターが関与する可能性
+3. 複数の解釈が可能な状況証拠
+4. 推理の手がかりを含む現場描写
 
-## 事件概要
-- 何が起きたか
-- いつ・どこで
-- 発見状況
-
-## 被害者情報
-- 被害者の詳細
-- 事件直前の行動
-
-## 現場状況
-- 現場の詳細描写
-- 重要な物的証拠
-
-## 真犯人
-- 犯人の正体
-- 犯行動機
-- 犯行手段
-
-## トリック
-- 使用されたトリック
-- ミスリード要素
-
-1000文字で効率的に高品質作成。`;
+【出力形式】
+JSON形式で以下の構造：
+{
+  "incident": {
+    "victim": {
+      "name": "被害者名",
+      "age": 年齢,
+      "occupation": "職業",
+      "deathTime": "死亡推定時刻",
+      "causeOfDeath": "死因",
+      "location": "発見場所"
+    },
+    "discovery": {
+      "discoverer": "第一発見者",
+      "time": "発見時刻",
+      "circumstances": "発見時の状況",
+      "initialReaction": "初期の反応"
+    },
+    "scene": {
+      "description": "現場の詳細描写",
+      "evidence": ["証拠1", "証拠2", "証拠3"],
+      "atmosphere": "現場の雰囲気",
+      "peculiarities": ["特異な点1", "特異な点2"]
+    },
+    "initialSuspicions": ["初期の疑惑1", "初期の疑惑2"]
+  }
+}`;
 }
+
+/**
+ * 事件詳細生成メインハンドラー
+ */
+async function generateIncident(req, res) {
+  const { concept, characters, relationships, previousPhases = {} } = req.body;
+
+  const actualConcept = concept || previousPhases.phase1?.concept;
+  const actualCharacters = characters || previousPhases.phase2?.characters;
+  const actualRelationships = relationships || previousPhases.phase3?.relationships;
+
+  if (!actualConcept || !actualCharacters) {
+    throw new AppError(
+      '事件生成に必要なデータが不足しています',
+      ErrorTypes.VALIDATION,
+      400
+    );
+  }
+
+  console.log('Phase 4: 事件詳細生成開始...');
+
+  try {
+    const prompt = generateIncidentPrompt(actualConcept, actualCharacters, actualRelationships);
+    const systemPrompt = `あなたは経験豊富なマーダーミステリー作家です。
+衝撃的で魅力的な事件を創造してください。
+必ずJSON形式で回答してください。`;
+
+    const result = await aiClient.generateWithRetry(systemPrompt, prompt, {
+      preferredProvider: 'groq',
+      maxRetries: 2
+    });
+
+    // JSON解析を試みる
+    let incident;
+    try {
+      incident = JSON.parse(result.content);
+    } catch (parseError) {
+      // JSONでない場合は構造化する
+      incident = {
+        incident: {
+          description: result.content
+        }
+      };
+    }
+
+    return res.status(200).json({
+      success: true,
+      phase: 4,
+      phaseName: '事件詳細',
+      incident: incident.incident || incident,
+      metadata: {
+        provider: result.provider,
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    throw new AppError(
+      `事件詳細生成エラー: ${error.message}`,
+      ErrorTypes.GENERATION,
+      500
+    );
+  }
+}
+
+/**
+ * エクスポート: エラーハンドリング付きハンドラー
+ */
+export default withErrorHandler(async (req, res) => {
+  setSecurityHeaders(res);
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    throw new AppError(
+      'Method not allowed',
+      ErrorTypes.VALIDATION,
+      405
+    );
+  }
+
+  return generateIncident(req, res);
+}, 'phase4-incident');

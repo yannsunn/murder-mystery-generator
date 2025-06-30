@@ -200,6 +200,7 @@ export default async function handler(req, res) {
   return withMemoryOptimization(async () => {
     let pdfDoc = null;
     
+    try {
       const { scenario, title = 'マーダーミステリーシナリオ' } = req.body;
 
     // 入力バリデーション
@@ -315,7 +316,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(title)}.pdf"`);
     res.setHeader('Content-Length', pdfBytes.length);
     
-      return res.status(200).send(Buffer.from(pdfBytes));
+    return res.status(200).send(Buffer.from(pdfBytes));
 
     } catch (error) {
       console.error('❌ PDF生成エラー:', error);

@@ -3,6 +3,9 @@
  * 各フェーズを個別に実行し、手動で次のステップへ
  */
 
+import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
+import { setSecurityHeaders } from './security-utils.js';
+
 export const config = {
   maxDuration: 30, // 短時間制限
 };
@@ -20,207 +23,261 @@ const PHASES = {
 };
 
 /**
- * 単一フェーズ実行
+ * 単一フェーズ実行（最適化版）
  */
 export async function executeSinglePhase(req, res) {
   const startTime = Date.now();
   
+  // バリデーション
+  const { phaseId, sessionId, formData } = req.body;
+  
+  if (!phaseId || !sessionId) {
+    throw new AppError(
+      'phaseIdとsessionIdが必要です',
+      ErrorTypes.VALIDATION,
+      400
+    );
+  }
+
+  const phase = PHASES[phaseId];
+  if (!phase) {
+    throw new AppError(
+      `無効なフェーズID: ${phaseId}`,
+      ErrorTypes.VALIDATION,
+      400
+    );
+  }
+
+  console.log(`🚀 Phase ${phaseId} 実行開始: ${phase.name}`);
+
+  // 前のフェーズの結果を並列で取得
+  const [previousResults] = await Promise.all([
+    getFromStorageOptimized(sessionId, req)
+  ]);
+  
+  // 並列でフェーズ実行とタイムアウト管理
+  const phaseResult = await executePhaseWithTimeout(phase, formData, previousResults, req);
+  
+  // 結果の非同期保存（レスポンス速度向上）
+  const savePromise = saveResultsOptimized(sessionId, phaseResult, phaseId, formData, previousResults, req);
+  
+  // 次のフェーズ情報
+  const nextPhaseId = parseInt(phaseId) + 1;
+  const nextPhase = PHASES[nextPhaseId];
+  
+  // レスポンス送信（保存完了を待たない）
+  const response = {
+    success: true,
+    phaseId: parseInt(phaseId),
+    phaseName: phase.name,
+    sessionId,
+    result: phaseResult,
+    nextPhase: nextPhase ? {
+      id: nextPhaseId,
+      name: nextPhase.name
+    } : null,
+    isComplete: !nextPhase,
+    progress: Math.round((parseInt(phaseId) / 8) * 100),
+    executionTime: Date.now() - startTime,
+    timestamp: new Date().toISOString()
+  };
+  
+  // 保存完了を確認（エラーのみログ）
+  savePromise.catch(error => {
+    console.error(`🚨 Phase ${phaseId} 保存エラー:`, error);
+  });
+  
+  return res.status(200).json(response);
+}
+
+/**
+ * 最適化されたフェーズ実行
+ */
+async function executePhaseWithTimeout(phase, formData, previousResults, req) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), phase.maxTime * 1000);
+
   try {
-    const { phaseId, sessionId, formData } = req.body;
+    // 並列でベースURL取得と内部API呼び出し
+    const baseUrl = getBaseUrl(req);
     
-    if (!phaseId || !sessionId) {
-      return res.status(400).json({
-        success: false,
-        error: 'phaseIdとsessionIdが必要です'
-      });
+    const response = await fetch(`${baseUrl}${phase.endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Phase-Executor/1.0'
+      },
+      body: JSON.stringify({
+        ...formData,
+        previousPhases: previousResults?.phases || {}
+      }),
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new AppError(
+        `Phase ${phase.name} failed: ${response.status} - ${errorText}`,
+        ErrorTypes.API,
+        response.status
+      );
     }
 
-    const phase = PHASES[phaseId];
-    if (!phase) {
-      return res.status(400).json({
-        success: false,
-        error: `無効なフェーズID: ${phaseId}`
-      });
-    }
-
-    console.log(`🚀 Phase ${phaseId} 実行開始: ${phase.name}`);
-
-    // 前のフェーズの結果を取得
-    const previousResults = await getFromStorage(sessionId, req);
-    
-    // タイムアウト設定
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), phase.maxTime * 1000);
-
-    try {
-      const baseUrl = req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000';
-      const response = await fetch(`${baseUrl}${phase.endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          previousPhases: previousResults?.phases || {}
-        }),
-        signal: controller.signal
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) {
-        throw new Error(`Phase ${phaseId} failed: ${response.status}`);
-      }
-
-      const phaseResult = await response.json();
-      
-      // 結果を保存
-      const updatedResults = previousResults || {
-        metadata: { ...formData, sessionId, createdAt: new Date().toISOString() },
-        phases: {}
-      };
-      
-      updatedResults.phases[`phase${phaseId}`] = phaseResult;
-      updatedResults.lastPhase = phaseId;
-      updatedResults.updatedAt = new Date().toISOString();
-      
-      await saveToStorage(sessionId, updatedResults, `phase${phaseId}`, req);
-
-      // 次のフェーズ情報
-      const nextPhaseId = parseInt(phaseId) + 1;
-      const nextPhase = PHASES[nextPhaseId];
-
-      return res.status(200).json({
-        success: true,
-        phaseId: parseInt(phaseId),
-        phaseName: phase.name,
-        sessionId,
-        result: phaseResult,
-        nextPhase: nextPhase ? {
-          id: nextPhaseId,
-          name: nextPhase.name
-        } : null,
-        isComplete: !nextPhase,
-        progress: Math.round((parseInt(phaseId) / 8) * 100),
-        processingTime: `${Date.now() - startTime}ms`
-      });
-
-    } catch (fetchError) {
-      clearTimeout(timeout);
-      
-      if (fetchError.name === 'AbortError') {
-        throw new Error(`Phase ${phaseId} timeout after ${phase.maxTime} seconds`);
-      }
-      throw fetchError;
-    }
+    return await response.json();
 
   } catch (error) {
-    console.error(`Phase ${req.body.phaseId} error:`, error);
-    return res.status(500).json({
-      success: false,
-      error: `Phase ${req.body.phaseId} エラー: ${error.message}`,
-      processingTime: `${Date.now() - startTime}ms`
-    });
+    if (error.name === 'AbortError') {
+      throw new AppError(
+        `Phase ${phase.name} タイムアウト (${phase.maxTime}秒)`,
+        ErrorTypes.TIMEOUT,
+        504
+      );
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
 /**
- * フェーズ状況確認
+ * 最適化されたストレージ取得
  */
-export async function getPhaseStatus(req, res) {
+async function getFromStorageOptimized(sessionId, req) {
   try {
-    const { sessionId } = req.query;
-    
-    if (!sessionId) {
-      return res.status(400).json({
-        success: false,
-        error: 'sessionIdが必要です'
-      });
-    }
-
-    const results = await getFromStorage(sessionId, req);
-    
-    if (!results) {
-      return res.status(404).json({
-        success: false,
-        error: 'セッションが見つかりません'
-      });
-    }
-
-    // 完了フェーズの確認
-    const completedPhases = Object.keys(results.phases || {}).map(key => 
-      parseInt(key.replace('phase', ''))
-    ).sort((a, b) => a - b);
-
-    const lastCompletedPhase = Math.max(...completedPhases, 0);
-    const nextPhaseId = lastCompletedPhase + 1;
-    const nextPhase = PHASES[nextPhaseId];
-
-    return res.status(200).json({
-      success: true,
-      sessionId,
-      completedPhases,
-      lastCompletedPhase,
-      nextPhase: nextPhase ? {
-        id: nextPhaseId,
-        name: nextPhase.name
-      } : null,
-      isComplete: lastCompletedPhase >= 8,
-      progress: Math.round((lastCompletedPhase / 8) * 100),
-      totalPhases: 8
+    const baseUrl = getBaseUrl(req);
+    const response = await fetch(`${baseUrl}/api/scenario-storage?action=get&sessionId=${sessionId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Phase-Executor/1.0'
+      }
     });
 
+    if (response.ok) {
+      const data = await response.json();
+      return data.success ? data.scenario : null;
+    }
+    
+    return null;
   } catch (error) {
-    console.error('Get phase status error:', error);
-    return res.status(500).json({
-      success: false,
-      error: `状況確認エラー: ${error.message}`
-    });
+    console.warn('Storage取得エラー:', error.message);
+    return null;
   }
 }
 
 /**
- * ストレージヘルパー関数
+ * 最適化された結果保存
  */
-async function saveToStorage(sessionId, data, phase, req) {
-  const baseUrl = req ? (req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000') : 'http://localhost:3000';
+async function saveResultsOptimized(sessionId, phaseResult, phaseId, formData, previousResults, req) {
+  const updatedResults = previousResults || {
+    metadata: { ...formData, sessionId, createdAt: new Date().toISOString() },
+    phases: {}
+  };
+  
+  updatedResults.phases[`phase${phaseId}`] = phaseResult;
+  updatedResults.lastPhase = phaseId;
+  updatedResults.updatedAt = new Date().toISOString();
+  
+  const baseUrl = getBaseUrl(req);
+  
   const response = await fetch(`${baseUrl}/api/scenario-storage?action=save`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'User-Agent': 'Phase-Executor/1.0'
     },
     body: JSON.stringify({
       sessionId,
-      scenario: data,
-      phase
+      scenario: updatedResults,
+      phase: `phase${phaseId}`,
+      isComplete: phaseId == 8
     })
   });
-  
-  if (!response.ok) {
-    throw new Error('ストレージ保存エラー');
-  }
-}
 
-async function getFromStorage(sessionId, req) {
-  const baseUrl = req ? (req.headers.host ? `https://${req.headers.host}` : 'http://localhost:3000') : 'http://localhost:3000';
-  const response = await fetch(`${baseUrl}/api/scenario-storage?action=get&sessionId=${sessionId}`);
-  
   if (!response.ok) {
-    return null;
+    throw new AppError(
+      'ストレージ保存エラー',
+      ErrorTypes.STORAGE,
+      500
+    );
   }
   
-  const result = await response.json();
-  return result.scenario;
+  return response.json();
 }
 
 /**
- * ルーティング処理
+ * ベースURL取得
  */
-export default async function handler(req, res) {
-  // CORS設定
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+function getBaseUrl(req) {
+  return req.headers.host ? 
+    `https://${req.headers.host}` : 
+    'http://localhost:3000';
+}
+
+/**
+ * フェーズ一覧取得
+ */
+export async function getPhaseList(req, res) {
+  const phaseList = Object.entries(PHASES).map(([id, phase]) => ({
+    id: parseInt(id),
+    name: phase.name,
+    maxTime: phase.maxTime,
+    endpoint: phase.endpoint
+  }));
+
+  return res.status(200).json({
+    success: true,
+    phases: phaseList,
+    totalPhases: Object.keys(PHASES).length
+  });
+}
+
+/**
+ * フェーズ状況確認（最適化版）
+ */
+export async function getPhaseStatus(req, res) {
+  const { sessionId } = req.query;
+  
+  if (!sessionId) {
+    throw new AppError(
+      'sessionIdが必要です',
+      ErrorTypes.VALIDATION,
+      400
+    );
+  }
+
+  const results = await getFromStorageOptimized(sessionId, req);
+  
+  if (!results) {
+    throw new AppError(
+      'セッションが見つかりません',
+      ErrorTypes.STORAGE,
+      404
+    );
+  }
+
+  const completedPhases = Object.keys(results.phases || {}).length;
+  const progress = Math.round((completedPhases / 8) * 100);
+
+  return res.status(200).json({
+    success: true,
+    sessionId,
+    completedPhases,
+    totalPhases: 8,
+    progress,
+    lastPhase: results.lastPhase || 0,
+    isComplete: completedPhases === 8,
+    metadata: results.metadata,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * メインハンドラー（統一エラーハンドリング付き）
+ */
+export default withErrorHandler(async (req, res) => {
+  // セキュリティヘッダー設定
+  setSecurityHeaders(res);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -230,13 +287,16 @@ export default async function handler(req, res) {
 
   switch (action) {
     case 'execute':
-      return executeSinglePhase(req, res);
+      return await executeSinglePhase(req, res);
     case 'status':
-      return getPhaseStatus(req, res);
+      return await getPhaseStatus(req, res);
+    case 'list':
+      return await getPhaseList(req, res);
     default:
-      return res.status(400).json({
-        success: false,
-        error: '無効なアクション'
-      });
+      throw new AppError(
+        '無効なアクション',
+        ErrorTypes.VALIDATION,
+        400
+      );
   }
-}
+}, 'phase-executor');

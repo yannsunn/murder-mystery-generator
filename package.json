@@ -6,12 +6,17 @@
   "main": "index.js",
   "scripts": {
     "dev": "netlify dev",
-    "build": "echo 'Static build completed'",
+    "build": "npm run test && echo '✅ Build successful'",
     "start": "netlify serve",
-    "test": "echo 'Tests will be implemented'",
-    "deploy": "netlify deploy --prod",
+    "test": "node tests/basic-test-suite.js",
+    "test:env": "node -e \"import('./api/config/env-manager.js').then(m => m.envManager.initialize())\"",
+    "test:security": "node -e \"import('./tests/basic-test-suite.js').then(m => m.runBasicTests())\"",
+    "test:download": "node tests/download-test.js",
+    "validate": "npm run test:env && npm run test",
+    "deploy": "npm run validate && netlify deploy --prod",
     "clean": "rm -rf node_modules package-lock.json && npm install",
-    "audit": "npm audit fix"
+    "audit": "npm audit fix",
+    "env:example": "node -e \"import('./api/config/env-manager.js').then(m => console.log(m.envManager.generateEnvExample()))\""
   },
   "dependencies": {
     "jszip": "^3.10.1",

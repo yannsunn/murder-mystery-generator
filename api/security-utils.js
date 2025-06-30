@@ -3,8 +3,21 @@
  * 入力検証、サニタイゼーション、レート制限
  */
 
+import { envManager } from './config/env-manager.js';
+
+// 環境変数マネージャーの初期化
+if (!envManager.initialized) {
+  envManager.initialize();
+}
+
 // レート制限のためのメモリストア（本番環境ではRedisなどを使用）
 const rateLimitStore = new Map();
+const MAX_RATE_LIMIT_ENTRIES = envManager.get('MAX_STORAGE_SIZE') || 10000;
+
+// 定期的なクリーンアップ（5分毎）
+setInterval(() => {
+  cleanupExpiredRateLimits();
+}, 5 * 60 * 1000);
 
 /**
  * 入力データの検証とサニタイゼーション
@@ -94,8 +107,13 @@ export function sanitizeText(text) {
 export function checkRateLimit(clientIP, endpoint) {
   const key = `${clientIP}:${endpoint}`;
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1分間
-  const maxRequests = 10; // 1分間に10回まで
+  const windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 900000; // デフォルト15分間
+  const maxRequests = envManager.get('RATE_LIMIT_MAX_REQUESTS') || 10;
+
+  // ストレージ容量制限チェック
+  if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+    cleanupOldestRateLimits();
+  }
 
   if (!rateLimitStore.has(key)) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
@@ -147,10 +165,41 @@ export function createErrorResponse(error, statusCode = 500) {
 }
 
 /**
+ * 期限切れレート制限エントリのクリーンアップ
+ */
+function cleanupExpiredRateLimits() {
+  const now = Date.now();
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(key);
+    }
+  }
+}
+
+/**
+ * 最古のレート制限エントリを削除（容量制限対応）
+ */
+function cleanupOldestRateLimits() {
+  const entries = Array.from(rateLimitStore.entries())
+    .sort(([,a], [,b]) => a.resetTime - b.resetTime);
+  
+  // 上位20%を削除
+  const deleteCount = Math.floor(entries.length * 0.2);
+  for (let i = 0; i < deleteCount; i++) {
+    const [key] = entries[i];
+    rateLimitStore.delete(key);
+  }
+}
+
+/**
  * セキュアなレスポンスヘッダーの設定
  */
 export function setSecurityHeaders(res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // より安全なCORS設定（必要に応じて特定のオリジンに限定）
+  const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
+    process.env.ALLOWED_ORIGINS.split(',') : ['*'];
+  
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Requested-With');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -160,6 +209,10 @@ export function setSecurityHeaders(res) {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  
+  // CSP ヘッダーの追加
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
 }
 
 /**
