@@ -375,7 +375,11 @@ export default async function handler(req, res) {
       });
     }
     
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+    const zipBuffer = await zip.generateAsync({ 
+      type: 'nodebuffer',
+      compression: 'DEFLATE',
+      compressionOptions: { level: 6 }
+    });
     
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', 'attachment; filename="murder_mystery_scenario.zip"');
@@ -385,10 +389,21 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('🚨 Simple Export System error:', error);
-    return res.status(500).json({
+    
+    // より詳細なエラー情報
+    const errorResponse = {
       success: false,
       error: error.message || 'Export generation failed',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+      errorType: error.constructor.name,
+      timestamp: new Date().toISOString(),
+      sessionDataKeys: sessionData ? Object.keys(sessionData) : 'missing'
+    };
+    
+    if (process.env.NODE_ENV === 'development') {
+      errorResponse.details = error.stack;
+      errorResponse.sessionDataSample = sessionData ? JSON.stringify(sessionData).substring(0, 200) + '...' : 'no data';
+    }
+    
+    return res.status(500).json(errorResponse);
   }
 }
