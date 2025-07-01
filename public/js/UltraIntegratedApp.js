@@ -419,7 +419,7 @@ class UltraIntegratedApp {
       
       // 進捗を100%に設定
       this.updateProgressBar(100);
-      this.updatePhaseInfo(5, 5, '生成完了');
+      this.updatePhaseInfo(this.progressPhases.length, this.progressPhases.length, '生成完了');
       
       // UX強化: 生成完了通知
       if (uxEnhancer) {
@@ -465,16 +465,25 @@ class UltraIntegratedApp {
     this.currentProgress = 0;
     this.currentPhase = 1;
     
-    // 進捗シミュレーション (5つのフェーズ)
+    // 進捗シミュレーション (段階的生成対応)
+    const participantCount = parseInt(this.formData.participants) || 5;
     this.progressPhases = [
-      { name: '🚀 作品タイトル・コンセプト生成', duration: 60 },
-      { name: '🎭 キャラクター完全設計', duration: 90 },
-      { name: '🔍 事件・謎・真相構築', duration: 75 },
-      { name: '⏱ タイムライン・進行管理', duration: 45 },
-      { name: '🎓 GMガイド完成', duration: 30 }
+      { name: '🚀 作品タイトル・コンセプト生成', duration: 45 },
+      { name: '👤 プレイヤー1 キャラクター生成', duration: 30 },
+      { name: '👤 プレイヤー2 キャラクター生成', duration: 25 },
+      { name: '👤 プレイヤー3 キャラクター生成', duration: 25 },
+      { name: '👤 プレイヤー4 キャラクター生成', duration: 25 },
+      ...(participantCount >= 5 ? [{ name: '👤 プレイヤー5 キャラクター生成', duration: 25 }] : []),
+      ...(participantCount >= 6 ? [{ name: '👤 プレイヤー6 キャラクター生成', duration: 25 }] : []),
+      ...(participantCount >= 7 ? [{ name: '👤 プレイヤー7 キャラクター生成', duration: 25 }] : []),
+      ...(participantCount >= 8 ? [{ name: '👤 プレイヤー8 キャラクター生成', duration: 25 }] : []),
+      { name: '🔗 全体関係性調整', duration: 40 },
+      { name: '🔍 事件・謎・真相構築', duration: 60 },
+      { name: '⏱ タイムライン・進行管理', duration: 35 },
+      { name: '🎓 GMガイド完成', duration: 25 }
     ];
     
-    this.updatePhaseInfo(1, 5, this.progressPhases[0].name);
+    this.updatePhaseInfo(1, this.progressPhases.length, this.progressPhases[0].name);
     
     // プログレスタイマー開始
     this.progressTimer = setInterval(() => {
@@ -518,7 +527,7 @@ class UltraIntegratedApp {
     // 前のフェーズが完了した場合
     if (phaseIndex !== this.currentPhase - 1) {
       this.currentPhase = phaseIndex + 1;
-      this.updatePhaseInfo(this.currentPhase, 5, this.progressPhases[phaseIndex].name);
+      this.updatePhaseInfo(this.currentPhase, this.progressPhases.length, this.progressPhases[phaseIndex].name);
     }
     
     // 進捗バー更新
