@@ -833,11 +833,124 @@ class UltraIntegratedApp {
   
   generateCharactersContent(phases) {
     const characters = phases.step2?.content?.characters || '';
+    
+    if (!characters) {
+      return '<p>キャラクターハンドアウトが生成されていません。</p>';
+    }
+    
+    // プレイヤー別ハンドアウトを分離
+    const playerHandouts = this.extractPlayerHandouts(characters);
+    
+    if (playerHandouts.length === 0) {
+      return `
+        <div class="characters-section">
+          ${this.formatContent(characters)}
+        </div>
+      `;
+    }
+    
     return `
       <div class="characters-section">
-        ${this.formatContent(characters)}
+        <div class="handout-navigation">
+          <h5>📋 プレイヤー別ハンドアウト</h5>
+          <div class="player-tabs">
+            ${playerHandouts.map((handout, index) => `
+              <button class="player-tab ${index === 0 ? 'active' : ''}" 
+                      onclick="showPlayerHandout(${index})" 
+                      id="player-tab-${index}">
+                👤 ${handout.playerName}
+              </button>
+            `).join('')}
+            <button class="player-tab" onclick="showAllHandouts()">
+              📚 全ハンドアウト
+            </button>
+          </div>
+        </div>
+        
+        <div class="handout-content">
+          ${playerHandouts.map((handout, index) => `
+            <div class="player-handout" id="handout-${index}" style="display: ${index === 0 ? 'block' : 'none'};">
+              <div class="handout-header">
+                <h4>🎭 ${handout.playerName} 専用ハンドアウト</h4>
+                <div class="handout-actions">
+                  <button class="btn btn-sm btn-primary" onclick="copyPlayerHandout(${index})">
+                    📋 このハンドアウトをコピー
+                  </button>
+                  <button class="btn btn-sm btn-secondary" onclick="printPlayerHandout(${index})">
+                    🖨️ 印刷
+                  </button>
+                </div>
+              </div>
+              <div class="handout-body">
+                ${this.formatContent(handout.content)}
+              </div>
+            </div>
+          `).join('')}
+          
+          <div class="player-handout" id="handout-all" style="display: none;">
+            <div class="handout-header">
+              <h4>📚 全プレイヤーハンドアウト</h4>
+              <div class="handout-actions">
+                <button class="btn btn-sm btn-primary" onclick="copyAllHandouts()">
+                  📋 全ハンドアウトをコピー
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="printAllHandouts()">
+                  🖨️ 全て印刷
+                </button>
+              </div>
+            </div>
+            <div class="handout-body">
+              ${this.formatContent(characters)}
+            </div>
+          </div>
+        </div>
       </div>
     `;
+  }
+  
+  // プレイヤー別ハンドアウトを抽出する新しいメソッド
+  extractPlayerHandouts(charactersText) {
+    const handouts = [];
+    const sections = charactersText.split(/【プレイヤー\d+専用ハンドアウト/);
+    
+    if (sections.length < 2) {
+      // 旧形式の場合、プレイヤー別に分割を試行
+      const lines = charactersText.split('\n');
+      let currentHandout = null;
+      
+      lines.forEach(line => {
+        const playerMatch = line.match(/^#+\s*(.+(?:プレイヤー|キャラクター).+)/i);
+        if (playerMatch) {
+          if (currentHandout) {
+            handouts.push(currentHandout);
+          }
+          currentHandout = {
+            playerName: playerMatch[1].replace(/【|】|#+|\s/g, ''),
+            content: line + '\n'
+          };
+        } else if (currentHandout) {
+          currentHandout.content += line + '\n';
+        }
+      });
+      
+      if (currentHandout) {
+        handouts.push(currentHandout);
+      }
+    } else {
+      // 新形式の場合
+      for (let i = 1; i < sections.length; i++) {
+        const section = sections[i];
+        const playerNameMatch = section.match(/^[^】]*】?\s*([^：\n]+)/);
+        const playerName = playerNameMatch ? playerNameMatch[1].trim() : `プレイヤー${i}`;
+        
+        handouts.push({
+          playerName: playerName,
+          content: '【' + playerName + '専用ハンドアウト】' + section
+        });
+      }
+    }
+    
+    return handouts;
   }
   
   generateTimelineContent(phases) {

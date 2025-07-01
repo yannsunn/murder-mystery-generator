@@ -1443,6 +1443,224 @@ footer {
   }
 }
 
+/* ============= プレイヤーハンドアウト管理 ============= */
+.handout-navigation {
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.handout-navigation h5 {
+  color: var(--primary-100);
+  margin-bottom: var(--space-md);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.player-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.player-tab {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--primary-200);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--animation-normal);
+  font-size: 0.9rem;
+  min-width: 120px;
+  text-align: center;
+}
+
+.player-tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--primary-100);
+  transform: translateY(-1px);
+}
+
+.player-tab.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.handout-content {
+  margin-top: var(--space-lg);
+}
+
+.player-handout {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: var(--space-lg);
+}
+
+.handout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: var(--space-lg);
+  background: rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.handout-header h4 {
+  color: var(--primary-100);
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.handout-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.handout-actions .btn {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: all var(--animation-normal);
+  font-weight: 500;
+}
+
+.handout-actions .btn.btn-primary {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.handout-actions .btn.btn-secondary {
+  background: var(--primary-600);
+  color: var(--primary-100);
+}
+
+.handout-actions .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.handout-body {
+  padding: var(--space-xl);
+  line-height: 1.7;
+}
+
+.handout-body h4,
+.handout-body h5 {
+  color: var(--primary-100);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.handout-body h4:first-child,
+.handout-body h5:first-child {
+  margin-top: 0;
+}
+
+.handout-body strong {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.handout-body p {
+  color: var(--primary-200);
+  margin-bottom: var(--space-md);
+}
+
+.handout-body ul,
+.handout-body ol {
+  color: var(--primary-200);
+  margin-left: var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.handout-body li {
+  margin-bottom: var(--space-xs);
+}
+
+/* ============= モバイル対応 ============= */
+@media (max-width: 768px) {
+  .player-tabs {
+    justify-content: center;
+  }
+  
+  .player-tab {
+    min-width: 100px;
+    font-size: 0.8rem;
+    padding: var(--space-xs) var(--space-sm);
+  }
+  
+  .handout-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .handout-header h4 {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-sm);
+  }
+  
+  .handout-actions {
+    justify-content: center;
+  }
+  
+  .handout-body {
+    padding: var(--space-lg);
+  }
+}
+
+/* ============= 印刷対応 ============= */
+@media print {
+  .handout-actions {
+    display: none !important;
+  }
+  
+  .player-handout {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 2rem;
+  }
+  
+  .handout-header {
+    background: #f5f5f5 !important;
+    color: #333 !important;
+  }
+  
+  .handout-header h4 {
+    color: #333 !important;
+  }
+  
+  .handout-body {
+    color: #333 !important;
+  }
+  
+  .handout-body h4,
+  .handout-body h5 {
+    color: #333 !important;
+  }
+  
+  .handout-body p,
+  .handout-body li {
+    color: #333 !important;
+  }
+}
+
 /* ============= マイクロ生成UI ============= */
 #micro-generation-container {
   padding: 2rem;
