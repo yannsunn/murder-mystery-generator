@@ -5,9 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "node api/index.js",
     "build": "echo '✅ Build successful - Vercel deployment'",
-    "start": "vercel dev --listen 3000",
+    "start": "node api/index.js",
     "test": "node tests/basic-test-suite.js",
     "test:env": "node -e \"import('./api/config/env-manager.js').then(m => m.envManager.initialize())\"",
     "test:security": "node -e \"import('./tests/basic-test-suite.js').then(m => m.runBasicTests())\"",

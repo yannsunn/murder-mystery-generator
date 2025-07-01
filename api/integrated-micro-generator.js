@@ -109,78 +109,58 @@ const INTEGRATED_GENERATION_FLOW = [
     name: 'キャラクター完全設計・個別ハンドアウト',
     weight: 30,
     handler: async (formData, context) => {
-      const concept = context.concept || '';
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルキャラクター設計専門家です。
-各キャラクターに個別のハンドアウト、バックストーリー、秘密、動機を与え、
-参加者が完全に役になりきれるプロ品質のキャラクター資料パッケージを作成してください。
-商業TRPG品質の没入感と緻密な人間関係を構築してください。`;
-      
-      const userPrompt = `
-【プロフェッショナル品質キャラクター設計依頼】
+      try {
+        const concept = context.concept || '';
+        const participantCount = parseInt(formData.participants) || 5;
+        
+        const systemPrompt = `あなたは商業品質のマーダーミステリーキャラクター設計専門家です。
+各プレイヤー用の詳細なハンドアウトを作成してください。`;
+        
+        const userPrompt = `
+【キャラクター設計依頼】
 
-作品コンセプト: ${concept}
-参加人数: ${formData.participants}人
+参加人数: ${participantCount}人
 プレイ時間: ${getPlayTime(formData.complexity)}
-トーン: ${formData.tone}
+作品概要: ${concept}
 
-【商業品質基準】
-- 狂気山脈レベルの深いキャラクター設定
-- 各キャラクター専用のプロ品質ハンドアウト
-- 緻密な人間関係と相互依存構造
-- 参加者が完全に役になりきれる没入感
-- 事件解決に不可欠な個別情報配置
+以下の形式で各プレイヤーのハンドアウトを作成してください：
 
-## プロフェッショナル品質キャラクター構造
-[${formData.participants}人の複雑で魅力的な人間関係とドラマ性]
+${Array.from({length: participantCount}, (_, i) => `
+## プレイヤー${i + 1}のハンドアウト
 
-## 個別ハンドアウト完全版（プレイヤー配布用）
+### あなたのキャラクター
+氏名: [フルネーム]
+年齢: [年齢]
+職業: [職業・立場]
+性格: [主要な性格特徴]
 
-${Array.from({length: parseInt(formData.participants)}, (_, i) => i + 1).map(num => `
-### 【プレイヤー${num}専用ハンドアウト（プロ品質）】
-#### あなたのキャラクター: [魅力的なフルネーム + 印象的な役職]
+### バックストーリー
+[このキャラクターの過去と現在の状況を300文字で説明]
 
-**■ 基本プロフィール**
-- 氏名・年齢・性別: [詳細設定]
-- 職業・立場: [社会的地位と専門性]
-- 外見・雰囲気: [印象的な特徴と個性]
-- 性格・癖: [演じやすい明確な性格設定]
+### 秘密情報
+- 公開情報: [他プレイヤーと共有可能な情報]
+- 秘密: [あなただけが知っている重要な秘密]
+- 目標: [このキャラクターの目的]
 
-**■ 詳細バックストーリー**
-[400文字程度：過去の重要な出来事、人間関係、今に至る経緯]
+### 他キャラクターとの関係
+[他のプレイヤーキャラクターとの関係性を簡潔に説明]
+`).join('')}
 
-**■ あなたが持つ秘密と情報**
-- **公開可能情報**: [他のプレイヤーと共有できる証言や知識]
-- **条件付き情報**: [特定の状況でのみ明かせる情報]
-- **絶対秘密**: [誰にも話してはいけない重要な秘密]
-- **特別知識**: [専門性に基づく独自の洞察や手がかり]
-
-**■ 人間関係詳細**
-${Array.from({length: parseInt(formData.participants) - 1}, (_, j) => `- **キャラクター${j + 1 + (j >= num - 1 ? 1 : 0)}との関係**: [過去の関わり、感情、利害関係の詳細]`).join('\n')}
-
-**■ 個人的動機・目標**
-- **表向きの目的**: [公然と追求できる目標]
-- **隠された動機**: [個人的な事情や欲求]
-- **恐れていること**: [暴かれたくない秘密や失いたくないもの]
-
-**■ 特殊能力・専門知識**
-[職業や経験に基づく調査手法、独自の視点、有用なスキル]
-
-**■ プレイ指針**
-- **演じ方のコツ**: [このキャラクターらしい話し方、行動パターン]
-- **調査戦略**: [効果的な情報収集方法]
-- **他者との接し方**: [各キャラクターへの態度や距離感]
-`).join('\n')}
-
-## 複雑さ別調整（短時間特化）
-### シンプル版（30分）: [情報を最小限に絞った構造]
-### 標準版（45分）: [バランス良い情報量]
-### 複雑版（60分）: [情報量を増やしても1時間で確実に完結]
-
-【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
+【重要】全ての内容を完結させ、中途半端な文章は避けてください。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      return { characters: result.content };
+        const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+        return { characters: result.content };
+        
+      } catch (error) {
+        console.error('❌ Character generation error:', error);
+        
+        // フォールバック: シンプルなキャラクター生成
+        const participantCount = parseInt(formData.participants) || 5;
+        const fallbackCharacters = generateFallbackCharacters(participantCount);
+        
+        return { characters: fallbackCharacters };
+      }
     }
   },
 
@@ -752,11 +732,21 @@ export default async function handler(req, res) {
           
         } catch (stepError) {
           console.error(`❌ Step failed: ${step.name}`, stepError);
+          console.error(`❌ Error details:`, {
+            message: stepError.message,
+            stack: stepError.stack,
+            name: stepError.name,
+            type: stepError.type || 'Unknown'
+          });
           
           sessionData.phases[`step${i + 1}`] = {
             name: step.name,
             status: 'error',
             error: stepError.message,
+            errorDetails: {
+              type: stepError.name || stepError.type || 'Unknown',
+              stack: process.env.NODE_ENV === 'development' ? stepError.stack : undefined
+            },
             failedAt: new Date().toISOString()
           };
           
@@ -765,7 +755,7 @@ export default async function handler(req, res) {
             console.log(`⚠️ Non-critical step failed, continuing...`);
             continue;
           } else {
-            throw new AppError(`Critical step failed: ${step.name}`, ErrorTypes.GENERATION_ERROR);
+            throw new AppError(`Critical step failed: ${step.name} - ${stepError.message}`, ErrorTypes.GENERATION_ERROR);
           }
         }
       }
@@ -799,10 +789,13 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('🚨 Integrated micro generation error:', error);
+    console.error('🚨 Error stack:', error.stack);
     return res.status(500).json({
       success: false,
       error: error.message || 'Generation failed',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      errorType: error.name || error.type || 'UnknownError',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      timestamp: new Date().toISOString()
     });
   }
 }
@@ -842,9 +835,20 @@ function createCacheKey(stepName, formData) {
  * 🔐 フォームデータハッシュ生成
  */
 function createFormDataHash(formData) {
-  const crypto = require('crypto');
-  const dataString = JSON.stringify(formData, Object.keys(formData).sort());
-  return crypto.createHash('md5').update(dataString).digest('hex').substring(0, 8);
+  try {
+    // 簡単で確実なハッシュ生成
+    const dataString = JSON.stringify(formData, Object.keys(formData).sort());
+    let hash = 0;
+    for (let i = 0; i < dataString.length; i++) {
+      const char = dataString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 32bit int
+    }
+    return Math.abs(hash).toString(16).substring(0, 8);
+  } catch (error) {
+    console.error('Hash generation error:', error);
+    return Date.now().toString(16).substring(0, 8);
+  }
 }
 
 function getPlayTime(complexity) {
@@ -854,4 +858,38 @@ function getPlayTime(complexity) {
     'complex': '60分'
   };
   return timeMap[complexity] || '45分';
+}
+
+/**
+ * 🛡️ フォールバックキャラクター生成
+ */
+function generateFallbackCharacters(count) {
+  const characters = [];
+  const names = ['田中太郎', '佐藤花子', '山田次郎', '鈴木美咲', '高橋健一', '渡辺理恵'];
+  const jobs = ['会社員', '大学生', '医師', '教師', '弁護士', '記者'];
+  
+  for (let i = 0; i < count; i++) {
+    characters.push(`
+## プレイヤー${i + 1}のハンドアウト
+
+### あなたのキャラクター
+氏名: ${names[i] || `プレイヤー${i + 1}`}
+年齢: ${20 + Math.floor(Math.random() * 40)}歳
+職業: ${jobs[i] || '会社員'}
+性格: 真面目で責任感が強い
+
+### バックストーリー
+地元出身で、現在は都市部で働いている。家族思いで、正義感が強い性格。
+
+### 秘密情報
+- 公開情報: 信頼できる人物として知られている
+- 秘密: 過去に重要な出来事を目撃している
+- 目標: 真実を明らかにしたい
+
+### 他キャラクターとの関係
+他のプレイヤーとは知人または友人関係。
+    `);
+  }
+  
+  return characters.join('\n');
 }
