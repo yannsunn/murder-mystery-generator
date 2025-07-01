@@ -1020,10 +1020,45 @@ class UltraIntegratedApp {
   // 各コンテンツ生成メソッド
   generateOverviewContent(sessionData) {
     const formData = sessionData.formData || {};
-    const concept = sessionData.phases?.step1?.content?.concept || '';
+    const phases = sessionData.phases || {};
+    
+    // 段階的生成の新しい構造からコンセプトを取得
+    let concept = '';
+    let title = 'マーダーミステリーシナリオ';
+    
+    // 段階0のランダム構造または段階1のコンセプトを探す
+    if (phases.step1?.content) {
+      const step1Content = phases.step1.content;
+      if (typeof step1Content === 'object') {
+        concept = step1Content.concept || step1Content.random_outline || '';
+      } else {
+        concept = step1Content;
+      }
+    }
+    
+    // 段階0のランダム構造も確認
+    if (!concept && phases.step1?.content) {
+      const step0Content = phases.step1.content;
+      if (typeof step0Content === 'object') {
+        concept = step0Content.random_outline || '';
+      }
+    }
+    
+    // タイトル抽出を試行
+    const titleMatch = concept.match(/(?:作品タイトル|タイトル)[\s\S]*?[：:]\s*([^\n]+)/i);
+    if (titleMatch) {
+      title = titleMatch[1].trim();
+    }
+    
+    const completedSteps = Object.values(phases).filter(p => p.status === 'completed').length;
     
     return `
       <div class="overview-section">
+        <div class="title-section">
+          <h4 class="scenario-main-title">🎭 ${title}</h4>
+          <p class="generation-status">✅ ${completedSteps}/9段階完了</p>
+        </div>
+        
         <h5>🎯 基本情報</h5>
         <ul>
           <li><strong>参加人数:</strong> ${formData.participants || 5}人</li>
@@ -1033,29 +1068,111 @@ class UltraIntegratedApp {
           <li><strong>トーン:</strong> ${this.getDisplayText('tone', formData.tone)}</li>
         </ul>
         
-        <h5>📝 コンセプト</h5>
+        <h5>📝 生成されたコンセプト</h5>
         <div class="concept-preview">
-          ${concept.length > 500 ? concept.substring(0, 500) + '...' : concept}
+          ${concept ? (concept.length > 800 ? concept.substring(0, 800) + '...' : concept) : '⚠️ コンセプトが生成されていません。'}
+        </div>
+        
+        <h5>🔄 生成段階ステータス</h5>
+        <div class="stages-status">
+          ${Object.entries(phases).map(([stepKey, step]) => `
+            <div class="stage-item ${step.status === 'completed' ? 'completed' : 'pending'}">
+              <span class="stage-icon">${step.status === 'completed' ? '✅' : '⏳'}</span>
+              <span class="stage-name">${step.name || stepKey}</span>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
   }
   
   generateScenarioContent(phases) {
-    const step1 = phases.step1?.content?.concept || '';
-    const step3 = phases.step3?.content?.incident_and_truth || '';
+    console.log('🔍 Generating scenario content from phases:', phases);
+    
+    // 段階的生成の新しい構造に対応
+    let scenarioContent = '';
+    
+    // 各段階のコンテンツを順番に表示
+    Object.keys(phases).sort().forEach(stepKey => {
+      const step = phases[stepKey];
+      if (step && step.content && step.status === 'completed') {
+        scenarioContent += `
+          <div class="scenario-step">
+            <h5 class="step-title">📋 ${step.name}</h5>
+            <div class="step-content">
+              ${this.formatStepContent(step.content)}
+            </div>
+          </div>
+          <hr style="margin: 1.5rem 0; border-color: var(--primary-600);">
+        `;
+      }
+    });
+    
+    if (!scenarioContent) {
+      return '<p class="no-content">⚠️ シナリオコンテンツが生成されていません。段階的生成を確認してください。</p>';
+    }
     
     return `
       <div class="scenario-section">
-        ${this.formatContent(step1)}
-        <hr style="margin: 2rem 0; border-color: var(--primary-600);">
-        ${this.formatContent(step3)}
+        <div class="scenario-intro">
+          <h4>🎯 完全生成シナリオ - 全9段階</h4>
+          <p>以下は段階的生成システムによって作成された完全なマーダーミステリーシナリオです。</p>
+        </div>
+        ${scenarioContent}
       </div>
     `;
   }
   
+  // 段階的生成コンテンツフォーマット
+  formatStepContent(content) {
+    if (typeof content === 'string') {
+      return this.formatContent(content);
+    }
+    
+    if (typeof content === 'object') {
+      // オブジェクトの場合、各プロパティを表示
+      let html = '';
+      Object.entries(content).forEach(([key, value]) => {
+        if (typeof value === 'string' && value.trim()) {
+          html += `
+            <div class="content-property">
+              <h6 class="property-title">${this.formatPropertyName(key)}</h6>
+              <div class="property-content">${this.formatContent(value)}</div>
+            </div>
+          `;
+        }
+      });
+      return html || this.formatContent(JSON.stringify(content, null, 2));
+    }
+    
+    return this.formatContent(String(content));
+  }
+  
+  formatPropertyName(key) {
+    const nameMap = {
+      'random_outline': '🎲 ランダム全体構造',
+      'concept': '🎨 基本コンセプト',
+      'incident_core': '🔍 事件の核心',
+      'incident_details': '⏰ 事件詳細',
+      'characters': '👤 キャラクター設計',
+      'evidence_system': '🔍 証拠システム',
+      'gamemaster_guide': '🎓 GM進行ガイド',
+      'final_integration': '🏆 最終統合',
+      'comprehensive_review': '🏆 総合レビュー'
+    };
+    return nameMap[key] || key.replace(/_/g, ' ').toUpperCase();
+  }
+
   generateCharactersContent(phases) {
-    const characters = phases.step2?.content?.characters || '';
+    console.log('🔍 Generating characters content from phases:', phases);
+    
+    // 段階4のキャラクター情報を探す
+    const step4 = phases.step4;
+    if (!step4 || !step4.content) {
+      return '<p class="no-content">⚠️ キャラクター情報が生成されていません。</p>';
+    }
+    
+    const characters = typeof step4.content === 'object' ? step4.content.characters : step4.content;
     
     if (!characters) {
       return '<p>キャラクターハンドアウトが生成されていません。</p>';
