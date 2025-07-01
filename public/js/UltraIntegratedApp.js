@@ -469,10 +469,15 @@ class UltraIntegratedApp {
       // エラーイベント
       eventSource.addEventListener('error', (event) => {
         console.error('❌ EventSource error:', event);
-        eventSource.close();
         
+        // EventSourceが失敗した場合はPOSTフォールバックを試行
         if (!finalSessionData) {
-          throw new Error('段階的生成中にエラーが発生しました');
+          console.log('🔄 EventSource failed, trying POST fallback...');
+          eventSource.close();
+          
+          // POSTフォールバックを実行
+          this.fallbackToPostGeneration(sessionId, timeoutId);
+          return;
         }
       });
       
@@ -544,6 +549,101 @@ class UltraIntegratedApp {
     } finally {
       this.isGenerating = false;
       this.stopProgressTimer();
+    }
+  }
+
+  // 🔄 EventSource失敗時のPOSTフォールバック
+  async fallbackToPostGeneration(sessionId, timeoutId) {
+    try {
+      console.log('🔄 Using POST fallback for staged generation...');
+      
+      const response = await fetch('/api/integrated-micro-generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          formData: this.formData,
+          sessionId: sessionId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ POST Fallback Error:', response.status, errorText);
+        throw new Error(`API Error ${response.status}: ${errorText}`);
+      }
+
+      // ストリーミングレスポンス読み取り
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // 最後の不完全な行は保持
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+              if (data.step && data.content) {
+                // 進捗更新
+                this.updateProgressBar(data.progress || 0);
+                this.updatePhaseInfo(data.step, data.totalSteps, data.name);
+                
+                console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
+                
+                if (uxEnhancer) {
+                  uxEnhancer.showToast(`段階${data.step}完了: ${data.name}`, 'info', 2000);
+                }
+              }
+            } catch (parseError) {
+              console.error('❌ Fallback parse error:', parseError);
+            }
+          } else if (line.startsWith('event: complete')) {
+            // 次の行でデータを読み取り
+          } else if (line.includes('"isComplete":true')) {
+            try {
+              const finalData = JSON.parse(line.substring(line.indexOf('{')));
+              if (finalData.sessionData) {
+                this.updateProgressBar(100);
+                this.updatePhaseInfo(9, 9, '生成完了');
+                
+                if (uxEnhancer) {
+                  uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
+                }
+                
+                setTimeout(() => {
+                  this.showResults(finalData.sessionData);
+                }, 1000);
+                
+                break;
+              }
+            } catch (parseError) {
+              console.error('❌ Final parse error:', parseError);
+            }
+          }
+        }
+      }
+      
+      clearTimeout(timeoutId);
+      
+    } catch (fallbackError) {
+      console.error('❌ POST Fallback failed:', fallbackError);
+      
+      this.stopProgressTimer();
+      clearTimeout(timeoutId);
+      
+      if (uxEnhancer) {
+        uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
+      }
+      
+      this.showError(fallbackError.message);
     }
   }
 

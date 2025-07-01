@@ -1174,12 +1174,14 @@ export default async function handler(req, res) {
     // 🎯 段階的レスポンス実装: 各段階で進捗を送信
     let isFirstStep = true;
     
-    // ヘッダー設定を段階的レスポンス用に調整
+    // ヘッダー設定を段階的レスポンス用に調整（EventSource対応）
     res.writeHead(200, {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Transfer-Encoding': 'chunked',
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': 'no-cache'
+      'Access-Control-Allow-Headers': 'Cache-Control',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
     });
     
     const sendProgressUpdate = (stepIndex, stepName, result, isComplete = false) => {
