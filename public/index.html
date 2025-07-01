@@ -283,13 +283,14 @@
           <!-- 生成されたシナリオがここに表示される -->
         </div>
         
-        <!-- アクションボタン -->
+        <!-- Web表示専用アクション -->
         <div class="result-actions">
-          <button id="download-zip" class="btn btn-primary">
-            <span>📦</span> シナリオパッケージダウンロード
-          </button>
-          <button id="new-scenario" class="btn btn-outline">
-            <span>🔄</span> 新規作成
+          <div class="web-display-notice">
+            <p>🌐 すべての資料はこのWebページ上で完全表示されています</p>
+            <p>📋 各タブをクリックして詳細な資料をご確認ください</p>
+          </div>
+          <button id="new-scenario" class="btn btn-primary">
+            <span>🔄</span> 新規シナリオ作成
           </button>
         </div>
       </div>
@@ -314,7 +315,6 @@
   <script type="module" src="js/SkeletonLoader.js"></script>
   <script type="module" src="js/UXEnhancer.js"></script>
   <script type="module" src="js/UltraIntegratedApp.js"></script>
-  <script type="module" src="js/MicroGenerationApp.js"></script>
   <script src="js/result-helpers.js"></script>
 </body>
 </html>

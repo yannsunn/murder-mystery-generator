@@ -115,12 +115,8 @@ class UltraIntegratedApp {
     console.log('🔬 Integrated micro generation mode only');
 
     // 結果画面のボタン
-    const downloadZipBtn = document.getElementById('download-zip');
     const newScenarioBtn = document.getElementById('new-scenario');
-
-    if (downloadZipBtn) {
-      downloadZipBtn.addEventListener('click', () => this.downloadFile('zip'));
-    }
+    // ZIPダウンロード機能は削除 - Web上完全表示のため
 
     if (newScenarioBtn) {
       newScenarioBtn.addEventListener('click', () => this.resetApp());
@@ -675,15 +671,21 @@ class UltraIntegratedApp {
           </div>
         ` : ''}
         
-        <div class="download-section">
-          <h4>📥 ダウンロードオプション</h4>
-          <div class="download-options">
-            <button class="btn btn-primary" onclick="window.app.handleDownload()">
-              📦 全てをZIPでダウンロード
+        <div class="web-actions-section">
+          <h4>🌐 Web上で完全表示中</h4>
+          <div class="web-actions">
+            <button class="btn btn-primary" onclick="copyScenarioText()">
+              📋 全シナリオをコピー
             </button>
-            <button class="btn btn-secondary" onclick="copyScenarioText()">
-              📋 シナリオをコピー
+            <button class="btn btn-secondary" onclick="window.print()">
+              🖨️ ページを印刷
             </button>
+            <button class="btn btn-success" onclick="window.app.resetApp()">
+              🔄 新規シナリオ作成
+            </button>
+          </div>
+          <div class="web-display-note">
+            <p>📖 すべての資料がWeb上で完全表示されています。タブを切り替えて各資料をご確認ください。</p>
           </div>
         </div>
       </div>
@@ -809,44 +811,14 @@ class UltraIntegratedApp {
     return names[stepNum] || `ステップ${stepNum}`;
   }
 
-  // ZIPファイルダウンロード（PDF廃止）
-  async downloadFile(format = 'zip') {
-    if (!this.sessionData) {
-      this.showError('ダウンロード用のデータがありません');
-      return;
-    }
-
-    try {
-      console.log('📦 Downloading ZIP scenario package...');
-      
-      const response = await fetch('/api/export', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionData: this.sessionData
-        }),
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'murder_mystery_scenario.zip';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        console.log('✅ ZIP download completed');
-      } else {
-        throw new Error(`Download failed: ${response.statusText}`);
-      }
-    } catch (error) {
-      console.error('❌ Download failed:', error);
-      this.showError(`ダウンロードに失敗しました: ${error.message}`);
+  // Web上完全表示専用メソッド（ZIPダウンロード廃止）
+  handleDownload() {
+    // Web上で完全表示のため、コピー機能に統一
+    if (typeof copyScenarioText === 'function') {
+      copyScenarioText();
+    } else {
+      console.log('📖 All content is displayed on this web page. Use tabs to navigate.');
+      alert('すべてのコンテンツはこのWebページ上で表示されています。タブを使って各資料をご確認ください。');
     }
   }
 

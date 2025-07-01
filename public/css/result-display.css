@@ -292,3 +292,53 @@
   from { filter: brightness(1); }
   to { filter: brightness(1.2); }
 }
+
+/* Web表示専用スタイル */
+.web-actions-section {
+  background: linear-gradient(135deg, var(--accent-success), var(--accent-info));
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.web-actions-section h4 {
+  color: white;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.web-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.web-actions .btn {
+  min-width: 180px;
+  font-weight: 500;
+}
+
+.web-display-note {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  color: white;
+  font-size: 0.9rem;
+}
+
+.web-display-notice {
+  background: var(--accent-info);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  color: white;
+  text-align: center;
+}
+
+.web-display-notice p {
+  margin: 0.5rem 0;
+  font-weight: 500;
+}
