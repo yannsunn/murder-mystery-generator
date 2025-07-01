@@ -2,11 +2,11 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/micro-generation-system.js": {
-      "maxDuration": 30
-    },
     "api/integrated-micro-generator.js": {
       "maxDuration": 300
+    },
+    "api/professional-mystery-generator.js": {
+      "maxDuration": 600
     },
     "api/export.js": {
       "maxDuration": 60
