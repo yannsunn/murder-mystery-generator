@@ -468,8 +468,14 @@ ${Array.from({length: participantCount}, (_, i) => `
   }
 ];
 
-// 画像プロンプト生成関数
+// 画像プロンプト生成関数（トグル対応）
 function createImagePrompts(sessionData) {
+  // アートワーク生成がトグルで有効化されているかチェック
+  if (!sessionData.formData?.generate_artwork) {
+    console.log('🎨 アートワーク生成は無効化されています（ユーザー設定）');
+    return [];
+  }
+  
   const prompts = [];
   const concept = sessionData.phases?.step1?.content?.concept || '';
   const characters = sessionData.phases?.step2?.content?.characters || '';
@@ -495,12 +501,19 @@ function createImagePrompts(sessionData) {
     });
   }
   
+  console.log(`🎨 アートワーク生成が有効化されました - ${prompts.length}個のプロンプト生成`);
   return prompts;
 }
 
-// OpenAI画像生成関数
+// OpenAI画像生成関数（トグル対応）
 async function generateImages(imagePrompts) {
   const images = [];
+  
+  // プロンプトが空の場合はスキップ
+  if (!imagePrompts || imagePrompts.length === 0) {
+    console.log('🎨 アートワーク生成はスキップされました');
+    return images;
+  }
   
   // APIキーが設定されていない場合はスキップ
   if (!process.env.OPENAI_API_KEY) {
