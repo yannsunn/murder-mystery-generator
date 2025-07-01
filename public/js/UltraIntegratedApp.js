@@ -677,8 +677,14 @@ class UltraIntegratedApp {
             <button class="btn btn-primary" onclick="copyScenarioText()">
               📋 全シナリオをコピー
             </button>
+            <button class="btn btn-info" onclick="copyTabContent()">
+              📄 表示中タブをコピー
+            </button>
             <button class="btn btn-secondary" onclick="window.print()">
               🖨️ ページを印刷
+            </button>
+            <button class="btn btn-warning" onclick="saveAsText()">
+              💾 テキストファイル保存
             </button>
             <button class="btn btn-success" onclick="window.app.resetApp()">
               🔄 新規シナリオ作成
@@ -686,6 +692,33 @@ class UltraIntegratedApp {
           </div>
           <div class="web-display-note">
             <p>📖 すべての資料がWeb上で完全表示されています。タブを切り替えて各資料をご確認ください。</p>
+            <p>💡 操作ヒント: Ctrl+F で検索、各ボタンで便利な機能をご利用いただけます。</p>
+          </div>
+        </div>
+        
+        <!-- 検索・フィルター機能 -->
+        <div class="search-filter-section">
+          <h4>🔍 検索・フィルター</h4>
+          <div class="search-controls">
+            <input type="text" id="content-search" placeholder="コンテンツ内を検索..." class="search-input">
+            <button class="btn btn-primary" onclick="searchContent()">
+              🔍 検索
+            </button>
+            <button class="btn btn-secondary" onclick="clearSearch()">
+              ❌ クリア
+            </button>
+          </div>
+          <div class="filter-controls">
+            <select id="content-filter" class="filter-select">
+              <option value="all">すべて表示</option>
+              <option value="handouts">ハンドアウトのみ</option>
+              <option value="gm-info">GM専用情報</option>
+              <option value="characters">キャラクター情報</option>
+              <option value="timeline">タイムライン</option>
+            </select>
+            <button class="btn btn-info" onclick="applyFilter()">
+              🎯 フィルター適用
+            </button>
           </div>
         </div>
       </div>
