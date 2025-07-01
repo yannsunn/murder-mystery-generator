@@ -10,6 +10,8 @@ import { setSecurityHeaders } from './security-utils.js';
 import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 import { createPerformanceMiddleware } from './middleware/performance-monitor.js';
 import { createValidationMiddleware } from './middleware/input-validator.js';
+import { qualityAssessor } from './utils/quality-assessor.js';
+import { parallelEngine, intelligentCache } from './utils/performance-optimizer.js';
 
 export const config = {
   maxDuration: 300, // 5分 - 30分-1時間高精度生成のため十分な時間
@@ -646,47 +648,125 @@ export default async function handler(req, res) {
     let currentWeight = 0;
     const totalWeight = INTEGRATED_GENERATION_FLOW.reduce((sum, step) => sum + step.weight, 0);
 
-    // 各ステップを順次実行
-    for (let i = 0; i < INTEGRATED_GENERATION_FLOW.length; i++) {
-      const step = INTEGRATED_GENERATION_FLOW[i];
+    // 🚀 パフォーマンス最適化: 並列生成可能なタスクを特定
+    const optimizedFlow = await optimizeGenerationFlow(INTEGRATED_GENERATION_FLOW, formData);
+    
+    // 各ステップを実行（並列化対応）
+    if (optimizedFlow.canParallelize) {
+      console.log('🚀 Using parallel generation for independent tasks');
+      const parallelResults = await parallelEngine.generateConcurrently(optimizedFlow.tasks, context);
       
-      console.log(`🔄 Executing: ${step.name}`);
-      
-      try {
-        const result = await step.handler(formData, context);
+      // 結果をセッションデータに統合
+      for (const [stepName, result] of Object.entries(parallelResults)) {
+        if (!result.error) {
+          Object.assign(context, result);
+          
+          const stepIndex = INTEGRATED_GENERATION_FLOW.findIndex(s => s.name === stepName);
+          sessionData.phases[`step${stepIndex + 1}`] = {
+            name: stepName,
+            content: result,
+            status: 'completed',
+            completedAt: new Date().toISOString(),
+            generationMethod: 'parallel'
+          };
+        }
+      }
+    } else {
+      // 従来の順次実行
+      for (let i = 0; i < INTEGRATED_GENERATION_FLOW.length; i++) {
+        const step = INTEGRATED_GENERATION_FLOW[i];
         
-        // コンテキストに結果を追加
-        Object.assign(context, result);
+        console.log(`🔄 Executing: ${step.name}`);
         
-        // フェーズデータとして保存
-        sessionData.phases[`step${i + 1}`] = {
-          name: step.name,
-          content: result,
-          status: 'completed',
-          completedAt: new Date().toISOString()
-        };
-        
-        currentWeight += step.weight;
-        const progress = Math.round((currentWeight / totalWeight) * 100);
-        
-        console.log(`✅ ${step.name} completed (${progress}%)`);
-        
-      } catch (stepError) {
-        console.error(`❌ Step failed: ${step.name}`, stepError);
-        
-        sessionData.phases[`step${i + 1}`] = {
-          name: step.name,
-          status: 'error',
-          error: stepError.message,
-          failedAt: new Date().toISOString()
-        };
-        
-        // 致命的エラーではない場合は続行
-        if (step.weight < 30) {
-          console.log(`⚠️ Non-critical step failed, continuing...`);
-          continue;
-        } else {
-          throw new AppError(`Critical step failed: ${step.name}`, ErrorTypes.GENERATION_ERROR);
+        try {
+          // 🧠 インテリジェントキャッシュチェック
+          const cacheKey = createCacheKey(step.name, formData);
+          const cachedResult = await intelligentCache.get(cacheKey, step.name);
+          
+          let result;
+          if (cachedResult) {
+            console.log(`💾 Using cached result for: ${step.name}`);
+            result = cachedResult;
+          } else {
+            // 新規生成
+            result = await step.handler(formData, context);
+            
+            // 🧠 品質評価実行
+            if (step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')) {
+              console.log(`🔍 Running quality assessment for: ${step.name}`);
+              const qualityResult = await qualityAssessor.evaluateScenario(
+                JSON.stringify(result), 
+                formData
+              );
+              
+              // 品質が基準以下の場合は再生成
+              if (!qualityResult.passesQuality && qualityResult.score < 0.8) {
+                console.log(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
+                
+                // フィードバックを含めて再生成
+                const enhancedContext = {
+                  ...context,
+                  qualityFeedback: qualityResult.recommendations.join('\n'),
+                  previousAttempt: result
+                };
+                
+                result = await step.handler(formData, enhancedContext);
+                
+                // 再評価
+                const requalityResult = await qualityAssessor.evaluateScenario(
+                  JSON.stringify(result), 
+                  formData
+                );
+                
+                console.log(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
+              } else {
+                console.log(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
+              }
+            }
+            
+            // キャッシュに保存
+            await intelligentCache.set(cacheKey, result, step.name, {
+              stepName: step.name,
+              formDataHash: createFormDataHash(formData),
+              timestamp: Date.now()
+            });
+          }
+          
+          // コンテキストに結果を追加
+          Object.assign(context, result);
+          
+          // フェーズデータとして保存
+          sessionData.phases[`step${i + 1}`] = {
+            name: step.name,
+            content: result,
+            status: 'completed',
+            completedAt: new Date().toISOString(),
+            generationMethod: cachedResult ? 'cached' : 'generated',
+            qualityAssessed: step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')
+          };
+          
+          currentWeight += step.weight;
+          const progress = Math.round((currentWeight / totalWeight) * 100);
+          
+          console.log(`✅ ${step.name} completed (${progress}%)`);
+          
+        } catch (stepError) {
+          console.error(`❌ Step failed: ${step.name}`, stepError);
+          
+          sessionData.phases[`step${i + 1}`] = {
+            name: step.name,
+            status: 'error',
+            error: stepError.message,
+            failedAt: new Date().toISOString()
+          };
+          
+          // 致命的エラーではない場合は続行
+          if (step.weight < 30) {
+            console.log(`⚠️ Non-critical step failed, continuing...`);
+            continue;
+          } else {
+            throw new AppError(`Critical step failed: ${step.name}`, ErrorTypes.GENERATION_ERROR);
+          }
         }
       }
     }
@@ -728,6 +808,45 @@ export default async function handler(req, res) {
 }
 
 // ========== ユーティリティ関数 ==========
+
+/**
+ * 🚀 生成フロー最適化
+ */
+async function optimizeGenerationFlow(flow, formData) {
+  // 現在は順次実行を維持（将来の拡張ポイント）
+  return {
+    canParallelize: false,
+    tasks: flow,
+    reason: 'Sequential execution for content dependency'
+  };
+}
+
+/**
+ * 🔑 キャッシュキー生成
+ */
+function createCacheKey(stepName, formData) {
+  const relevantFields = {
+    participants: formData.participants,
+    era: formData.era,
+    setting: formData.setting,
+    complexity: formData.complexity,
+    tone: formData.tone,
+    incident_type: formData.incident_type
+  };
+  
+  const dataHash = createFormDataHash(relevantFields);
+  return `${stepName}_${dataHash}`;
+}
+
+/**
+ * 🔐 フォームデータハッシュ生成
+ */
+function createFormDataHash(formData) {
+  const crypto = require('crypto');
+  const dataString = JSON.stringify(formData, Object.keys(formData).sort());
+  return crypto.createHash('md5').update(dataString).digest('hex').substring(0, 8);
+}
+
 function getPlayTime(complexity) {
   const timeMap = {
     'simple': '30分',
