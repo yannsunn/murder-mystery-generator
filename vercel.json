@@ -2,18 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "public": true,
-  "outputDirectory": "public",
   "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
   "functions": {
     "api/integrated-micro-generator.js": {
       "maxDuration": 300

@@ -135,7 +135,10 @@ header p {
   transition: all var(--animation-slow);
   position: relative;
   overflow: hidden;
-  /* レイアウト安定化 - コンパクト化 */
+  /* レイアウト安定化 - 固定サイズ */
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
   min-height: 500px;
 }
 
@@ -271,7 +274,8 @@ header p {
 /* ========== フォーム ========== */
 .form-container {
   position: relative;
-  min-height: 300px;
+  min-height: 350px;
+  padding-bottom: var(--space-xl);
 }
 
 .step {
@@ -282,7 +286,8 @@ header p {
   position: relative;
   z-index: 1;
   /* コンテンツ高さ固定でボタン位置安定化 */
-  min-height: 280px;
+  min-height: 320px;
+  padding-bottom: var(--space-lg);
 }
 
 .step.active {
@@ -657,36 +662,27 @@ header p {
 }
 
 /* ========== ボタン ========== */
+/* ========== ボタンコンテナ完全安定化 ========== */
 .button-container {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  height: 70px;
   margin-top: var(--space-2xl);
-  padding-top: var(--space-xl);
+  padding: var(--space-md) 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: var(--space-md);
-  /* ボタン位置完全固定 - 強化版 */
-  position: relative;
-  min-height: 80px;
-  height: 80px;
-  overflow: hidden;
+  /* レイアウト固定 - ホバー時の移動防止 */
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .btn-spacer {
   flex: 1;
+  min-width: 0;
 }
-
-/* ========== ボタンコンテナ完全修正 ========== */
-.button-container {
-  position: relative !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  width: 100% !important;
-  height: 60px !important;
-  margin-top: var(--space-2xl) !important;
-  padding: 0 !important;
-  /* 固定された高さとレイアウト */
 }
 
 .btn-spacer {
@@ -741,12 +737,18 @@ header p {
   font-weight: 700 !important;
   text-decoration: none;
   cursor: pointer;
-  transition: all var(--animation-normal);
+  transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
   min-width: 120px;
+  height: 44px;
   white-space: nowrap;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+  /* ホバー時の安定性強化 */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform-origin: center center;
+  will-change: transform, box-shadow;
 }
 
 .btn:disabled {
@@ -756,8 +758,9 @@ header p {
 }
 
 .btn:not(:disabled):hover {
-  transform: translateY(-2px);
+  transform: scale(1.02);
   box-shadow: var(--shadow-lg);
+  transition: all 0.2s ease;
 }
 
 .btn:not(:disabled):active {
@@ -771,7 +774,9 @@ header p {
 }
 
 .btn-primary:not(:disabled):hover {
+  transform: scale(1.02);
   box-shadow: var(--shadow-xl), 0 0 20px rgba(102, 126, 234, 0.4);
+  transition: all 0.2s ease;
 }
 
 .btn-secondary {
@@ -792,7 +797,9 @@ header p {
 }
 
 .btn-success:not(:disabled):hover {
+  transform: scale(1.02);
   box-shadow: var(--shadow-xl), 0 0 20px rgba(79, 172, 254, 0.4);
+  transition: all 0.2s ease;
 }
 
 .btn-outline {
