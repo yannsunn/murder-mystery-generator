@@ -604,26 +604,30 @@ class UltraIntegratedApp {
         <div class="generation-stats">
           <div class="stat-card">
             <span class="stat-number">${completedSteps}</span>
-            <span class="stat-label">統合ステップ完了</span>
+            <span class="stat-label">プロ品質ステップ完了</span>
           </div>
           <div class="stat-card">
             <span class="stat-number">${sessionData.formData?.participants || 5}</span>
-            <span class="stat-label">参加者用</span>
+            <span class="stat-label">キャラクター</span>
           </div>
           <div class="stat-card">
             <span class="stat-number">${successfulImages.length}</span>
-            <span class="stat-label">生成画像</span>
+            <span class="stat-label">プロ品質画像</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">🏆</span>
+            <span class="stat-label">商業品質</span>
           </div>
         </div>
         
         <!-- タブナビゲーション -->
         <div class="result-tabs">
-          <button class="tab-button active" onclick="showTab('overview')">📊 概要</button>
-          <button class="tab-button" onclick="showTab('scenario')">📝 シナリオ</button>
-          <button class="tab-button" onclick="showTab('characters')">👥 キャラクター</button>
-          <button class="tab-button" onclick="showTab('timeline')">⏰ タイムライン</button>
-          <button class="tab-button" onclick="showTab('gm-guide')">🎮 GMガイド</button>
-          ${successfulImages.length > 0 ? '<button class="tab-button" onclick="showTab(\'images\')">🎨 画像</button>' : ''}
+          <button class="tab-button active" onclick="showTab('overview')">📊 作品概要</button>
+          <button class="tab-button" onclick="showTab('scenario')">📜 完全シナリオ</button>
+          <button class="tab-button" onclick="showTab('characters')">🎭 ハンドアウト集</button>
+          <button class="tab-button" onclick="showTab('timeline')">⏱ 進行管理</button>
+          <button class="tab-button" onclick="showTab('gm-guide')">🎓 GMマニュアル</button>
+          ${successfulImages.length > 0 ? '<button class="tab-button" onclick="showTab(\'images\')">🖼 アートワーク</button>' : ''}
         </div>
         
         <!-- タブコンテンツ -->
