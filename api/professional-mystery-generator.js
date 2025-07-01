@@ -429,6 +429,66 @@ function createProfessionalImagePrompts(sessionData) {
   return prompts;
 }
 
+// ========== 画像生成関数 ==========
+async function generateImages(imagePrompts) {
+  const images = [];
+  
+  // APIキーが設定されていない場合はスキップ
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('⚠️ OPENAI_API_KEY not set, skipping image generation');
+    return images;
+  }
+  
+  for (const promptData of imagePrompts) {
+    try {
+      console.log(`🎨 Generating image: ${promptData.type}`);
+      
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: promptData.prompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard"
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        images.push({
+          ...promptData,
+          url: data.data[0].url,
+          revised_prompt: data.data[0].revised_prompt,
+          status: 'success'
+        });
+        console.log(`✅ Image generated: ${promptData.type}`);
+      } else {
+        const error = await response.text();
+        console.error(`❌ Image generation failed: ${error}`);
+        images.push({
+          ...promptData,
+          error: 'Generation failed',
+          status: 'failed'
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Image generation error: ${error.message}`);
+      images.push({
+        ...promptData,
+        error: error.message,
+        status: 'failed'
+      });
+    }
+  }
+  
+  return images;
+}
+
 // ========== ユーティリティ関数 ==========
 function getPlayTime(complexity) {
   const timeMap = {
