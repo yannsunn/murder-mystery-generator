@@ -662,49 +662,21 @@ header p {
 }
 
 /* ========== ボタン ========== */
-/* ========== ボタンコンテナ完全安定化 ========== */
+/* ========== ボタンコンテナ完全復元 ========== */
 .button-container {
-  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  height: 70px;
   margin-top: var(--space-2xl);
-  padding: var(--space-md) 0;
+  padding-top: var(--space-xl);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   gap: var(--space-md);
-  /* レイアウト固定 - ホバー時の移動防止 */
-  box-sizing: border-box;
-  flex-shrink: 0;
+  position: relative;
+  width: 100%;
 }
 
 .btn-spacer {
   flex: 1;
-  min-width: 0;
-}
-}
-
-.btn-spacer {
-  flex: 1 !important;
-  height: 1px !important;
-}
-
-/* ボタン位置完全固定 */
-#prev-btn {
-  position: static !important;
-  flex-shrink: 0 !important;
-  margin: 0 !important;
-}
-
-#next-btn, #generate-btn {
-  position: static !important;
-  flex-shrink: 0 !important;
-  margin: 0 !important;
-  /* 完全に同じサイズと位置 */
-  min-width: 200px !important;
-  height: 48px !important;
-  padding: var(--space-md) var(--space-xl) !important;
 }
 
 /* ボタン表示切り替え時の安定化 */
@@ -758,9 +730,10 @@ header p {
 }
 
 .btn:not(:disabled):hover {
-  transform: scale(1.02);
   box-shadow: var(--shadow-lg);
   transition: all 0.2s ease;
+  /* 位置移動を防止しつつ、視覚的フィードバックを保持 */
+  filter: brightness(1.1);
 }
 
 .btn:not(:disabled):active {
@@ -774,9 +747,9 @@ header p {
 }
 
 .btn-primary:not(:disabled):hover {
-  transform: scale(1.02);
   box-shadow: var(--shadow-xl), 0 0 20px rgba(102, 126, 234, 0.4);
   transition: all 0.2s ease;
+  filter: brightness(1.1);
 }
 
 .btn-secondary {
@@ -797,9 +770,9 @@ header p {
 }
 
 .btn-success:not(:disabled):hover {
-  transform: scale(1.02);
   box-shadow: var(--shadow-xl), 0 0 20px rgba(79, 172, 254, 0.4);
   transition: all 0.2s ease;
+  filter: brightness(1.1);
 }
 
 .btn-outline {
