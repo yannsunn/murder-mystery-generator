@@ -406,6 +406,22 @@ header p {
   text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important;
 }
 
+/* セレクトボックスのオプション修正 */
+.form-select option {
+  background: var(--primary-800) !important;
+  color: #ffffff !important;
+  padding: 8px 12px !important;
+  border: none !important;
+  font-weight: 500 !important;
+}
+
+.form-select option:hover,
+.form-select option:focus,
+.form-select option:checked {
+  background: var(--accent-primary) !important;
+  color: #ffffff !important;
+}
+
 .form-select:focus,
 .form-input:focus {
   outline: none;
