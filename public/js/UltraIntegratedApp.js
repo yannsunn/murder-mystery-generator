@@ -560,6 +560,7 @@ class UltraIntegratedApp {
 
   generateResultSummary(sessionData) {
     const phases = sessionData.phases || {};
+    const images = sessionData.images || [];
     
     // 統合マイクロ生成の結果からタイトルを抽出
     let title = 'マーダーミステリーシナリオ';
@@ -575,6 +576,10 @@ class UltraIntegratedApp {
     
     const completedSteps = Object.values(phases).filter(p => p.status === 'completed').length;
     const totalSteps = Object.keys(phases).length;
+    const successfulImages = images.filter(img => img.status === 'success');
+    
+    // グローバルスコープに保存（タブ切り替え用）
+    window.currentSessionData = sessionData;
     
     return `
       <div class="result-summary">
@@ -589,38 +594,184 @@ class UltraIntegratedApp {
             <span class="stat-label">参加者用</span>
           </div>
           <div class="stat-card">
-            <span class="stat-number">${sessionData.generationType || '統合マイクロ'}</span>
-            <span class="stat-label">生成モード</span>
+            <span class="stat-number">${successfulImages.length}</span>
+            <span class="stat-label">生成画像</span>
           </div>
         </div>
         
-        <div class="result-phases">
-          ${Object.entries(phases).map(([key, data]) => {
-            const stepNum = key.replace('step', '');
-            const stepName = data.name || `ステップ${stepNum}`;
-            return `
-              <div class="phase-result">
-                <h4>ステップ ${stepNum}: ${stepName}</h4>
-                <div class="phase-status">
-                  ${data.status === 'completed' ? '✅ 完了' : 
-                    data.status === 'error' ? '❌ エラー' : '⏳ 処理中'}
-                </div>
-              </div>
-            `;
-          }).join('')}
+        <!-- タブナビゲーション -->
+        <div class="result-tabs">
+          <button class="tab-button active" onclick="showTab('overview')">📊 概要</button>
+          <button class="tab-button" onclick="showTab('scenario')">📝 シナリオ</button>
+          <button class="tab-button" onclick="showTab('characters')">👥 キャラクター</button>
+          <button class="tab-button" onclick="showTab('timeline')">⏰ タイムライン</button>
+          <button class="tab-button" onclick="showTab('gm-guide')">🎮 GMガイド</button>
+          ${successfulImages.length > 0 ? '<button class="tab-button" onclick="showTab(\'images\')">🎨 画像</button>' : ''}
         </div>
         
-        <div class="download-section">
-          <h4>📥 ダウンロード可能な形式</h4>
-          <div class="download-options">
-            <div class="download-option">
-              <strong>📦 統合マイクロ生成ZIP</strong>
-              <p>超詳細シナリオテキスト + ゲームマスター完全ガイド + プレイヤー配布資料</p>
+        <!-- タブコンテンツ -->
+        <div class="tab-content" id="tab-overview" style="display: block;">
+          <h4>🌟 シナリオ概要</h4>
+          <div class="scenario-overview">
+            ${this.generateOverviewContent(sessionData)}
+          </div>
+        </div>
+        
+        <div class="tab-content" id="tab-scenario" style="display: none;">
+          <h4>📖 完全シナリオ</h4>
+          <div class="scenario-full-content">
+            ${this.generateScenarioContent(phases)}
+          </div>
+        </div>
+        
+        <div class="tab-content" id="tab-characters" style="display: none;">
+          <h4>🎭 キャラクター詳細</h4>
+          <div class="characters-content">
+            ${this.generateCharactersContent(phases)}
+          </div>
+        </div>
+        
+        <div class="tab-content" id="tab-timeline" style="display: none;">
+          <h4>⏱ タイムライン</h4>
+          <div class="timeline-content">
+            ${this.generateTimelineContent(phases)}
+          </div>
+        </div>
+        
+        <div class="tab-content" id="tab-gm-guide" style="display: none;">
+          <h4>🎓 ゲームマスターガイド</h4>
+          <div class="gm-guide-content">
+            ${this.generateGMGuideContent(phases)}
+          </div>
+        </div>
+        
+        ${successfulImages.length > 0 ? `
+          <div class="tab-content" id="tab-images" style="display: none;">
+            <h4>🎨 生成画像ギャラリー</h4>
+            <div class="images-gallery">
+              ${this.generateImagesGallery(successfulImages)}
             </div>
+          </div>
+        ` : ''}
+        
+        <div class="download-section">
+          <h4>📥 ダウンロードオプション</h4>
+          <div class="download-options">
+            <button class="btn btn-primary" onclick="app.handleDownload()">
+              📦 全てをZIPでダウンロード
+            </button>
+            <button class="btn btn-secondary" onclick="copyScenarioText()">
+              📋 シナリオをコピー
+            </button>
           </div>
         </div>
       </div>
     `;
+  }
+
+  // 各コンテンツ生成メソッド
+  generateOverviewContent(sessionData) {
+    const formData = sessionData.formData || {};
+    const concept = sessionData.phases?.step1?.content?.concept || '';
+    
+    return `
+      <div class="overview-section">
+        <h5>🎯 基本情報</h5>
+        <ul>
+          <li><strong>参加人数:</strong> ${formData.participants || 5}人</li>
+          <li><strong>プレイ時間:</strong> ${formData.complexity === 'simple' ? '30分' : formData.complexity === 'complex' ? '60分' : '45分'}</li>
+          <li><strong>時代背景:</strong> ${this.getDisplayText('era', formData.era)}</li>
+          <li><strong>舞台設定:</strong> ${this.getDisplayText('setting', formData.setting)}</li>
+          <li><strong>トーン:</strong> ${this.getDisplayText('tone', formData.tone)}</li>
+        </ul>
+        
+        <h5>📝 コンセプト</h5>
+        <div class="concept-preview">
+          ${concept.length > 500 ? concept.substring(0, 500) + '...' : concept}
+        </div>
+      </div>
+    `;
+  }
+  
+  generateScenarioContent(phases) {
+    const step1 = phases.step1?.content?.concept || '';
+    const step3 = phases.step3?.content?.incident_and_truth || '';
+    
+    return `
+      <div class="scenario-section">
+        ${this.formatContent(step1)}
+        <hr style="margin: 2rem 0; border-color: var(--primary-600);">
+        ${this.formatContent(step3)}
+      </div>
+    `;
+  }
+  
+  generateCharactersContent(phases) {
+    const characters = phases.step2?.content?.characters || '';
+    return `
+      <div class="characters-section">
+        ${this.formatContent(characters)}
+      </div>
+    `;
+  }
+  
+  generateTimelineContent(phases) {
+    const timeline = phases.step4?.content?.timeline || '';
+    return `
+      <div class="timeline-section">
+        ${this.formatContent(timeline)}
+      </div>
+    `;
+  }
+  
+  generateGMGuideContent(phases) {
+    const gmGuide = phases.step5?.content?.gamemaster_guide || '';
+    return `
+      <div class="gm-guide-section">
+        ${this.formatContent(gmGuide)}
+      </div>
+    `;
+  }
+  
+  generateImagesGallery(images) {
+    return `
+      <div class="images-grid">
+        ${images.map((img, index) => `
+          <div class="image-card">
+            <img src="${img.url}" alt="${img.description}" loading="lazy" onclick="openImageModal('${img.url}', '${img.description}')">
+            <div class="image-info">
+              <h5>${img.description}</h5>
+              <p class="image-type">${img.type}</p>
+              <a href="${img.url}" download="${img.type}_${index + 1}.png" class="btn btn-sm">
+                💾 ダウンロード
+              </a>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  
+  formatContent(content) {
+    if (!content) return '<p>コンテンツが生成されていません。</p>';
+    
+    return content
+      .replace(/## /g, '<h4>')
+      .replace(/### /g, '<h5>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>')
+      .replace(/^/, '<p>')
+      .replace(/$/, '</p>');
+  }
+  
+  getDisplayText(field, value) {
+    const mappings = {
+      era: { 'modern': '現代', 'showa': '昭和', 'near-future': '近未来', 'fantasy': 'ファンタジー' },
+      setting: { 'closed-space': '閉鎖空間', 'mountain-villa': '山荘', 'city': '都市部' },
+      tone: { 'serious': 'シリアス', 'comedy': 'コメディ', 'horror': 'ホラー', 'adventure': '冒険活劇' }
+    };
+    return mappings[field]?.[value] || value || '未設定';
   }
 
   getPhaseName(stepNum) {

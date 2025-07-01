@@ -451,6 +451,96 @@ ${Array.from({length: parseInt(formData.participants) - 1}, (_, j) => `- キャ�
   }
 ];
 
+// 画像プロンプト生成関数
+function createImagePrompts(sessionData) {
+  const prompts = [];
+  const concept = sessionData.phases?.step1?.content?.concept || '';
+  const characters = sessionData.phases?.step2?.content?.characters || '';
+  
+  // タイトル抽出
+  const titleMatch = concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
+  const title = titleMatch ? titleMatch[1].trim() : 'マーダーミステリーシナリオ';
+  
+  // メインコンセプト画像
+  prompts.push({
+    type: 'main_concept',
+    prompt: `Murder mystery scene for "${title}", atmospheric and mysterious, ${sessionData.formData?.tone || 'serious'} tone, ${sessionData.formData?.era || 'modern'} setting, professional book cover style, dramatic lighting, no text`,
+    description: 'メインコンセプトアート'
+  });
+  
+  // キャラクター画像（参加人数分）
+  const participantCount = parseInt(sessionData.formData?.participants || 5);
+  for (let i = 1; i <= participantCount; i++) {
+    prompts.push({
+      type: `character_${i}`,
+      prompt: `Character portrait for murder mystery, player ${i}, ${sessionData.formData?.era || 'modern'} era, professional character art, detailed face, mysterious expression, dramatic lighting`,
+      description: `キャラクター${i}のポートレート`
+    });
+  }
+  
+  return prompts;
+}
+
+// OpenAI画像生成関数
+async function generateImages(imagePrompts) {
+  const images = [];
+  
+  // APIキーが設定されていない場合はスキップ
+  if (!process.env.OPENAI_API_KEY) {
+    console.log('⚠️ OPENAI_API_KEY not set, skipping image generation');
+    return images;
+  }
+  
+  for (const promptData of imagePrompts) {
+    try {
+      console.log(`🎨 Generating image: ${promptData.type}`);
+      
+      const response = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: "dall-e-3",
+          prompt: promptData.prompt,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard"
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        images.push({
+          ...promptData,
+          url: data.data[0].url,
+          revised_prompt: data.data[0].revised_prompt,
+          status: 'success'
+        });
+        console.log(`✅ Image generated: ${promptData.type}`);
+      } else {
+        const error = await response.text();
+        console.error(`❌ Image generation failed: ${error}`);
+        images.push({
+          ...promptData,
+          error: 'Generation failed',
+          status: 'failed'
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Image generation error: ${error.message}`);
+      images.push({
+        ...promptData,
+        error: error.message,
+        status: 'error'
+      });
+    }
+  }
+  
+  return images;
+}
+
 // メインハンドラー
 export default async function handler(req, res) {
   console.log('🔬 Integrated Micro Generator called');
@@ -566,19 +656,30 @@ export default async function handler(req, res) {
       }
     }
 
+    // 画像生成フェーズ
+    console.log('🎨 Starting image generation phase...');
+    const imagePrompts = createImagePrompts(sessionData);
+    const generatedImages = await generateImages(imagePrompts);
+    
+    // 画像データをセッションに追加
+    sessionData.images = generatedImages;
+    sessionData.hasImages = generatedImages.length > 0;
+    
     // 完了処理
     sessionData.status = 'completed';
     sessionData.completedAt = new Date().toISOString();
     sessionData.context = context;
 
     console.log('🎉 Integrated micro generation completed successfully!');
+    console.log(`📸 Generated ${generatedImages.filter(img => img.status === 'success').length} images`);
 
     return res.status(200).json({
       success: true,
       sessionData,
       message: '🎉 統合マイクロ生成が完了しました！',
       downloadReady: true,
-      generationType: 'integrated_micro'
+      generationType: 'integrated_micro',
+      imageCount: generatedImages.filter(img => img.status === 'success').length
     });
 
   } catch (error) {

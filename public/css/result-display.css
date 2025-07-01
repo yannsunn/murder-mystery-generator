@@ -1,0 +1,289 @@
+/* 🎨 Result Display Enhancement - Web表示完全対応 */
+
+/* タブナビゲーション */
+.result-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  border-bottom: 2px solid var(--primary-600);
+  padding-bottom: 0.5rem;
+}
+
+.tab-button {
+  background: var(--primary-700);
+  color: var(--primary-100);
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer;
+  transition: all var(--animation-normal);
+  font-size: 0.9rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.tab-button:hover {
+  background: var(--primary-600);
+  transform: translateY(-1px);
+}
+
+.tab-button.active {
+  background: var(--accent-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.tab-button.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-primary);
+}
+
+/* タブコンテンツ */
+.tab-content {
+  padding: 1.5rem 0;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 画像ギャラリー */
+.images-gallery {
+  margin-top: 1rem;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.image-card {
+  background: var(--primary-800);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transition: transform var(--animation-normal);
+}
+
+.image-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+}
+
+.image-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--primary-600);
+}
+
+.image-info {
+  padding: 1rem;
+}
+
+.image-info h5 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-100);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.image-type {
+  color: var(--primary-400);
+  font-size: 0.8rem;
+  margin: 0 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* コンテンツセクション */
+.overview-section,
+.scenario-section,
+.characters-section,
+.timeline-section,
+.gm-guide-section {
+  background: var(--primary-800);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin: 1rem 0;
+}
+
+.overview-section h5,
+.scenario-section h4,
+.characters-section h4,
+.timeline-section h4,
+.gm-guide-section h4 {
+  color: var(--accent-primary);
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary-600);
+  padding-bottom: 0.5rem;
+}
+
+.overview-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.overview-section li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--primary-700);
+  color: var(--primary-200);
+}
+
+.overview-section li:last-child {
+  border-bottom: none;
+}
+
+.concept-preview {
+  background: var(--primary-900);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  color: var(--primary-300);
+  font-style: italic;
+  border-left: 4px solid var(--accent-primary);
+  margin-top: 1rem;
+}
+
+/* ダウンロードセクション改善 */
+.download-section {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.download-section h4 {
+  color: white;
+  margin: 0 0 1rem 0;
+  font-weight: 600;
+}
+
+.download-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.download-options .btn {
+  min-width: 200px;
+  font-weight: 500;
+}
+
+/* トーストメッセージ */
+.toast-message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--accent-success);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out, slideOutRight 0.3s ease-out 2.7s;
+}
+
+.toast-message.success {
+  background: var(--accent-success);
+}
+
+.toast-message.error {
+  background: var(--accent-danger);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 768px) {
+  .result-tabs {
+    flex-direction: column;
+  }
+  
+  .tab-button {
+    width: 100%;
+    text-align: left;
+    border-radius: var(--radius-md);
+  }
+  
+  .tab-button.active::after {
+    display: none;
+  }
+  
+  .images-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .download-options {
+    flex-direction: column;
+  }
+  
+  .download-options .btn {
+    width: 100%;
+  }
+}
+
+/* スクロールバー改善 */
+.tab-content {
+  max-height: 70vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--primary-800);
+}
+
+.tab-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: var(--primary-800);
+  border-radius: var(--radius-sm);
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: var(--radius-sm);
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-secondary);
+}
+
+/* アニメーション改善 */
+.scenario-title {
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 1.5rem 0;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.2); }
+}
