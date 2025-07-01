@@ -479,8 +479,14 @@ header p {
 }
 
 .checkbox-label:has(.checkbox-input:checked) {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: var(--accent-primary, #3b82f6) !important;
+}
+
+/* 追加の強化スタイル */
+.checkbox-text {
+  color: var(--primary-200, #e2e8f0) !important;
+  font-size: 0.9rem !important;
 }
 
 .checkbox-input {

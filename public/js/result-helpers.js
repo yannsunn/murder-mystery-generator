@@ -2,24 +2,35 @@
 
 // タブ切り替え関数
 function showTab(tabName) {
-  // 全てのタブを非表示
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.style.display = 'none';
-  });
-  
-  // 全てのボタンのアクティブを解除
-  document.querySelectorAll('.tab-button').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  
-  // 選択されたタブを表示
-  const selectedTab = document.getElementById(`tab-${tabName}`);
-  if (selectedTab) {
-    selectedTab.style.display = 'block';
+  try {
+    console.log(`Switching to tab: ${tabName}`);
+    
+    // 全てのタブを非表示
+    document.querySelectorAll('.tab-content').forEach(tab => {
+      tab.style.display = 'none';
+    });
+    
+    // 全てのボタンのアクティブを解除
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // 選択されたタブを表示
+    const selectedTab = document.getElementById(`tab-${tabName}`);
+    if (selectedTab) {
+      selectedTab.style.display = 'block';
+      console.log(`Tab ${tabName} displayed successfully`);
+    } else {
+      console.error(`Tab ${tabName} not found`);
+    }
+    
+    // クリックされたボタンをアクティブに
+    if (window.event && window.event.target) {
+      window.event.target.classList.add('active');
+    }
+  } catch (error) {
+    console.error('Error in showTab:', error);
   }
-  
-  // クリックされたボタンをアクティブに
-  event.target.classList.add('active');
 }
 
 // シナリオテキストをクリップボードにコピー
@@ -157,6 +168,17 @@ document.addEventListener('keydown', function(event) {
   if (event.key === 'Escape') {
     closeImageModal();
   }
+});
+
+// デバッグ用：ページ読み込み時にログ出力
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🎨 result-helpers.js loaded successfully');
+  console.log('🔧 Available functions:', {
+    showTab: typeof showTab,
+    copyScenarioText: typeof copyScenarioText,
+    openImageModal: typeof openImageModal,
+    closeImageModal: typeof closeImageModal
+  });
 });
 
 // モーダル用CSS追加

@@ -657,7 +657,7 @@ class UltraIntegratedApp {
         <div class="download-section">
           <h4>📥 ダウンロードオプション</h4>
           <div class="download-options">
-            <button class="btn btn-primary" onclick="app.handleDownload()">
+            <button class="btn btn-primary" onclick="window.app.handleDownload()">
               📦 全てをZIPでダウンロード
             </button>
             <button class="btn btn-secondary" onclick="copyScenarioText()">
@@ -738,11 +738,14 @@ class UltraIntegratedApp {
       <div class="images-grid">
         ${images.map((img, index) => `
           <div class="image-card">
-            <img src="${img.url}" alt="${img.description}" loading="lazy" onclick="openImageModal('${img.url}', '${img.description}')">
+            <img src="${img.url}" alt="${img.description}" loading="lazy" onclick="openImageModal('${img.url}', '${img.description}')"
+                 style="cursor: pointer; transition: transform 0.2s; border-radius: 8px;"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'">
             <div class="image-info">
               <h5>${img.description}</h5>
               <p class="image-type">${img.type}</p>
-              <a href="${img.url}" download="${img.type}_${index + 1}.png" class="btn btn-sm">
+              <a href="${img.url}" download="${img.type}_${index + 1}.png" class="btn btn-sm" style="background: var(--accent-primary); color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; display: inline-block;">
                 💾 ダウンロード
               </a>
             </div>
@@ -917,5 +920,6 @@ class UltraIntegratedApp {
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
-  window.ultraIntegratedApp = new UltraIntegratedApp();
+  window.app = new UltraIntegratedApp();
+  window.ultraIntegratedApp = window.app; // 後方互換性のため
 });
