@@ -881,21 +881,26 @@ header p {
 .loading-header h3 {
   font-size: 2.25rem;
   font-weight: 700;
-  color: var(--primary-100) !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 20px rgba(0, 0, 0, 0.8) !important;
   margin-bottom: var(--space-lg);
   line-height: 1.2;
+  background: rgba(0, 0, 0, 0.4) !important;
+  padding: 1rem 2rem !important;
+  border-radius: var(--radius-lg) !important;
   /* グラデーションテキストを無効化して白いテキストに */
 }
 
 .progress-percentage {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-100) !important;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 15px rgba(0, 0, 0, 0.8) !important;
   margin-top: var(--space-sm);
-  background: var(--accent-primary);
-  padding: 0.5rem 1rem;
+  background: var(--accent-primary) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  padding: 0.75rem 1.25rem;
   border-radius: var(--radius-lg);
   display: inline-block;
 }
@@ -971,10 +976,12 @@ header p {
 .current-phase {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary-100) !important;
+  color: #ffffff !important;
   margin-bottom: var(--space-md);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 20px rgba(0, 0, 0, 0.8) !important;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
   padding: 1rem 1.5rem;
   border-radius: var(--radius-lg);
   text-align: center;
@@ -988,11 +995,14 @@ header p {
 
 .phase-details {
   font-size: 1.125rem;
-  color: var(--primary-100) !important;
-  font-weight: 500;
+  color: #ffffff !important;
+  font-weight: 600;
   margin-bottom: var(--space-sm);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6) !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 15px rgba(0, 0, 0, 0.8) !important;
   text-align: center;
+  background: rgba(0, 0, 0, 0.3) !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: var(--radius-md) !important;
 }
 
 .loading-stats {
@@ -1039,18 +1049,18 @@ header p {
 .stat-label {
   display: block;
   font-size: 0.875rem;
-  color: var(--primary-200) !important;
+  color: #ffffff !important;
   margin-bottom: var(--space-xs);
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6) !important;
-  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 10px rgba(0, 0, 0, 0.8) !important;
+  font-weight: 600;
 }
 
 .stat-value {
   display: block;
   font-size: 1.125rem;
   font-weight: 700;
-  color: var(--primary-100) !important;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9) !important, 0 0 15px rgba(0, 0, 0, 0.8) !important;
 }
 
 .loading-spinner {

@@ -19,13 +19,6 @@ const shortcuts = {
   'Ctrl+5': () => switchToTab('gm-guide'),
   'Ctrl+6': () => switchToTab('images'),
 
-  // 機能操作
-  'Ctrl+c': () => copyCurrentTabContent(),
-  'Ctrl+s': () => saveCurrentContent(),
-  'Ctrl+p': () => window.print(),
-  'Ctrl+f': () => focusSearchInput(),
-  'Ctrl+r': () => window.app?.resetApp(),
-
   // ナビゲーション
   'ArrowLeft': () => navigateTabs(-1),
   'ArrowRight': () => navigateTabs(1),
@@ -41,9 +34,6 @@ const shortcuts = {
   'Alt+h': () => toggleHighContrast(),
   'Alt+f': () => toggleLargeFonts(),
   'Alt+r': () => toggleReducedMotion(),
-
-  // 開発者・デバッグ
-  'F12': () => toggleDeveloperMode(),
 };
 
 /**
@@ -68,23 +58,7 @@ function navigateTabs(direction) {
   }
 }
 
-/**
- * 📋 現在のタブ内容をコピー
- */
-function copyCurrentTabContent() {
-  if (typeof copyTabContent === 'function') {
-    copyTabContent();
-  }
-}
-
-/**
- * 💾 現在の内容を保存
- */
-function saveCurrentContent() {
-  if (typeof saveAsText === 'function') {
-    saveAsText();
-  }
-}
+// コピーと保存機能は削除（元のブラウザ機能を維持）
 
 /**
  * 🔍 検索入力にフォーカス
@@ -126,18 +100,17 @@ function showShortcutHelp() {
         </div>
         
         <div class="shortcut-section">
-          <h4>📋 ファイル操作</h4>
+          <h4>📋 ブラウザ標準機能</h4>
           <div class="shortcut-list">
-            <div class="shortcut-item"><kbd>Ctrl + C</kbd> → タブ内容をコピー</div>
-            <div class="shortcut-item"><kbd>Ctrl + S</kbd> → テキストファイル保存</div>
-            <div class="shortcut-item"><kbd>Ctrl + P</kbd> → ページを印刷</div>
+            <div class="shortcut-item">ブラウザ標準のショートカットをご利用ください</div>
+            <div class="shortcut-item"><kbd>Ctrl + C</kbd> → コピー（標準）</div>
+            <div class="shortcut-item"><kbd>Ctrl + P</kbd> → 印刷（標準）</div>
           </div>
         </div>
         
         <div class="shortcut-section">
-          <h4">🔍 検索・ナビゲーション</h4>
+          <h4>🔍 ナビゲーション</h4>
           <div class="shortcut-list">
-            <div class="shortcut-item"><kbd>Ctrl + F</kbd> → 検索フィールドに移動</div>
             <div class="shortcut-item"><kbd>← →</kbd> → タブ切り替え</div>
             <div class="shortcut-item"><kbd>Home</kbd> → 最初のタブ</div>
             <div class="shortcut-item"><kbd>End</kbd> → 最後のタブ</div>
@@ -147,7 +120,6 @@ function showShortcutHelp() {
         <div class="shortcut-section">
           <h4>🔧 システム操作</h4>
           <div class="shortcut-list">
-            <div class="shortcut-item"><kbd>Ctrl + R</kbd> → アプリリセット</div>
             <div class="shortcut-item"><kbd>F1</kbd> or <kbd>H</kbd> → このヘルプ</div>
             <div class="shortcut-item"><kbd>Esc</kbd> → モーダルを閉じる</div>
           </div>
@@ -272,26 +244,7 @@ function toggleReducedMotion() {
   }
 }
 
-/**
- * 🛠️ 開発者モード切り替え
- */
-function toggleDeveloperMode() {
-  const isDeveloper = document.body.classList.toggle('developer-mode');
-  
-  if (isDeveloper) {
-    console.log('🛠️ Developer Mode Enabled');
-    console.log('Session Data:', window.currentSessionData);
-    console.log('App Instance:', window.app);
-    
-    if (typeof showToast === 'function') {
-      showToast('🛠️ 開発者モード有効 (コンソールを確認)', 'info', 4000);
-    }
-  } else {
-    if (typeof showToast === 'function') {
-      showToast('👤 通常モード', 'info', 2000);
-    }
-  }
-}
+// 開発者モード機能は削除
 
 /**
  * 🎮 メインキーボードイベントハンドラー
@@ -315,12 +268,25 @@ function handleKeyboardShortcut(event) {
     event.key
   ].filter(Boolean).join('+');
   
-  // 入力フィールド内では一部のショートカットのみ許可
+  // 入力フィールド内では標準ブラウザ機能を優先
   if (isInputFocused) {
-    const allowedInInput = ['Ctrl+c', 'Ctrl+v', 'Ctrl+f', 'Escape', 'F1'];
+    // 標準的なブラウザショートカットは干渉しない
+    const systemShortcuts = ['Ctrl+c', 'Ctrl+v', 'Ctrl+x', 'Ctrl+a', 'Ctrl+z', 'Ctrl+y', 'Ctrl+f', 'Ctrl+s', 'Ctrl+p'];
+    if (systemShortcuts.includes(keyCombo)) {
+      return; // ブラウザの標準動作に任せる
+    }
+    
+    // アプリ固有のショートカットのみ処理
+    const allowedInInput = ['Escape', 'F1'];
     if (!allowedInInput.includes(keyCombo)) {
       return;
     }
+  }
+  
+  // 標準ブラウザショートカットは干渉しない（全体的に）
+  const criticalBrowserShortcuts = ['Ctrl+c', 'Ctrl+v', 'Ctrl+x', 'Ctrl+a', 'Ctrl+s', 'Ctrl+p', 'Ctrl+f', 'F12', 'Ctrl+Shift+I', 'Ctrl+Shift+C'];
+  if (criticalBrowserShortcuts.includes(keyCombo)) {
+    return; // ブラウザの標準動作を優先
   }
   
   // ショートカットの実行
