@@ -1,7 +1,6 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "public": true,
   "cleanUrls": true,
   "functions": {
     "api/integrated-micro-generator.js": {
@@ -20,6 +19,7 @@
       "maxDuration": 10
     }
   },
+  "regions": ["hnd1"],
   "headers": [
     {
       "source": "/(.*)",
