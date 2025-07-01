@@ -17,21 +17,85 @@ export const config = {
   maxDuration: 300, // 5分 - 30分-1時間高精度生成のため十分な時間
 };
 
-// 30分-1時間段階的統合生成フロー（全要素段階化）
+// 30分-1時間理想的生成フロー（ランダム→段階的→全体調整）
 const INTEGRATED_GENERATION_FLOW = [
-  // === 段階1: 基本コンセプト策定 ===
+  
+  // === 段階0: ランダム全体構造生成 ===
   {
-    name: '段階1: 作品タイトル・基本コンセプト',
-    weight: 10,
+    name: '段階0: ランダム全体構造・アウトライン',
+    weight: 15,
     handler: async (formData, context) => {
-      console.log('🎨 段階1: 基本コンセプト策定開始');
+      console.log('🎲 段階0: ランダム全体構造生成開始');
       
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
-30分-1時間セッション用の魅力的な作品コンセプトを段階的に作成してください。
-この段階では、後の段階で詳細化されるための基礎設定に集中してください。`;
+      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのマーダーミステリークリエイターです。
+30分-1時間セッション用のマーダーミステリーの大まかな全体構造をランダムに生成してください。
+この段階では、後で詳細化されるための基本的なアウトラインを作成します。`;
       
       const userPrompt = `
-【プロフェッショナル品質マーダーミステリー制作依頼】
+【ランダム全体構造生成依頼】
+
+参加人数: ${formData.participants}人
+時代背景: ${formData.era}
+舞台設定: ${formData.setting}
+世界観: ${formData.worldview || 'リアル'}
+トーン: ${formData.tone}
+事件種類: ${formData.incident_type}
+複雑さ: ${formData.complexity}
+
+以下の形式で大まかな全体構造をランダム生成してください：
+
+## 作品基本情報（ランダム版）
+**作品タイトル**: [ユニークなタイトル]
+**基本コンセプト**: [簡潔なコンセプト]
+**舞台設定**: [具体的な場所・状況]
+
+## 事件の大まかな構造（ランダム版）
+**事件の種類**: [具体的な事件内容]
+**犯人の数**: [単犯または共犯]
+**基本的な動機**: [簡潔な動機]
+**主なトリック**: [使用されるトリックの種類]
+
+## キャラクターの大まかな役割（ランダム版）
+${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイヤー${i + 1}**: [大まかな役割・立場・事件との関係]`).join('\n')}
+
+## 重要な要素（ランダム版）
+**主な証拠**: [重要な証拠の種類]
+**キーとなる手がかり**: [解決の鍵となる要素]
+**メインイベント**: [セッション中の主要な出来事]
+
+## 大まかな解決フロー（ランダム版）
+**第1段階**: [初期発見・状況把握]
+**第2段階**: [証拠収集・関係性理解]
+**第3段階**: [推理・真相解明]
+
+【重要】
+- この段階はアウトラインのみ、詳細は後の段階で作成
+- 30分-1時間で完結可能な範囲で設定
+- ランダム性と面白さを重視
+- 全ての文章を完結させる
+`;
+
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階0: ランダム全体構造完成');
+      return { random_outline: result.content };
+    }
+  },
+  // === 段階1: 基本コンセプト精密化 ===
+  {
+    name: '段階1: コンセプト精密化・世界観詳細化',
+    weight: 10,
+    handler: async (formData, context) => {
+      console.log('🎨 段階1: コンセプト精密化開始');
+      
+      const randomOutline = context.random_outline || '';
+      
+      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
+ランダム生成された大まかな構造を基に、詳細なコンセプトと世界観を精密に作成してください。`;
+      
+      const userPrompt = `
+【コンセプト精密化依頼】
+
+ランダム全体構造: ${randomOutline}
 
 参加人数: ${formData.participants}人
 プレイ時間: ${getPlayTime(formData.complexity)}
@@ -113,17 +177,19 @@ const INTEGRATED_GENERATION_FLOW = [
     name: '段階2: 事件核心・犯人・動機設定',
     weight: 12,
     handler: async (formData, context) => {
-      console.log('🕵️ 段階2: 事件核心部設計開始');
+      console.log('🕵️ 段階2: 事件核心部詳細設計開始');
       
+      const randomOutline = context.random_outline || '';
       const concept = context.concept || '';
       const systemPrompt = `あなたはマーダーミステリーの事件設計のエキスパートです。
-30分-1時間で解決可能な、しかし興味深い事件の核心部分を設計してください。
-この段階では犯人、動機、犯行手段の核心を確定します。`;
+ランダム生成された大まかな構造と精密化されたコンセプトを基に、事件の核心部分を詳細に設計してください。
+この段階では犯人、動機、犯行手段の具体的な詳細を確定します。`;
       
       const userPrompt = `
-【事件核心部設計依頼】
+【事件核心部詳細設計依頼】
 
-基本コンセプト: ${concept}
+ランダム全体構造: ${randomOutline}
+精密化コンセプト: ${concept}
 参加人数: ${formData.participants}人
 複雑さ: ${formData.complexity}
 トーン: ${formData.tone}
@@ -245,6 +311,7 @@ const INTEGRATED_GENERATION_FLOW = [
     weight: 35,
     handler: async (formData, context) => {
       try {
+        const randomOutline = context.random_outline || '';
         const concept = context.concept || '';
         const incidentCore = context.incident_core || '';
         const incidentDetails = context.incident_details || '';
@@ -265,6 +332,7 @@ const INTEGRATED_GENERATION_FLOW = [
           const userPrompt = `
 【プレイヤー${i}専用キャラクター作成】
 
+ランダム全体構造: ${randomOutline}
 作品情報: ${concept}
 事件核心: ${incidentCore}
 事件詳細: ${incidentDetails}
@@ -331,6 +399,7 @@ ${allCharacters.length > 0 ? allCharacters.map((c, idx) => `**プレイヤー${i
         const relationshipUserPrompt = `
 【関係性調整依頼】
 
+ランダム全体構造: ${randomOutline}
 作品情報: ${concept}
 事件核心: ${incidentCore}
 事件詳細: ${incidentDetails}
@@ -754,8 +823,8 @@ ${characterRelationships}
 
   // === 段階7: 最終統合・品質確認 ===
   {
-    name: '段階7: 最終統合・全体つじつま調整',
-    weight: 12,
+    name: '段階7: 統合・品質確認',
+    weight: 10,
     handler: async (formData, context) => {
       console.log('🔧 段階7: 最終統合・全体つじつま調整開始');
       
@@ -823,6 +892,92 @@ ${characterRelationships}
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
       console.log('✅ 段階7: 最終統合・全体調整完成');
       return { final_integration: result.content };
+    }
+  },
+
+  // === 段階8: 全体最終確認・総合品質保証 ===
+  {
+    name: '段階8: 最終レビュー・総合調整完了',
+    weight: 8,
+    handler: async (formData, context) => {
+      console.log('🏆 段階8: 全体最終確認・総合品質保証開始');
+      
+      const randomOutline = context.random_outline || '';
+      const concept = context.concept || '';
+      const incidentCore = context.incident_core || '';
+      const incidentDetails = context.incident_details || '';
+      const characters = context.characters || '';
+      const evidenceSystem = context.evidence_system || '';
+      const gamemasterGuide = context.gamemaster_guide || '';
+      const finalIntegration = context.final_integration || '';
+      
+      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルの品質管理最高責任者です。
+理想的な生成フローを完了した全ての出力物を総合的にレビューし、最終的な品質保証を行ってください。
+ランダム生成→段階的生成→全体調整が適切に行われたかを確認し、必要に応じて最終調整を指示してください。`;
+      
+      const userPrompt = `
+【最終総合レビュー・品質保証依頼】
+
+理想的生成フローの全段階出力:
+
+=== ランダム生成段階 ===
+段階0: ${randomOutline}
+
+=== 段階的生成段階 ===
+段階1: ${concept}
+段階2: ${incidentCore}
+段階3: ${incidentDetails}
+段階4: ${characters}
+段階5: ${evidenceSystem}
+段階6: ${gamemasterGuide}
+段階7: ${finalIntegration}
+
+参加人数: ${formData.participants}人
+複雑さ: ${formData.complexity}
+時間目標: 30分-1時間
+
+以下の観点で最終総合レビューを実施してください：
+
+## 理想的生成フローの検証
+### ランダム→段階的→調整の流れ確認
+[各段階が前段階の出力を適切に活用しているか]
+
+### 全体一貫性の最終確認
+[ランダム生成された要素が最終的に統合されているか]
+
+## 完成度総合評価
+### 商業品質基準適合性
+- 狂気山脈レベルの品質達成度: [評価]/10
+- 30分-1時間完結性: [評価]/10
+- エンターテイメント性: [評価]/10
+- プレイアビリティ: [評価]/10
+
+### 技術的完成度
+- 論理的整合性: [評価]/10
+- キャラクター深度: [評価]/10
+- 謎解き設計: [評価]/10
+- 進行システム: [評価]/10
+
+## 最終推奨事項
+### 成功保証のための重要ポイント
+[セッション成功のために特に注意すべき点]
+
+### 高品質体験のためのコツ
+[参加者が最高の体験を得るための追加アドバイス]
+
+## 完成宣言
+### 品質証明
+[このマーダーミステリーが商業レベルの品質を満たしていることの確認]
+
+### 実用性証明
+[30分-1時間セッションとして完璧に機能することの確認]
+
+【最終判定】このマーダーミステリーは理想的な生成フローを経て、プロフェッショナル品質に達しましたか？
+`;
+
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('🎉 段階8: 最終総合レビュー完了 - プロ品質保証済み');
+      return { comprehensive_review: result.content };
     }
   }
 ];
