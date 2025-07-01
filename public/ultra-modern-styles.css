@@ -649,25 +649,57 @@ header p {
   flex: 1;
 }
 
-/* ボタン位置完全固定 - 最終版 */
+/* ========== ボタンコンテナ完全修正 ========== */
+.button-container {
+  position: relative !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  height: 60px !important;
+  margin-top: var(--space-2xl) !important;
+  padding: 0 !important;
+  /* 固定された高さとレイアウト */
+}
+
+.btn-spacer {
+  flex: 1 !important;
+  height: 1px !important;
+}
+
+/* ボタン位置完全固定 */
 #prev-btn {
-  position: absolute !important;
-  left: 0 !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 999 !important;
+  position: static !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
 }
 
 #next-btn, #generate-btn {
-  position: absolute !important;
-  right: 0 !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  z-index: 999 !important;
-  /* 完全に同じ位置に強制 */
-  width: auto !important;
+  position: static !important;
+  flex-shrink: 0 !important;
   margin: 0 !important;
+  /* 完全に同じサイズと位置 */
+  min-width: 200px !important;
+  height: 48px !important;
   padding: var(--space-md) var(--space-xl) !important;
+}
+
+/* ボタン表示切り替え時の安定化 */
+#next-btn[style*="display: none"],
+#generate-btn[style*="display: none"] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: static !important;
+  width: 200px !important;
+  height: 48px !important;
+  /* スペースを保持して位置ずれを防ぐ */
+}
+
+#next-btn[style*="display: block"],
+#generate-btn[style*="display: block"] {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transition: opacity var(--animation-normal) !important;
 }
 
 .btn {
@@ -1241,11 +1273,9 @@ footer {
   }
 
   #next-btn, #generate-btn {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
+    position: static !important;
+    min-width: 180px !important;
+    height: 44px !important;
   }
   
   .action-buttons-modern {

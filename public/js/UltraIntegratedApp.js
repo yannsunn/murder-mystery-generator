@@ -211,12 +211,29 @@ class UltraIntegratedApp {
       prevBtn.disabled = this.currentStep === 1;
     }
 
+    // visibility切り替えで位置ずれを防ぐ
     if (nextBtn) {
-      nextBtn.style.display = this.currentStep === this.totalSteps ? 'none' : 'block';
+      if (this.currentStep === this.totalSteps) {
+        nextBtn.style.visibility = 'hidden';
+        nextBtn.style.opacity = '0';
+        nextBtn.style.pointerEvents = 'none';
+      } else {
+        nextBtn.style.visibility = 'visible';
+        nextBtn.style.opacity = '1';
+        nextBtn.style.pointerEvents = 'auto';
+      }
     }
 
     if (generateBtn) {
-      generateBtn.style.display = this.currentStep === this.totalSteps ? 'block' : 'none';
+      if (this.currentStep === this.totalSteps) {
+        generateBtn.style.visibility = 'visible';
+        generateBtn.style.opacity = '1';
+        generateBtn.style.pointerEvents = 'auto';
+      } else {
+        generateBtn.style.visibility = 'hidden';
+        generateBtn.style.opacity = '0';
+        generateBtn.style.pointerEvents = 'none';
+      }
     }
     
     // モード説明を最終ステップで表示
