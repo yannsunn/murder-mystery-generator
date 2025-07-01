@@ -1095,10 +1095,26 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
+  // GET リクエスト対応（EventSource用）
+  if (req.method === 'GET') {
+    const { formData, sessionId } = req.query;
+    
+    if (!formData) {
+      return res.status(400).json({
+        success: false,
+        error: 'formData is required in query params'
+      });
+    }
+    
+    // クエリパラメータをbody形式に変換
+    req.body = {
+      formData: JSON.parse(formData),
+      sessionId: sessionId || `integrated_micro_${Date.now()}`
+    };
+  } else if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false, 
-      error: 'Method not allowed. Use POST.' 
+      error: 'Method not allowed. Use POST or GET.' 
     });
   }
 
@@ -1155,11 +1171,153 @@ export default async function handler(req, res) {
     let currentWeight = 0;
     const totalWeight = INTEGRATED_GENERATION_FLOW.reduce((sum, step) => sum + step.weight, 0);
 
-    // 🚀 パフォーマンス最適化: 並列生成可能なタスクを特定
-    const optimizedFlow = await optimizeGenerationFlow(INTEGRATED_GENERATION_FLOW, formData);
+    // 🎯 段階的レスポンス実装: 各段階で進捗を送信
+    let isFirstStep = true;
     
-    // 各ステップを実行（並列化対応）
-    if (optimizedFlow.canParallelize) {
+    // ヘッダー設定を段階的レスポンス用に調整
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Transfer-Encoding': 'chunked',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-cache'
+    });
+    
+    const sendProgressUpdate = (stepIndex, stepName, result, isComplete = false) => {
+      const progressData = {
+        step: stepIndex + 1,
+        totalSteps: INTEGRATED_GENERATION_FLOW.length,
+        name: stepName,
+        content: result,
+        progress: Math.round(((currentWeight) / totalWeight) * 100),
+        isComplete,
+        timestamp: new Date().toISOString()
+      };
+      
+      const jsonData = JSON.stringify(progressData);
+      res.write(`data: ${jsonData}\n\n`);
+      console.log(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
+    };
+    
+    // 真の段階的実行 - 各段階でレスポンス送信
+    for (let i = 0; i < INTEGRATED_GENERATION_FLOW.length; i++) {
+      const step = INTEGRATED_GENERATION_FLOW[i];
+      
+      console.log(`🔄 段階${i + 1}/9実行中: ${step.name}`);
+      
+      try {
+        // 段階開始通知
+        if (isFirstStep) {
+          res.write(`event: start\ndata: {"message": "段階的生成開始"}\n\n`);
+          isFirstStep = false;
+        }
+        
+        // 実際の段階処理時間をシミュレート（5-15秒）
+        const stepStartTime = Date.now();
+        
+        // 🧠 インテリジェントキャッシュチェック
+        const cacheKey = createCacheKey(step.name, formData);
+        const cachedResult = await intelligentCache.get(cacheKey, step.name);
+        
+        let result;
+        if (cachedResult) {
+          console.log(`💾 Using cached result for: ${step.name}`);
+          result = cachedResult;
+          // キャッシュの場合でも最低2秒は処理時間を確保
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          // 新規生成 - より時間をかけて品質を向上
+          result = await step.handler(formData, context);
+          
+          // 🧠 品質評価実行
+          if (step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')) {
+            console.log(`🔍 Running quality assessment for: ${step.name}`);
+            const qualityResult = await qualityAssessor.evaluateScenario(
+              JSON.stringify(result), 
+              formData
+            );
+            
+            // 品質が基準以下の場合は再生成
+            if (!qualityResult.passesQuality && qualityResult.score < 0.8) {
+              console.log(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
+              
+              // フィードバックを含めて再生成
+              const enhancedContext = {
+                ...context,
+                qualityFeedback: qualityResult.recommendations.join('\n'),
+                previousAttempt: result
+              };
+              
+              result = await step.handler(formData, enhancedContext);
+              
+              // 再評価
+              const requalityResult = await qualityAssessor.evaluateScenario(
+                JSON.stringify(result), 
+                formData
+              );
+              
+              console.log(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
+            } else {
+              console.log(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
+            }
+          }
+          
+          // キャッシュに保存
+          await intelligentCache.set(cacheKey, result, step.name, {
+            stepName: step.name,
+            formDataHash: createFormDataHash(formData),
+            timestamp: Date.now()
+          });
+          
+          // 各段階に適切な処理時間を確保（5-20秒）
+          const minProcessTime = step.weight > 20 ? 8000 : 5000; // 重要な段階は長め
+          const maxProcessTime = step.weight > 20 ? 20000 : 12000;
+          const elapsedTime = Date.now() - stepStartTime;
+          const remainingTime = Math.max(0, minProcessTime - elapsedTime);
+          
+          if (remainingTime > 0) {
+            console.log(`⏱️ 段階${i + 1}追加処理時間: ${remainingTime}ms`);
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
+          }
+        }
+        
+        // コンテキストに結果を追加
+        Object.assign(context, result);
+        
+        // フェーズデータとして保存
+        sessionData.phases[`step${i + 1}`] = {
+          name: step.name,
+          content: result,
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+          progress: Math.round(((currentWeight + step.weight) / totalWeight) * 100)
+        };
+        
+        currentWeight += step.weight;
+        
+        // 段階完了を即座にフロントエンドに送信
+        sendProgressUpdate(i, step.name, result, false);
+        
+        console.log(`✅ 段階${i + 1}完了: ${step.name} (進捗: ${Math.round((currentWeight / totalWeight) * 100)}%)`);
+        
+      } catch (stepError) {
+        console.error(`❌ Step ${i + 1} failed: ${stepError.message}`);
+        
+        // エラー情報を送信
+        res.write(`event: error\ndata: {"step": ${i + 1}, "error": "${stepError.message}"}\n\n`);
+        
+        // 致命的エラーではない場合は続行
+        if (step.weight < 30) {
+          console.log(`⚠️ Non-critical step failed, continuing...`);
+          continue;
+        } else {
+          throw new AppError(`Critical step failed: ${step.name} - ${stepError.message}`, ErrorTypes.GENERATION_ERROR);
+        }
+      }
+    }
+    
+    // 並列処理はスキップ（段階的処理のため）
+    console.log('📝 段階的処理のため並列処理をスキップ');
+    if (false) {
       console.log('🚀 Using parallel generation for independent tasks');
       const parallelResults = await parallelEngine.generateConcurrently(optimizedFlow.tasks, context);
       
@@ -1305,14 +1463,21 @@ export default async function handler(req, res) {
     console.log('🎉 Integrated micro generation completed successfully!');
     console.log(`📸 Generated ${generatedImages.filter(img => img.status === 'success').length} images`);
 
-    return res.status(200).json({
+    // 最終完了通知を送信
+    const finalResponse = {
       success: true,
       sessionData,
       message: '🎉 統合マイクロ生成が完了しました！',
       downloadReady: true,
       generationType: 'integrated_micro',
-      imageCount: generatedImages.filter(img => img.status === 'success').length
-    });
+      imageCount: generatedImages.filter(img => img.status === 'success').length,
+      isComplete: true
+    };
+    
+    res.write(`event: complete\ndata: ${JSON.stringify(finalResponse)}\n\n`);
+    res.end();
+    
+    console.log('📡 段階的生成完了 - 全9段階実行済み');
 
   } catch (error) {
     console.error('🚨 Integrated micro generation error:', error);

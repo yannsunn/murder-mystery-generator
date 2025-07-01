@@ -389,47 +389,142 @@ class UltraIntegratedApp {
       
       const sessionId = `integrated_micro_${Date.now()}`;
       
-      console.log('🔬 Calling integrated micro generator...');
+      console.log('🔬 Starting staged generation with real-time progress...');
       
-      const response = await fetch('/api/integrated-micro-generator', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          formData: this.formData,
-          sessionId: sessionId
-        }),
+      // 🎯 段階的処理用のEventSourceを使用
+      const eventSource = new EventSource('/api/integrated-micro-generator?' + new URLSearchParams({
+        formData: JSON.stringify(this.formData),
+        sessionId: sessionId
+      }));
+      
+      let currentStep = 0;
+      let finalSessionData = null;
+      
+      // Server-Sent Events リスナー
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('📡 Received progress update:', data);
+          
+          if (data.step && data.content) {
+            currentStep = data.step;
+            
+            // 進捗バー更新
+            this.updateProgressBar(data.progress || 0);
+            
+            // フェーズ情報更新
+            this.updatePhaseInfo(
+              data.step, 
+              data.totalSteps, 
+              data.name || `段階${data.step}`
+            );
+            
+            console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
+            
+            // UX強化: 段階完了通知
+            if (uxEnhancer) {
+              uxEnhancer.showToast(
+                `段階${data.step}完了: ${data.name}`, 
+                'info', 
+                2000
+              );
+            }
+          }
+          
+        } catch (parseError) {
+          console.error('❌ Progress data parse error:', parseError);
+        }
+      };
+      
+      // 完了イベント
+      eventSource.addEventListener('complete', (event) => {
+        try {
+          const finalResult = JSON.parse(event.data);
+          console.log('🎉 All stages completed!', finalResult);
+          
+          finalSessionData = finalResult.sessionData;
+          
+          // 進捗を100%に設定
+          this.updateProgressBar(100);
+          this.updatePhaseInfo(9, 9, '生成完了');
+          
+          // UX強化: 生成完了通知
+          if (uxEnhancer) {
+            uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
+          }
+          
+          // 結果表示
+          setTimeout(() => {
+            this.showResults(finalSessionData);
+          }, 1000);
+          
+          // EventSource終了
+          eventSource.close();
+          
+        } catch (parseError) {
+          console.error('❌ Final result parse error:', parseError);
+        }
       });
+      
+      // エラーイベント
+      eventSource.addEventListener('error', (event) => {
+        console.error('❌ EventSource error:', event);
+        eventSource.close();
+        
+        if (!finalSessionData) {
+          throw new Error('段階的生成中にエラーが発生しました');
+        }
+      });
+      
+      // 開始イベント
+      eventSource.addEventListener('start', (event) => {
+        console.log('🚀 Staged generation started');
+        if (uxEnhancer) {
+          uxEnhancer.showToast('🚀 段階的生成開始', 'info', 3000);
+        }
+      });
+      
+      // 代替: POSTリクエストによる段階的処理
+      if (!window.EventSource) {
+        console.log('⚠️ EventSource not supported, using POST fallback');
+        
+        const response = await fetch('/api/integrated-micro-generator', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            formData: this.formData,
+            sessionId: sessionId
+          }),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API Response Error:', response.status, errorText);
-        throw new Error(`API Error ${response.status}: ${errorText}`);
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.substring(6));
+                if (data.step && data.content) {
+                  // 進捗更新処理（上記と同様）
+                  this.updateProgressBar(data.progress || 0);
+                  this.updatePhaseInfo(data.step, data.totalSteps, data.name);
+                }
+              } catch (parseError) {
+                console.error('❌ Chunk parse error:', parseError);
+              }
+            }
+          }
+        }
       }
-
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Integrated micro generation failed');
-      }
-      
-      console.log('🎉 Integrated Micro Generation completed successfully!');
-      this.sessionData = result.sessionData;
-      
-      // 進捗を100%に設定
-      this.updateProgressBar(100);
-      this.updatePhaseInfo(this.progressPhases.length, this.progressPhases.length, '生成完了');
-      
-      // UX強化: 生成完了通知
-      if (uxEnhancer) {
-        uxEnhancer.showToast('🎉 統合マイクロ生成が完了しました！', 'success', 5000);
-      }
-      
-      // 少し遅らせて結果表示
-      setTimeout(() => {
-        this.showResults(result.sessionData);
-      }, 1000);
       
       clearTimeout(timeoutId);
       
