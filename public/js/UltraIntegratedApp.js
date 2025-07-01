@@ -372,6 +372,18 @@ class UltraIntegratedApp {
       this.isGenerating = true;
       this.showGenerationUI();
       
+      // 5分タイムアウト設定
+      const timeoutId = setTimeout(() => {
+        if (this.isGenerating) {
+          console.error('⏰ Generation timeout reached');
+          this.showError('生成がタイムアウトしました。再度お試しください。');
+          this.isGenerating = false;
+          this.stopProgressTimer();
+          this.hideElement('loading-container');
+          this.showElement('main-card');
+        }
+      }, 300000);
+      
       // 進捗とタイマーを開始
       this.startProgressTimer();
       
@@ -419,11 +431,14 @@ class UltraIntegratedApp {
         this.showResults(result.sessionData);
       }, 1000);
       
+      clearTimeout(timeoutId);
+      
     } catch (error) {
       console.error('❌ Integrated Micro Generation failed:', error);
       
       // タイマー停止
       this.stopProgressTimer();
+      clearTimeout(timeoutId);
       
       // UX強化: エラー通知
       if (uxEnhancer) {
@@ -650,7 +665,7 @@ class UltraIntegratedApp {
     // step1のコンセプトからタイトルを探す
     const step1 = phases.step1;
     if (step1 && step1.content && step1.content.concept) {
-      const titleMatch = step1.content.concept.match(/## 作品タイトル[\\s\\S]*?\\n([^\\n]+)/);
+      const titleMatch = step1.content.concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
       if (titleMatch) {
         title = titleMatch[1].trim();
       }

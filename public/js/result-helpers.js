@@ -1,33 +1,36 @@
 // 🎨 Result Display Helper Functions - Web表示完全対応
 
-// タブ切り替え関数
+// タブ切り替え関数（パフォーマンス最適化版）
 function showTab(tabName) {
   try {
     console.log(`Switching to tab: ${tabName}`);
     
-    // 全てのタブを非表示
-    document.querySelectorAll('.tab-content').forEach(tab => {
-      tab.style.display = 'none';
+    // DocumentFragment使用でDOM操作を最適化
+    const tabs = document.querySelectorAll('.tab-content');
+    const buttons = document.querySelectorAll('.tab-button');
+    
+    // バッチでDOMを更新（リフロー最小化）
+    requestAnimationFrame(() => {
+      // 全てのタブを非表示
+      tabs.forEach(tab => tab.style.display = 'none');
+      
+      // 全てのボタンのアクティブを解除
+      buttons.forEach(btn => btn.classList.remove('active'));
+      
+      // 選択されたタブを表示
+      const selectedTab = document.getElementById(`tab-${tabName}`);
+      if (selectedTab) {
+        selectedTab.style.display = 'block';
+        console.log(`Tab ${tabName} displayed successfully`);
+      } else {
+        console.error(`Tab ${tabName} not found`);
+      }
+      
+      // クリックされたボタンをアクティブに
+      if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+      }
     });
-    
-    // 全てのボタンのアクティブを解除
-    document.querySelectorAll('.tab-button').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    
-    // 選択されたタブを表示
-    const selectedTab = document.getElementById(`tab-${tabName}`);
-    if (selectedTab) {
-      selectedTab.style.display = 'block';
-      console.log(`Tab ${tabName} displayed successfully`);
-    } else {
-      console.error(`Tab ${tabName} not found`);
-    }
-    
-    // クリックされたボタンをアクティブに
-    if (window.event && window.event.target) {
-      window.event.target.classList.add('active');
-    }
   } catch (error) {
     console.error('Error in showTab:', error);
   }

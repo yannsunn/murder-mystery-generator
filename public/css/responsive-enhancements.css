@@ -1,7 +1,18 @@
 /**
  * 📱 Responsive Design Enhancements
  * モバイルファースト・レスポンシブデザイン強化
+ * パフォーマンス最適化: will-change, contain プロパティ使用
  */
+
+/* パフォーマンス最適化 */
+.card, .tab-content, .loading-container {
+  contain: layout style;
+  will-change: transform;
+}
+
+.step-indicator-item {
+  contain: layout;
+}
 
 /* モバイルファーストアプローチ */
 

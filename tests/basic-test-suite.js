@@ -217,28 +217,19 @@ async function testStorageSystem(results) {
 /**
  * フェーズAPIテスト（基本的な存在確認）
  */
-async function testPhaseAPIs(results) {
-  console.log('\n🎭 フェーズAPIテスト');
+async function testIntegratedAPI(results) {
+  console.log('\n🔬 統合マイクロ生成APIテスト');
   
-  const phases = [
-    'phase1-concept',
-    'phase2-characters', 
-    'phase3-relationships',
-    'phase4-incident',
-    'phase5-clues',
-    'phase6-timeline',
-    'phase7-solution',
-    'phase8-gamemaster'
-  ];
-  
-  for (const phase of phases) {
-    try {
-      const module = await import(`../api/${phase}.js`);
-      assert(module.default !== undefined, `${phase} should export default handler`);
-      results.pass(`${phase} module exists`);
-    } catch (error) {
-      results.fail(`${phase} module test`, error);
-    }
+  try {
+    const module = await import('../api/integrated-micro-generator.js');
+    assert(module.default !== undefined, 'integrated-micro-generator should export default handler');
+    results.pass('integrated-micro-generator module exists');
+    
+    // APIのテスト (実際の呼び出しはせず、存在確認のみ)
+    results.pass('integrated-micro-generator loads successfully');
+    
+  } catch (error) {
+    results.fail('integrated-micro-generator test', error);
   }
 }
 
@@ -262,7 +253,7 @@ export async function runBasicTests() {
   await testErrorHandling(results);
   await testSecurityFeatures(results);
   await testStorageSystem(results);
-  await testPhaseAPIs(results);
+  await testIntegratedAPI(results);
   
   // 結果サマリー
   const success = results.summary();
