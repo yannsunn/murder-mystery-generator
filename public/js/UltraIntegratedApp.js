@@ -372,6 +372,9 @@ class UltraIntegratedApp {
       this.isGenerating = true;
       this.showGenerationUI();
       
+      // 進捗とタイマーを開始
+      this.startProgressTimer();
+      
       const sessionId = `integrated_micro_${Date.now()}`;
       
       console.log('🔬 Calling integrated micro generator...');
@@ -402,15 +405,25 @@ class UltraIntegratedApp {
       console.log('🎉 Integrated Micro Generation completed successfully!');
       this.sessionData = result.sessionData;
       
+      // 進捗を100%に設定
+      this.updateProgressBar(100);
+      this.updatePhaseInfo(5, 5, '生成完了');
+      
       // UX強化: 生成完了通知
       if (uxEnhancer) {
         uxEnhancer.showToast('🎉 統合マイクロ生成が完了しました！', 'success', 5000);
       }
       
-      this.showResults(result.sessionData);
+      // 少し遅らせて結果表示
+      setTimeout(() => {
+        this.showResults(result.sessionData);
+      }, 1000);
       
     } catch (error) {
       console.error('❌ Integrated Micro Generation failed:', error);
+      
+      // タイマー停止
+      this.stopProgressTimer();
       
       // UX強化: エラー通知
       if (uxEnhancer) {
@@ -420,6 +433,7 @@ class UltraIntegratedApp {
       this.showError(error.message);
     } finally {
       this.isGenerating = false;
+      this.stopProgressTimer();
     }
   }
 
@@ -430,6 +444,76 @@ class UltraIntegratedApp {
     await this.startMicroGeneration();
   }
 
+  // 🎯 進捗タイマー開始
+  startProgressTimer() {
+    this.progressStartTime = Date.now();
+    this.currentProgress = 0;
+    this.currentPhase = 1;
+    
+    // 進捗シミュレーション (5つのフェーズ)
+    this.progressPhases = [
+      { name: '🚀 作品タイトル・コンセプト生成', duration: 60 },
+      { name: '🎭 キャラクター完全設計', duration: 90 },
+      { name: '🔍 事件・謎・真相構築', duration: 75 },
+      { name: '⏱ タイムライン・進行管理', duration: 45 },
+      { name: '🎓 GMガイド完成', duration: 30 }
+    ];
+    
+    this.updatePhaseInfo(1, 5, this.progressPhases[0].name);
+    
+    // プログレスタイマー開始
+    this.progressTimer = setInterval(() => {
+      this.updateProgressSimulation();
+    }, 1000);
+  }
+  
+  // 🛑 進捗タイマー停止
+  stopProgressTimer() {
+    if (this.progressTimer) {
+      clearInterval(this.progressTimer);
+      this.progressTimer = null;
+    }
+  }
+  
+  // 📈 進捗シミュレーション更新
+  updateProgressSimulation() {
+    const elapsed = (Date.now() - this.progressStartTime) / 1000; // 秒
+    
+    // 各フェーズの累積時間を計算
+    let totalDuration = 0;
+    let currentPhaseDuration = 0;
+    let phaseIndex = 0;
+    
+    for (let i = 0; i < this.progressPhases.length; i++) {
+      if (elapsed < totalDuration + this.progressPhases[i].duration) {
+        phaseIndex = i;
+        currentPhaseDuration = elapsed - totalDuration;
+        break;
+      }
+      totalDuration += this.progressPhases[i].duration;
+    }
+    
+    // 全体進捗計算
+    const totalTime = this.progressPhases.reduce((sum, phase) => sum + phase.duration, 0);
+    const overallProgress = Math.min(95, (elapsed / totalTime) * 100); // 最大95%まで
+    
+    // 現在のフェーズ進捗
+    const phaseProgress = Math.min(100, (currentPhaseDuration / this.progressPhases[phaseIndex].duration) * 100);
+    
+    // 前のフェーズが完了した場合
+    if (phaseIndex !== this.currentPhase - 1) {
+      this.currentPhase = phaseIndex + 1;
+      this.updatePhaseInfo(this.currentPhase, 5, this.progressPhases[phaseIndex].name);
+    }
+    
+    // 進捗バー更新
+    this.updateProgressBar(Math.floor(overallProgress));
+    
+    // 残り時間計算
+    const remainingTime = Math.max(0, totalTime - elapsed);
+    this.updateEstimatedTime(remainingTime);
+  }
+  
   // 進捗更新表示 - 統合マイクロ生成用
   updateProgress(progressData) {
     // 統合生成では進捗は簡単なパーセンテージ表示のみ
@@ -455,34 +539,27 @@ class UltraIntegratedApp {
     const phaseNumber = document.getElementById('current-phase-number');
     const currentPhaseEl = document.getElementById('current-phase');
     const phaseDetails = document.getElementById('phase-details');
-    const estimatedTime = document.getElementById('estimated-time');
-    const generationMethod = document.getElementById('generation-method');
     
     if (phaseNumber) phaseNumber.textContent = `${currentPhase}/${totalPhases}`;
-    if (currentPhaseEl) currentPhaseEl.textContent = `🔄 ${phaseName}`;
+    if (currentPhaseEl) currentPhaseEl.textContent = phaseName;
     if (phaseDetails) phaseDetails.textContent = `フェーズ ${currentPhase} を処理中...`;
-    
-    // 推定残り時間の動的計算（統合マイクロ生成用）
-    const remainingPhases = totalPhases - currentPhase;
-    const timePerPhase = 60; // 統合生成では各ステップが約1分
-    const estimatedSeconds = remainingPhases * timePerPhase;
+  }
+  
+  // 推定時間更新
+  updateEstimatedTime(remainingSeconds) {
+    const estimatedTime = document.getElementById('estimated-time');
     
     if (estimatedTime) {
-      if (estimatedSeconds > 0) {
-        if (estimatedSeconds > 60) {
-          const minutes = Math.ceil(estimatedSeconds / 60);
+      if (remainingSeconds > 0) {
+        if (remainingSeconds > 60) {
+          const minutes = Math.ceil(remainingSeconds / 60);
           estimatedTime.textContent = `約 ${minutes} 分`;
         } else {
-          estimatedTime.textContent = `約 ${estimatedSeconds} 秒`;
+          estimatedTime.textContent = `約 ${Math.ceil(remainingSeconds)} 秒`;
         }
       } else {
         estimatedTime.textContent = '完了間近';
       }
-    }
-    
-    // 生成方式の説明を更新（統合マイクロ生成）
-    if (generationMethod) {
-      generationMethod.textContent = '統合マイクロ生成（超詳細）';
     }
   }
   
@@ -526,22 +603,14 @@ class UltraIntegratedApp {
     const phaseDetails = document.getElementById('phase-details');
     const phaseNumber = document.getElementById('current-phase-number');
     const estimatedTime = document.getElementById('estimated-time');
-    const generationMethod = document.getElementById('generation-method');
     
     if (currentPhase) currentPhase.textContent = '🚀 AI生成エンジン起動中...';
     if (phaseDetails) phaseDetails.textContent = 'マーダーミステリー生成を開始します';
-    if (phaseNumber) phaseNumber.textContent = '1/5';
+    if (phaseNumber) phaseNumber.textContent = '0/5';
     
     // 初期推定時間設定（統合マイクロ生成用）
     if (estimatedTime) {
-      const totalTime = 300; // 5分（統合生成のため十分な時間）
-      const minutes = Math.ceil(totalTime / 60);
-      estimatedTime.textContent = `最大 ${minutes} 分`;
-    }
-    
-    // 統合マイクロ生成方式表示
-    if (generationMethod) {
-      generationMethod.textContent = '統合マイクロ生成（超詳細）';
+      estimatedTime.textContent = '約 5 分';
     }
   }
 
