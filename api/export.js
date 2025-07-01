@@ -1,6 +1,6 @@
 /**
- * 🚀 Unified Export System - 統合ZIP生成API
- * 全機能統合・最適化済み・プロダクション対応
+ * 🚀 Unified Export System - 30分-1時間特化ZIP生成API
+ * 短時間セッション専用・極限精度・完全文章対応
  */
 
 import JSZip from 'jszip';
@@ -31,12 +31,12 @@ async function generateTextFiles(sessionData) {
   
   const sanitizedTitle = title.replace(/[^a-zA-Z0-9\-_]/g, '_');
   
-  // 5時間対応メインファイル生成
+  // 30分-1時間対応メインファイル生成
   files[`${sanitizedTitle}_complete_scenario.txt`] = generateCompleteScenario(sessionData, title);
   files[`${sanitizedTitle}_gamemaster_guide.txt`] = generateGameMasterGuide(sessionData, title);
   files[`${sanitizedTitle}_introduction_handout.txt`] = generateIntroductionHandout(sessionData, title);
   
-  // 参加者別個別ハンドアウト生成
+  // 参加者別個別ハンドアウト生成（短時間特化）
   const participantCount = parseInt(sessionData.formData?.participants || 5);
   for (let i = 1; i <= participantCount; i++) {
     files[`${sanitizedTitle}_player${i}_handout.txt`] = generatePlayerHandout(sessionData, title, i);
@@ -71,37 +71,36 @@ function generateCompleteScenario(sessionData, title) {
   let content = `
 ================================================================================
                         ${title}
-                    完全シナリオドキュメント
+                30分-1時間特化シナリオドキュメント
 ================================================================================
 
 【基本情報】
 参加人数: ${formData.participants || '未設定'}人
+プレイ時間: 30分-1時間（複雑さ：${getDisplayText('complexity', formData.complexity)}）
 時代背景: ${getDisplayText('era', formData.era)}
 舞台設定: ${getDisplayText('setting', formData.setting)}
-複雑さ: ${getDisplayText('complexity', formData.complexity)}
+トーン: ${getDisplayText('tone', formData.tone)}
 生成日時: ${new Date(sessionData.startTime || Date.now()).toLocaleString('ja-JP')}
 
 ================================================================================
-目次
+短時間セッション構成
 ================================================================================
-1. コンセプト・世界観
-2. キャラクター設定
-3. 人物関係
-4. 事件・謎の構造
-5. 手がかり・証拠
-6. タイムライン
-7. 真相・解決編
-8. ゲームマスターガイド
+1. 高密度コンセプト・世界観
+2. 効率的キャラクター設定
+3. 短時間解決構造
+4. 決定的証拠システム
+5. 30分-1時間完結タイムライン
+6. 完璧ゲームマスターガイド
 
 `;
 
-  // 統合マイクロ生成の各ステップ内容を追加
+  // 30分-1時間特化各ステップ内容を追加
   const stepNames = {
-    step1: '1. 作品タイトル・コンセプト',
-    step2: '2. キャラクター完全設計', 
-    step3: '3. 事件・謎・真相構築',
-    step4: '4. タイムライン・進行管理',
-    step5: '5. ゲームマスター完全ガイド'
+    step1: '1. 短時間特化コンセプト・導入',
+    step2: '2. 効率的キャラクター・個別ハンドアウト', 
+    step3: '3. 30分-1時間解決構造・真相',
+    step4: '4. 短時間完結タイムライン',
+    step5: '5. 実用GMガイド'
   };
 
   Object.entries(stepNames).forEach(([stepKey, stepTitle]) => {
@@ -123,11 +122,12 @@ function generateCompleteScenario(sessionData, title) {
                         制作情報
 ================================================================================
 
-このシナリオは人工知能により生成されました。
-生成システム: Ultra Integrated Murder Mystery Generator
+このシナリオは30分-1時間特化型人工知能により生成されました。
+生成システム: Ultra Integrated Short-Session Murder Mystery Generator
+特化仕様: 短時間完結・極限精度・文章完全性保証
 生成日時: ${new Date().toLocaleString('ja-JP')}
 
-© AI Generated Murder Mystery Scenario
+© AI Generated Short-Session Murder Mystery Scenario
 `;
   
   return content;
@@ -138,43 +138,50 @@ function generateCompleteScenario(sessionData, title) {
  */
 function generateGameMasterGuide(sessionData, title) {
   const formData = sessionData.formData || {};
+  const complexity = formData.complexity || 'standard';
+  
+  // 複雑さ別時間設定
+  const timeSettings = {
+    'simple': { total: '30分', intro: '5分', investigation: '20分', resolution: '5分' },
+    'standard': { total: '45分', intro: '7分', investigation: '30分', resolution: '8分' },
+    'complex': { total: '60分', intro: '10分', investigation: '40分', resolution: '10分' }
+  };
+  
+  const time = timeSettings[complexity] || timeSettings['standard'];
   
   return `
 ================================================================================
                     ${title}
-                ゲームマスター専用ガイド
+            30分-1時間特化ゲームマスター専用ガイド
 ================================================================================
 
-【重要】このファイルには重大なネタバレが含まれています。
+【重要警告】このファイルには重大なネタバレが含まれています。
 プレイヤーは絶対に見ないでください。
 
 【基本情報】
 参加人数: ${formData.participants || '未設定'}人
-推定プレイ時間: 2-3時間
+設定プレイ時間: ${time.total}（複雑さ：${getDisplayText('complexity', complexity)}）
+トーン: ${getDisplayText('tone', formData.tone)}
 
-【クイックリファレンス】
-真犯人: [真相セクションを参照]
-決定的証拠: [手がかりセクションを参照]
-重要なタイミング: [タイムラインセクションを参照]
+【${time.total}完結進行チェックリスト】
+□ 開始前準備（ハンドアウト・証拠・タイマー）
+□ 導入（${time.intro}）: ルール説明・事件発生
+□ 調査（${time.investigation}）: 証拠収集・推理構築
+□ 解決（${time.resolution}）: 真相公開・完結
+□ 時間管理の徹底確認
 
-【進行チェックリスト】
-□ 開始前準備完了
-□ キャラクター配布
-□ 基本ルール説明
-□ 各フェーズ進行
-□ 最終推理タイム
-□ 真相公開
-□ 感想戦
+【短時間進行の重要ポイント】
+- 情報は段階的だが迅速に提供
+- 参加者の理解度を常時チェック
+- 行き詰まり時は即座にヒント提供
+- 時間配分の厳密な管理
 
-【タイムマネジメント】
-- 開始: 15分（説明・準備）
-- 調査フェーズ: 60分
-- 議論フェーズ: 45分
-- 推理発表: 30分
-- 真相公開: 15分
-- 感想戦: 15分
+【緊急時対応】
+- 進行遅れ: 重要証拠を直接提示
+- 推理停滞: 3段階ヒントシステム活用
+- 時間不足: 簡潔な真相公開で確実完結
 
-${sessionData.phases?.phase8?.gamemaster || '詳細なGM指示は個別ファイルを参照してください。'}
+${sessionData.phases?.step5?.content?.gamemaster_guide || '詳細なGM指示は個別ファイルを参照してください。'}
 `;
 }
 
@@ -186,6 +193,17 @@ ${sessionData.phases?.phase8?.gamemaster || '詳細なGM指示は個別ファイ
  */
 function generatePlayerHandout(sessionData, title, playerNumber) {
   const characters = sessionData.phases?.step2?.content?.characters || '';
+  const formData = sessionData.formData || {};
+  const complexity = formData.complexity || 'standard';
+  
+  // 複雑さ別時間設定
+  const timeSettings = {
+    'simple': { total: '30分', phases: ['導入(5分)', '調査(20分)', '解決(5分)'] },
+    'standard': { total: '45分', phases: ['導入(7分)', '調査(30分)', '解決(8分)'] },
+    'complex': { total: '60分', phases: ['導入(10分)', '調査(40分)', '解決(10分)'] }
+  };
+  
+  const time = timeSettings[complexity] || timeSettings['standard'];
   
   // キャラクター情報から特定プレイヤーの情報を抽出
   const playerPattern = new RegExp(`プレイヤー${playerNumber}[\\s\\S]*?(?=プレイヤー${playerNumber + 1}|$)`, 'i');
@@ -200,47 +218,44 @@ function generatePlayerHandout(sessionData, title, playerNumber) {
   return `
 ================================================================================
                         ${title}
-                プレイヤー${playerNumber} 専用ハンドアウト
+            プレイヤー${playerNumber} 専用ハンドアウト（${time.total}特化）
 ================================================================================
 
-【重要警告】
+【絶対警告】
 これはプレイヤー${playerNumber}専用の資料です。
 他のプレイヤーや他のハンドアウトファイルは絶対に見ないでください！
 
 ${playerContent || `プレイヤー${playerNumber}の詳細情報を生成中...`}
 
-【5時間セッション専用ガイド】
+【${time.total}セッション完結ガイド】
 
-■ 第1時間 (0-60分): 導入・キャラクター紹介
-- あなたのキャラクターを他のプレイヤーに紹介
-- 初期の関係性を確認
-- 事件発生時の行動を決定
+■ ${time.phases[0]}: キャラクター紹介・事件発生
+- あなたのキャラクターを簡潔に紹介
+- 他プレイヤーとの関係性を即座に確認
+- 事件発生時の初期行動を決定
 
-■ 第2時間 (60-120分): 初期調査
-- 基本的な証拠収集
-- 他キャラクターからの初期証言聴取
-- あなたの秘密情報を活用
+■ ${time.phases[1]}: 効率的調査・推理構築
+- 重要証拠の迅速な収集
+- 他キャラクターからの証言聴取
+- あなたの秘密情報を戦略的に活用
+- 短時間で論理的推理を構築
 
-■ 第3時間 (120-180分): 詳細調査
-- より深い調査を実行
-- 隠された情報の発見
-- 他プレイヤーとの情報交換
+■ ${time.phases[2]}: 最終推理・真相解明
+- 決定的な推理の発表
+- 犯人特定・投票参加
+- 真相公開・満足のエピローグ
 
-■ 第4時間 (180-240分): 推理・議論
-- これまでの情報を整理
-- 仮説を構築して発表
-- 他プレイヤーの推理を検証
+【短時間セッションの重要戦略】
+- 時間効率を意識した行動
+- 重要情報の見極めと活用
+- 他プレイヤーとの効果的な情報交換
+- あなたの目標達成への集中
+- 秘密の情報は適切なタイミングで活用
 
-■ 第5時間 (240-300分): 最終推理・真相
-- 最終的な犯人推理
-- 投票・決定
-- 真相公開・エピローグ
-
-【重要な注意事項】
-- あなたの秘密は絶対に守る
-- 目標達成のために戦略的に行動
-- 他プレイヤーとの会話・交渉を活用
-- 最後まで諦めずに推理を続ける
+【勝利への道筋】
+- あなたの特別な情報を最大限活用
+- 短時間で確実に推理を構築
+- ${time.total}で必ず解決に導く
 `;
 }
 
@@ -249,6 +264,17 @@ ${playerContent || `プレイヤー${playerNumber}の詳細情報を生成中...
  */
 function generateIntroductionHandout(sessionData, title) {
   const concept = sessionData.phases?.step1?.content?.concept || '';
+  const formData = sessionData.formData || {};
+  const complexity = formData.complexity || 'standard';
+  
+  // 複雑さ別時間設定
+  const timeSettings = {
+    'simple': { total: '30分', description: '短時間集中型' },
+    'standard': { total: '45分', description: 'バランス型' },
+    'complex': { total: '60分', description: '本格長時間型' }
+  };
+  
+  const time = timeSettings[complexity] || timeSettings['standard'];
   
   // 導入シナリオを抽出
   const introPattern = /## 導入シナリオ[^\n]*\n([\s\S]*?)(?=##|$)/;
@@ -257,41 +283,40 @@ function generateIntroductionHandout(sessionData, title) {
   return `
 ================================================================================
                         ${title}
-                    導入シナリオ（全員配布用）
+                導入シナリオ（全員配布用・${time.total}特化）
 ================================================================================
 
 【これは全プレイヤーに配布される共通資料です】
 
 ${introContent || '魅力的な導入ストーリーを準備中...'}
 
-【ゲームセッション概要】
-プレイ時間: 5時間（300分）
+【${time.total}セッション概要】
+プレイ時間: ${time.total}（${time.description}）
 参加人数: ${sessionData.formData?.participants || 5}人
-複雑さ: ${sessionData.formData?.complexity || '標準'}
-トーン: ${sessionData.formData?.tone || 'シリアス'}
+複雑さ: ${getDisplayText('complexity', complexity)}
+トーン: ${getDisplayText('tone', formData.tone)}
 
-【5時間の流れ】
-第1時間: 導入・キャラクター紹介・事件発生
-第2時間: 初期調査・基本証拠収集
-第3時間: 詳細調査・深層情報収集
-第4時間: 推理・議論・仮説構築
-第5時間: 最終推理・真相公開・エピローグ
+【${time.total}完結の流れ】
+導入: ルール説明・世界観・事件発生
+調査: 証拠収集・証言聴取・推理構築
+解決: 最終推理・真相公開・完結
 
-【基本ルール】
+【短時間セッション基本ルール】
 1. 自分のキャラクターになりきってプレイ
-2. 他プレイヤーとの会話・交渉は自由
-3. 嘘をつくことも戦略として有効
-4. 個別ハンドアウトの情報は秘密を守る
-5. 最終的に真犯人を推理して投票
+2. 時間効率を意識した行動・発言
+3. 他プレイヤーとの効果的な情報交換
+4. 個別ハンドアウトの秘密情報は厳守
+5. ${time.total}で確実に真犯人を推理
 
-【注意事項】
-- 他プレイヤーの個別ハンドアウトは見てはいけません
-- ゲームマスター専用資料も見てはいけません
-- 分からないことはゲームマスターに質問
-- 楽しみながら最後まで参加してください
+【重要な注意事項】
+- 他プレイヤーの個別ハンドアウトは絶対に見ない
+- ゲームマスター専用資料も絶対に見ない
+- 分からないことは即座にGMに質問
+- 時間を意識しながら楽しく参加
+- ${time.total}で必ず完結することを意識
 
 準備はよろしいでしょうか？
-それでは、${title}の世界へようこそ！
+それでは、${time.total}完結の${title}の世界へようこそ！
 `;
 }
 
