@@ -17,16 +17,18 @@ export const config = {
   maxDuration: 300, // 5分 - 30分-1時間高精度生成のため十分な時間
 };
 
-// 30分-1時間高精度統合生成フロー
+// 30分-1時間段階的統合生成フロー（全要素段階化）
 const INTEGRATED_GENERATION_FLOW = [
+  // === 段階1: 基本コンセプト策定 ===
   {
-    name: '作品タイトル・コンセプト・導入',
-    weight: 8,
+    name: '段階1: 作品タイトル・基本コンセプト',
+    weight: 10,
     handler: async (formData, context) => {
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー制作専門家です。
-商業品質のTRPGシナリオを生成し、参加者が完全に没入できる世界観を構築してください。
-ハンドアウト、GM資料、キャラクターシートまで含む完全なパッケージを制作する最初のステップとして、
-印象的で魅力的な作品基礎を構築してください。`;
+      console.log('🎨 段階1: 基本コンセプト策定開始');
+      
+      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
+30分-1時間セッション用の魅力的な作品コンセプトを段階的に作成してください。
+この段階では、後の段階で詳細化されるための基礎設定に集中してください。`;
       
       const userPrompt = `
 【プロフェッショナル品質マーダーミステリー制作依頼】
@@ -101,17 +103,151 @@ const INTEGRATED_GENERATION_FLOW = [
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階1: 基本コンセプト完成');
       return { concept: result.content };
     }
   },
-
+  
+  // === 段階2: 事件核心部の設計 ===
   {
-    name: '段階的キャラクター生成システム',
+    name: '段階2: 事件核心・犯人・動機設定',
+    weight: 12,
+    handler: async (formData, context) => {
+      console.log('🕵️ 段階2: 事件核心部設計開始');
+      
+      const concept = context.concept || '';
+      const systemPrompt = `あなたはマーダーミステリーの事件設計のエキスパートです。
+30分-1時間で解決可能な、しかし興味深い事件の核心部分を設計してください。
+この段階では犯人、動機、犯行手段の核心を確定します。`;
+      
+      const userPrompt = `
+【事件核心部設計依頼】
+
+基本コンセプト: ${concept}
+参加人数: ${formData.participants}人
+複雑さ: ${formData.complexity}
+トーン: ${formData.tone}
+
+以下の形式で事件の核心部分を設計してください：
+
+## 事件の核心構造
+
+### 犯人の特定
+**真の犯人**: [プレイヤー番号またはNPCを明記]
+**犯人の特徴**: [人物像と性格的特徴]
+
+### 根本的動機
+**主動機**: [犯行の最も深い動機]
+**副次的要因**: [犯行を後押しした状況や感情]
+**隔したい秘密**: [犯人が最も隠したいこと]
+
+### 犯行手段・トリック
+**基本的な手段**: [30分-1時間で理解できるシンプルな手段]
+**使用したトリック**: [特別なトリックや工作]
+**犯行時刻**: [具体的な時刻と状況]
+
+### 重要な証拠
+**物的証拠**: [発見される重要な物証]
+**状況証拠**: [現場の状況や痕跡]
+**証言証拠**: [目撃情報や関連者の証言]
+
+### ミスリード要素（簡潔版）
+[短時間で整理できる程度の適度なミスリード要素]
+
+【重要】
+- 30分-1時間で理解・解決可能な範囲
+- 後の段階で詳細化されるため、核心部分に集中
+- 全ての文章を完結させる
+`;
+
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階2: 事件核心部完成');
+      return { incident_core: result.content };
+    }
+  },
+
+  // === 段階3: 事件詳細・タイムライン構築 ===
+  {
+    name: '段階3: 事件詳細・基本タイムライン',
+    weight: 15,
+    handler: async (formData, context) => {
+      console.log('⏰ 段階3: 事件詳細・タイムライン構築開始');
+      
+      const concept = context.concept || '';
+      const incidentCore = context.incident_core || '';
+      const systemPrompt = `あなたはマーダーミステリーの事件詳細設計のエキスパートです。
+30分-1時間セッション用の詳細な事件タイムラインと状況を段階的に構築してください。
+この段階では、キャラクター生成の前段階として事件の詳細を確定します。`;
+      
+      const userPrompt = `
+【事件詳細・タイムライン構築依頼】
+
+基本コンセプト: ${concept}
+事件核心部: ${incidentCore}
+参加人数: ${formData.participants}人
+複雑さ: ${formData.complexity}
+
+以下の形式で事件の詳細とタイムラインを構築してください：
+
+## 事件発生前タイムライン（簡潔版）
+### 重要前史（事件1週間前〜）
+[事件に直結する必要最小限の背景事情]
+
+### 事件当日タイムライン（詳細版）
+**午前**:
+- [時刻]: [出来事・人物の行動]
+
+**午後**:
+- [時刻]: [出来事・人物の行動]  
+
+**夜間**:
+- [時刻]: [事件発生とその前後の状況]
+
+## 事件現場詳細
+### 現場の状況
+[発見時の詳細な現場状況・証拠配置]
+
+### 重要な物的証拠
+[現場で発見される決定的証拠のリスト]
+
+### 証言・目撃情報
+[各関係者からの重要な証言や目撃情報]
+
+## アリバイ・行動パターン
+### 事件時刻周辺の人物動向
+[各関係者の事件時刻前後の行動・アリバイ状況]
+
+## ${formData.complexity}レベル対応調整
+### シンプル版（30分）要素
+[30分で解決可能な簡素化要素]
+
+### 標準版（45分）要素  
+[適度な複雑さの中級要素]
+
+### 複雑版（60分）要素
+[1時間必要な高度な要素]
+
+【重要】
+- 後のキャラクター生成で活用される詳細情報
+- 30分-1時間で確実に解決可能な構造
+- 全ての文章を完結させる
+`;
+
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階3: 事件詳細・タイムライン完成');
+      return { incident_details: result.content };
+    }
+  },
+
+  // === 段階4: 段階的キャラクター生成システム ===
+  {
+    name: '段階4: 段階的キャラクター生成システム',
     weight: 35,
     handler: async (formData, context) => {
       try {
         const concept = context.concept || '';
-        const incident = context.incident_and_truth || '';
+        const incidentCore = context.incident_core || '';
+        const incidentDetails = context.incident_details || '';
         const participantCount = parseInt(formData.participants) || 5;
         
         console.log(`👥 段階的キャラクター生成開始: ${participantCount}人`);
@@ -130,7 +266,8 @@ const INTEGRATED_GENERATION_FLOW = [
 【プレイヤー${i}専用キャラクター作成】
 
 作品情報: ${concept}
-事件情報: ${incident}
+事件核心: ${incidentCore}
+事件詳細: ${incidentDetails}
 参加人数: ${participantCount}人中の${i}人目
 既存キャラクター: ${allCharacters.length > 0 ? allCharacters.map((c, idx) => `プレイヤー${idx + 1}: ${c.name || '未設定'}`).join(', ') : 'なし'}
 
@@ -195,7 +332,8 @@ ${allCharacters.length > 0 ? allCharacters.map((c, idx) => `**プレイヤー${i
 【関係性調整依頼】
 
 作品情報: ${concept}
-事件情報: ${incident}
+事件核心: ${incidentCore}
+事件詳細: ${incidentDetails}
 
 キャラクター一覧:
 ${allCharacters.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')}
@@ -282,15 +420,29 @@ ${characterRelationships}
     }
   },
 
+  // === 段階5: 証拠配置・手がかり設計 ===
   {
-    name: '事件・謎・真相構築（30分-1時間特化）',
-    weight: 25,
+    name: '段階5: 証拠配置・手がかり体系化',
+    weight: 18,
     handler: async (formData, context) => {
+      console.log('🔍 段階5: 証拠配置・手がかり体系化開始');
+      
+      const concept = context.concept || '';
+      const incidentCore = context.incident_core || '';
+      const incidentDetails = context.incident_details || '';
       const characters = context.characters || '';
-      const systemPrompt = `30分-1時間短時間マーダーミステリー専門の謎構築者として、短時間で確実に解決できる完璧な論理構造を構築してください。文章の切れや不完全さは絶対に許されません。`;
+      
+      const systemPrompt = `あなたはマーダーミステリーの証拠配置とヒントシステム設計の専門家です。
+30分-1時間で確実に解決可能な、段階的で論理的な証拠配置システムを構築してください。
+この段階では、キャラクターと事件詳細を基にした具体的な証拠・手がかりの配置を行います。`;
       
       const userPrompt = `
-キャラクター: ${characters}
+【証拠配置・手がかり体系化依頼】
+
+基本情報: ${concept}
+事件核心: ${incidentCore}
+事件詳細: ${incidentDetails}
+キャラクター情報: ${characters}
 複雑さレベル: ${formData.complexity}
 トーン: ${formData.tone}
 特殊要素:
@@ -298,7 +450,7 @@ ${characterRelationships}
 - どんでん返し: ${formData.twist_ending ? 'あり' : 'なし'}
 - 秘密の役割: ${formData.secret_roles ? 'あり' : 'なし'}
 
-【超重要】30分-1時間で確実に解決できる完璧な事件構造を構築してください。
+以下の形式で証拠配置システムを構築してください：
 
 【絶対条件】
 - 30分-1時間で完全解決可能
@@ -352,22 +504,36 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      return { incident_and_truth: result.content };
+      console.log('✅ 段階5: 証拠配置・手がかり体系化完成');
+      return { evidence_system: result.content };
     }
   },
 
+  // === 段階6: GM進行ガイド作成 ===
   {
-    name: 'タイムライン・進行管理（30分-1時間特化）',
-    weight: 17,
+    name: '段階6: GM進行ガイド・セッション管理',
+    weight: 20,
     handler: async (formData, context) => {
-      const incident = context.incident_and_truth || '';
-      const characters = context.characters || '';
+      console.log('🎓 段階6: GM進行ガイド・セッション管理作成開始');
       
-      const systemPrompt = `30分-1時間短時間マーダーミステリーセッション専門の進行管理者として、短時間で完璧に完結する進行タイムラインを構築してください。文章の切れや不完全さは絶対に許されません。`;
+      const concept = context.concept || '';
+      const incidentCore = context.incident_core || '';
+      const incidentDetails = context.incident_details || '';
+      const characters = context.characters || '';
+      const evidenceSystem = context.evidence_system || '';
+      
+      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルGM（ゲームマスター）です。
+30分-1時間セッション用の完璧なGM進行ガイドを、これまでの全段階の情報を統合して作成してください。
+実際のセッション運営で即座に使用できる実用的なガイドに仕上げてください。`;
       
       const userPrompt = `
-事件情報: ${incident}
-キャラクター: ${characters}
+【GM進行ガイド統合作成依頼】
+
+基本情報: ${concept}
+事件核心: ${incidentCore}
+事件詳細: ${incidentDetails}
+キャラクター情報: ${characters}
+証拠システム: ${evidenceSystem}
 複雑さ: ${formData.complexity}
 
 【超重要】30分-1時間で完全に完結するセッション進行タイムラインを構築してください。
@@ -581,7 +747,82 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階6: GM進行ガイド完成');
       return { gamemaster_guide: result.content };
+    }
+  },
+
+  // === 段階7: 最終統合・品質確認 ===
+  {
+    name: '段階7: 最終統合・全体つじつま調整',
+    weight: 12,
+    handler: async (formData, context) => {
+      console.log('🔧 段階7: 最終統合・全体つじつま調整開始');
+      
+      const concept = context.concept || '';
+      const incidentCore = context.incident_core || '';
+      const incidentDetails = context.incident_details || '';
+      const characters = context.characters || '';
+      const evidenceSystem = context.evidence_system || '';
+      const gamemasterGuide = context.gamemaster_guide || '';
+      
+      const systemPrompt = `あなたはマーダーミステリー品質管理の最終責任者です。
+これまでの全段階で作成された要素を統合し、全体のつじつま合わせと品質確認を行ってください。
+30分-1時間セッションとして完璧に機能するよう最終調整してください。`;
+      
+      const userPrompt = `
+【最終統合・品質確認依頼】
+
+全ての生成要素:
+1. 基本コンセプト: ${concept}
+2. 事件核心: ${incidentCore}
+3. 事件詳細: ${incidentDetails}
+4. キャラクター情報: ${characters}
+5. 証拠システム: ${evidenceSystem}
+6. GM進行ガイド: ${gamemasterGuide}
+
+以下の観点で最終チェックと調整を行ってください：
+
+## 論理的整合性チェック
+### キャラクター間の矛盾確認
+[各キャラクターの設定、関係性、動機に矛盾がないか確認]
+
+### 事件・証拠の論理性確認
+[事件の流れ、証拠配置、解決手順に論理的問題がないか確認]
+
+### タイムライン整合性確認
+[時系列、アリバイ、行動パターンの整合性確認]
+
+## プレイアビリティ確認
+### 30分-1時間完結性
+[指定時間内で確実に完結できるかの確認]
+
+### 難易度適正性
+[${formData.complexity}レベルとして適切な難易度か確認]
+
+### 参加者体験品質
+[全${formData.participants}人が楽しめる構成になっているか確認]
+
+## 最終調整・修正点
+### 発見された問題点
+[チェックで発見された問題とその解決策]
+
+### 最終版推奨事項
+[セッション成功のための最終的な推奨事項]
+
+## 完成度評価
+### 品質スコア（100点満点）
+- 論理性: [点数]/100
+- エンターテイメント性: [点数]/100  
+- プレイアビリティ: [点数]/100
+- 総合評価: [点数]/100
+
+【最終確認】このマーダーミステリーは30分-1時間セッションとして完璧に機能しますか？
+`;
+
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      console.log('✅ 段階7: 最終統合・全体調整完成');
+      return { final_integration: result.content };
     }
   }
 ];
