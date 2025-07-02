@@ -1202,9 +1202,10 @@ class UltraIntegratedApp {
 
   // 実際の生成UI表示
   showActualGenerationUI() {
-    if (skeletonLoader) {
-      this.skeletonLoader.hide('loading-container');
-    }
+    // ローディング画面が確実に表示されているか確認
+    this.showElement('loading-container');
+    this.hideElement('result-container');
+    this.hideElement('main-card');
     
     // プログレス初期化
     this.updateProgressBar(0);
@@ -1215,14 +1216,24 @@ class UltraIntegratedApp {
     const phaseNumber = document.getElementById('current-phase-number');
     const estimatedTime = document.getElementById('estimated-time');
     
+    console.log('🎯 進捗UI要素状態:', {
+      currentPhase: !!currentPhase,
+      phaseDetails: !!phaseDetails,
+      phaseNumber: !!phaseNumber,
+      estimatedTime: !!estimatedTime,
+      loadingContainer: !!document.getElementById('loading-container')
+    });
+    
     if (currentPhase) currentPhase.textContent = '🚀 AI生成エンジン起動中...';
     if (phaseDetails) phaseDetails.textContent = 'マーダーミステリー生成を開始します';
-    if (phaseNumber) phaseNumber.textContent = '0/5';
+    if (phaseNumber) phaseNumber.textContent = '0/9'; // 正しい段階数
     
     // 初期推定時間設定（統合マイクロ生成用）
     if (estimatedTime) {
-      estimatedTime.textContent = '約 5 分';
+      estimatedTime.textContent = '推定時間: 約 5分';
     }
+    
+    console.log('✅ 生成UI表示完了 - 進捗表示準備OK');
   }
 
 

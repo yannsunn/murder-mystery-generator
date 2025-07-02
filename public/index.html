@@ -251,16 +251,13 @@
     // シンプル化されたアプリ初期化（重複防止）
     let app;
     
-    // 重複初期化防止
-    if (window.appInitialized) {
-      console.log('⚠️ App already initialized, skipping...');
-      return;
-    }
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.appInitialized) return; // 二重防止
+    function initializeApp() {
+      // 重複初期化防止
+      if (window.appInitialized) {
+        console.log('⚠️ App already initialized, skipping...');
+        return;
+      }
       
-      console.log('🎆 DOM Content Loaded - アプリ初期化開始');
       console.log('🔍 初期DOM状態チェック:', {
         generateBtn: !!document.getElementById('generate-btn'),
         randomBtn: !!document.getElementById('random-generate-btn'),
@@ -341,7 +338,14 @@
           });
         }
       };
-    });
+    }
+    
+    // DOM読み込み完了時またはすでに読み込み済みの場合に初期化
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
   </script>
 </body>
 </html>
