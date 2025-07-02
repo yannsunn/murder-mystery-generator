@@ -612,6 +612,9 @@ class UltraIntegratedApp {
                   // 進捗更新処理（上記と同様）
                   this.updateProgressBar(data.progress || 0);
                   this.updatePhaseInfo(data.step, data.totalSteps, data.name);
+                  
+                  // リアルタイムタブ更新
+                  this.updateTabsRealtime(data);
                 }
               } catch (parseError) {
                 console.error('❌ Chunk parse error:', parseError);
@@ -685,6 +688,9 @@ class UltraIntegratedApp {
                 // 進捗更新
                 this.updateProgressBar(data.progress || 0);
                 this.updatePhaseInfo(data.step, data.totalSteps, data.name);
+                
+                // リアルタイムタブ更新
+                this.updateTabsRealtime(data);
                 
                 console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
                 
@@ -1044,6 +1050,89 @@ class UltraIntegratedApp {
       const title = h4 ? h4.outerHTML : '';
       tabElement.innerHTML = title + '<div class="dynamic-content">' + content + '</div>';
     }
+  }
+  
+  // リアルタイムタブ更新（段階完了時）
+  updateTabsRealtime(stepData) {
+    if (!window.currentSessionData) {
+      // セッションデータが存在しない場合は初期化
+      window.currentSessionData = {
+        phases: {},
+        formData: this.formData
+      };
+    }
+    
+    // 段階データを現在のセッションデータに統合
+    if (stepData.step && stepData.content) {
+      const stepKey = `step${stepData.step}`;
+      window.currentSessionData.phases[stepKey] = {
+        content: stepData.content,
+        status: 'completed',
+        name: stepData.name || `段階${stepData.step}`
+      };
+      
+      console.log(`🔄 タブ更新: 段階${stepData.step}のデータを統合`);
+      
+      // 全てのタブコンテンツを更新（現在表示中でなくても準備）
+      ['overview', 'scenario', 'characters', 'timeline', 'gm-guide'].forEach(tabName => {
+        this.updateTabContent(tabName, window.currentSessionData);
+      });
+      
+      // 視覚的フィードバック：タブボタンに更新インジケーターを追加
+      this.addTabUpdateIndicator(stepData.step);
+    }
+  }
+  
+  // タブ更新インジケーター
+  addTabUpdateIndicator(step) {
+    // 段階に関連するタブを特定
+    const stepTabMap = {
+      1: ['overview', 'scenario'],
+      2: ['scenario', 'gm-guide'],
+      3: ['timeline', 'scenario'],
+      4: ['characters'],
+      5: ['timeline', 'scenario'],
+      6: ['gm-guide', 'timeline'],
+      7: ['scenario', 'gm-guide'],
+      8: ['scenario', 'overview'],
+      9: ['overview', 'scenario']
+    };
+    
+    const relevantTabs = stepTabMap[step] || [];
+    
+    relevantTabs.forEach(tabName => {
+      const tabButton = document.querySelector(`[onclick*="showTab('${tabName}')"]`);
+      if (tabButton && !tabButton.classList.contains('active')) {
+        // 更新インジケーターを追加
+        tabButton.classList.add('updated');
+        tabButton.style.position = 'relative';
+        
+        // 小さな更新ドット
+        if (!tabButton.querySelector('.update-dot')) {
+          const dot = document.createElement('span');
+          dot.className = 'update-dot';
+          dot.style.cssText = `
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: #43e97b;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+          `;
+          tabButton.appendChild(dot);
+          
+          // 3秒後に自動削除
+          setTimeout(() => {
+            if (dot.parentNode) {
+              dot.parentNode.removeChild(dot);
+            }
+            tabButton.classList.remove('updated');
+          }, 3000);
+        }
+      }
+    });
   }
 
   generateResultSummary(sessionData) {
@@ -1490,6 +1579,11 @@ class UltraIntegratedApp {
     const step3 = phases.step3; // 事件詳細・基本タイムライン
     const step5 = phases.step5; // 証拠配置・手がかり体系化
     const step6 = phases.step6; // GM進行ガイド（進行管理含む）
+    
+    // 生成中の場合は美しいローディング表示
+    if (this.isGenerating && (!step3 || !step5 || !step6)) {
+      return this.generateLoadingContent('⏱ タイムライン', '段階3,5,6: 統合タイムライン構築中...', '事件・証拠・進行の3層タイムラインを統合して作成しています');
+    }
     
     let timelineContent = '';
     let incidentTimeline = '';
