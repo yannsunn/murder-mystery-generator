@@ -719,6 +719,15 @@ textarea.form-control {
   margin-top: 2rem;
 }
 
+.result-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
 .tab-nav {
   display: flex;
   border-bottom: 1px solid var(--border-color);
@@ -948,6 +957,77 @@ textarea.form-control {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--secondary-gradient);
+}
+
+/* ========== 結果表示 ========== */
+.result-summary {
+  margin-top: 2rem;
+}
+
+.scenario-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 2rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.generation-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+  transition: all var(--transition-medium);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* 基本レイアウト */
+#loading-container,
+#result-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+#result-container {
+  display: none;
+}
+
+#result-container.active {
+  display: block;
+}
+
+#loading-container.hidden {
+  display: none;
 }
 
 /* ========== ユーティリティクラス ========== */
