@@ -120,6 +120,17 @@ class UltraIntegratedApp {
     try {
       console.log('🔧 シンプル版イベントリスナー設定開始');
       
+      // DOM要素の状況を詳細に診断
+      console.log('🔍 DOM診断開始');
+      console.log('📋 現在のDOM状態:', {
+        formExists: !!document.getElementById('scenario-form'),
+        generateBtnExists: !!document.getElementById('generate-btn'),
+        randomBtnExists: !!document.getElementById('random-generate-btn'),
+        newScenarioBtnExists: !!document.getElementById('new-scenario'),
+        bodyReady: !!document.body,
+        readyState: document.readyState
+      });
+      
       // フォームとボタンの取得
       const formElement = document.getElementById('scenario-form');
       const generateBtn = document.getElementById('generate-btn');
@@ -143,27 +154,67 @@ class UltraIntegratedApp {
       // 生成ボタンの直接クリック処理
       if (generateBtn) {
         console.log('✅ 生成ボタンが見つかりました:', generateBtn);
+        console.log('🔧 ボタン初期状態:', {
+          id: generateBtn.id,
+          disabled: generateBtn.disabled,
+          className: generateBtn.className,
+          innerHTML: generateBtn.innerHTML,
+          type: generateBtn.type,
+          offsetParent: generateBtn.offsetParent
+        });
+        
         generateBtn.addEventListener('click', (e) => {
+          console.log('🚨 CRITICAL: 生成ボタンクリックイベント発火!');
+          console.log('📊 イベント詳細:', {
+            type: e.type,
+            target: e.target.id,
+            currentTarget: e.currentTarget.id,
+            timeStamp: e.timeStamp,
+            bubbles: e.bubbles,
+            cancelable: e.cancelable
+          });
+          
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
           
           console.log('🎯 生成ボタン直接クリック受信');
-          console.log('📄 ボタンの犀性:', {
+          console.log('📄 ボタンの現在状態:', {
             disabled: generateBtn.disabled,
             className: generateBtn.className,
             style: generateBtn.style.cssText,
-            type: generateBtn.type
+            type: generateBtn.type,
+            appInstance: !!this,
+            validateFormExists: typeof this.validateForm === 'function',
+            handleGenerationStartExists: typeof this.handleGenerationStart === 'function'
           });
           
-          if (this.validateForm()) {
-            this.handleGenerationStart();
+          try {
+            if (this.validateForm()) {
+              console.log('✅ フォームバリデーション成功 - 生成開始');
+              this.handleGenerationStart();
+            } else {
+              console.log('❌ フォームバリデーション失敗');
+            }
+          } catch (error) {
+            console.error('❌ CRITICAL: ボタンクリック処理でエラー:', error);
           }
           
           return false;
         });
+        
+        // 追加診断: ボタンがクリック可能かテスト
+        console.log('🧪 ボタンクリック可能性テスト');
+        const testClick = () => {
+          console.log('✅ テストクリック成功 - ボタンは反応可能');
+        };
+        generateBtn.addEventListener('mousedown', testClick, { once: true });
+        
       } else {
         console.error('❌ 生成ボタンが見つかりません');
+        console.log('🔍 利用可能なボタン要素:', 
+          Array.from(document.querySelectorAll('button')).map(btn => ({ id: btn.id, text: btn.textContent.trim() }))
+        );
       }
       
       // 新規シナリオボタン
@@ -175,20 +226,63 @@ class UltraIntegratedApp {
       const randomGenerateBtn = document.getElementById('random-generate-btn');
       if (randomGenerateBtn) {
         console.log('✅ ランダム生成ボタンが見つかりました:', randomGenerateBtn);
+        console.log('🔧 ランダムボタン初期状態:', {
+          id: randomGenerateBtn.id,
+          disabled: randomGenerateBtn.disabled,
+          className: randomGenerateBtn.className,
+          innerHTML: randomGenerateBtn.innerHTML,
+          type: randomGenerateBtn.type,
+          offsetParent: randomGenerateBtn.offsetParent
+        });
+        
         randomGenerateBtn.addEventListener('click', (e) => {
+          console.log('🚨 CRITICAL: ランダム生成ボタンクリックイベント発火!');
+          console.log('📊 イベント詳細:', {
+            type: e.type,
+            target: e.target.id,
+            currentTarget: e.currentTarget.id,
+            timeStamp: e.timeStamp,
+            bubbles: e.bubbles,
+            cancelable: e.cancelable
+          });
+          
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
           
           console.log('🎲 ランダム生成ボタンクリック受信');
+          console.log('📄 ランダムボタンの現在状態:', {
+            disabled: randomGenerateBtn.disabled,
+            className: randomGenerateBtn.className,
+            style: randomGenerateBtn.style.cssText,
+            type: randomGenerateBtn.type,
+            appInstance: !!this,
+            handleRandomGenerationExists: typeof this.handleRandomGeneration === 'function'
+          });
           
-          // ランダムモードでマイクロ生成を開始
-          this.handleRandomGeneration();
+          try {
+            console.log('✅ ランダム生成開始');
+            // ランダムモードでマイクロ生成を開始
+            this.handleRandomGeneration();
+          } catch (error) {
+            console.error('❌ CRITICAL: ランダムボタンクリック処理でエラー:', error);
+          }
           
           return false;
         });
+        
+        // 追加診断: ランダムボタンがクリック可能かテスト
+        console.log('🧪 ランダムボタンクリック可能性テスト');
+        const testRandomClick = () => {
+          console.log('✅ ランダムボタンテストクリック成功 - ボタンは反応可能');
+        };
+        randomGenerateBtn.addEventListener('mousedown', testRandomClick, { once: true });
+        
       } else {
-        console.warn('⚠️ ランダム生成ボタンが見つかりません');
+        console.warn('❌ ランダム生成ボタンが見つかりません');
+        console.log('🔍 利用可能なボタン要素:', 
+          Array.from(document.querySelectorAll('button')).map(btn => ({ id: btn.id, text: btn.textContent.trim() }))
+        );
       }
       
       // フォーム変更監視
