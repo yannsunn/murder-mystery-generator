@@ -92,8 +92,11 @@ class UltraIntegratedApp {
     document.addEventListener('swipeLeft', () => this.goToNextStep());
     document.addEventListener('swipeRight', () => this.goToPreviousStep());
 
-    // 成功通知の表示
-    this.uxEnhancer.showToast('🚀 アプリケーション初期化完了', 'success', 3000);
+    // 初期化完了通知（重複防止のため一度だけ表示）
+    if (!window.appInitializationNotified) {
+      window.appInitializationNotified = true;
+      this.uxEnhancer.showToast('🚀 アプリケーション初期化完了', 'success', 3000);
+    }
   }
 
   addTooltips() {

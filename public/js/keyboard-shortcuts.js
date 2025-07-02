@@ -414,11 +414,12 @@ function initializeKeyboardShortcuts() {
   
   console.log('⌨️ Keyboard shortcuts and accessibility features initialized');
   
-  // 初期化完了の通知
-  if (typeof showToast === 'function') {
+  // キーボードショートカット通知（重複防止）
+  if (typeof showToast === 'function' && !window.keyboardShortcutsNotified) {
+    window.keyboardShortcutsNotified = true;
     setTimeout(() => {
       showToast('⌨️ キーボードショートカット有効 (F1でヘルプ)', 'info', 4000);
-    }, 2000);
+    }, 4000); // アプリ初期化通知の後に表示
   }
 }
 

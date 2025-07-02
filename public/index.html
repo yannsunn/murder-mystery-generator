@@ -248,9 +248,18 @@
   <script src="js/UXEnhancer.js"></script>
   <script src="js/UltraIntegratedApp.js"></script>
   <script>
-    // シンプル化されたアプリ初期化
+    // シンプル化されたアプリ初期化（重複防止）
     let app;
+    
+    // 重複初期化防止
+    if (window.appInitialized) {
+      console.log('⚠️ App already initialized, skipping...');
+      return;
+    }
+    
     document.addEventListener('DOMContentLoaded', function() {
+      if (window.appInitialized) return; // 二重防止
+      
       console.log('🎆 DOM Content Loaded - アプリ初期化開始');
       console.log('🔍 初期DOM状態チェック:', {
         generateBtn: !!document.getElementById('generate-btn'),
@@ -270,10 +279,14 @@
         console.log('✅ UXEnhancer initialized globally');
       }
       
-      // メインアプリを即座に初期化（遅延を削除）
+      // メインアプリを初期化（重複防止）
       try {
         console.log('🚀 UltraIntegratedApp初期化開始');
-        app = new UltraIntegratedApp();
+        if (!window.app) {
+          app = new UltraIntegratedApp();
+          window.app = app; // グローバルに保存
+          window.appInitialized = true; // 初期化完了フラグ
+        }
         console.log('✅ UltraIntegratedApp initialized successfully');
         
         // 初期化完了後の追加チェック
