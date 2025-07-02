@@ -21,6 +21,7 @@ class UltraIntegratedApp {
     this.formData = {};
     this.sessionData = null;
     this.isGenerating = false;
+    this.eventSourceMode = false; // EventSourceモードフラグ
     this.generationProgress = {
       currentPhase: 0,
       totalPhases: 9,
@@ -683,6 +684,7 @@ class UltraIntegratedApp {
 
     try {
       this.isGenerating = true;
+      this.eventSourceMode = false; // EventSourceモードフラグリセット
       this.showGenerationUI();
       
       // 5分タイムアウト設定
@@ -744,11 +746,18 @@ class UltraIntegratedApp {
         try {
           const data = JSON.parse(event.data);
           console.log('📊 Progress event received:', data);
+          console.log('🔄 Switching to EventSource progress data:', {
+            step: data.step,
+            totalSteps: data.totalSteps,
+            stepName: data.stepName,
+            progress: data.progress
+          });
           
           // EventSourceデータが来た場合は古いシミュレーションを停止
+          this.eventSourceMode = true; // EventSourceモードフラグ設定
           this.stopProgressTimer();
           
-          // 進捗情報を更新
+          // 🔥 FORCE UPDATE: EventSourceの正確なデータで強制更新
           this.updateProgressBar(data.progress || 0);
           this.updatePhaseInfo(
             data.step, 
@@ -761,6 +770,8 @@ class UltraIntegratedApp {
             this.updateEstimatedTime(data.estimatedTimeRemaining * 60); // 分を秒に変換
           }
           
+          console.log('✅ EventSource progress update applied');
+          
         } catch (error) {
           console.error('❌ Progress event parse error:', error);
         }
@@ -772,8 +783,13 @@ class UltraIntegratedApp {
           const data = JSON.parse(event.data);
           console.log('🚀 Start event received:', data);
           
-          // EventSourceデータが来た場合は古いシミュレーションを停止
+          // EventSourceデータが来た場合は古いシミュレーションを完全停止
+          this.eventSourceMode = true; // EventSourceモードフラグ設定
           this.stopProgressTimer();
+          
+          // 🔥 CRITICAL: EventSource開始時に9段階モードに切り替え
+          console.log('🔄 Switching from simulation to EventSource mode (9 stages)');
+          this.updatePhaseInfo(0, 9, 'EventSource生成開始');
           
           if (this.uxEnhancer) {
             this.uxEnhancer.showToast(data.message || '生成開始', 'success', 3000);
@@ -1220,9 +1236,10 @@ class UltraIntegratedApp {
       { name: '🏆 段階8: 最終レビュー・総合調整完了', duration: 15 }
     ];
     
-    this.updatePhaseInfo(1, this.progressPhases.length, this.progressPhases[0].name);
+    // 🎯 INITIAL DISPLAY: 最初は9段階モードで表示（EventSource待機中）
+    this.updatePhaseInfo(1, 9, '🔄 EventSource接続待機中...');
     
-    // プログレスタイマー開始
+    // プログレスタイマー開始（EventSourceが来たら即座に停止される）
     this.progressTimer = setInterval(() => {
       this.updateProgressSimulation();
     }, 1000);
@@ -1238,6 +1255,13 @@ class UltraIntegratedApp {
   
   // 📈 進捗シミュレーション更新
   updateProgressSimulation() {
+    // EventSourceモードに切り替わった場合はシミュレーション停止
+    if (this.eventSourceMode) {
+      console.log('🔄 EventSource mode active, stopping simulation');
+      this.stopProgressTimer();
+      return;
+    }
+    
     const elapsed = (Date.now() - this.progressStartTime) / 1000; // 秒
     
     // 各フェーズの累積時間を計算
