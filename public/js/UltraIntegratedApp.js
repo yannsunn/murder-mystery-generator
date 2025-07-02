@@ -348,13 +348,39 @@ class UltraIntegratedApp {
     }
   }
 
+  // フォームバリデーション - セキュリティ強化版
   validateForm() {
+    // 入力検証クラスを初期化
+    if (!this.inputValidator && window.InputValidator) {
+      this.inputValidator = new window.InputValidator();
+    }
+    
     const formElement = document.getElementById('scenario-form');
     if (!formElement) {
       console.error('フォームが見つかりません');
       return false;
     }
     
+    // 入力検証クラスが利用可能な場合は詳細検証を実行
+    if (this.inputValidator) {
+      const formData = new FormData(formElement);
+      const formObject = Object.fromEntries(formData.entries());
+      
+      const validation = this.inputValidator.validateFormData(formObject);
+      
+      if (!validation.isValid) {
+        this.inputValidator.displayErrors(validation.errors);
+        return false;
+      }
+      
+      // サニタイズされたデータで更新
+      this.formData = { ...this.formData, ...validation.sanitizedData };
+      
+      console.log('✅ セキュリティ強化フォーム検証・サニタイゼーション完了');
+      return true;
+    }
+    
+    // フォールバック: 基本検証
     const requiredFields = formElement.querySelectorAll('[required]');
     console.log(`🔍 必須フィールド数: ${requiredFields.length}`);
     
@@ -369,7 +395,7 @@ class UltraIntegratedApp {
       }
     }
     
-    console.log('✅ フォーム検証成功');
+    console.log('✅ 基本フォーム検証成功');
     return true;
   }
 
@@ -1258,15 +1284,24 @@ class UltraIntegratedApp {
     }
   }
   
-  // 進捗バー更新
+  // 進捗バー更新 - アクセシビリティ強化版
   updateProgressBar(percentage) {
     const progressFill = document.getElementById('progress-fill');
     const progressPercentage = document.getElementById('progress-percentage');
     const progressText = document.getElementById('progress-text');
+    const progressContainer = document.querySelector('.progress-container[role="progressbar"]');
     
     if (progressFill) progressFill.style.width = `${percentage}%`;
     if (progressPercentage) progressPercentage.textContent = `${percentage}%`;
     if (progressText) progressText.textContent = `生成中... ${percentage}%`;
+    
+    // ARIA属性を更新してスクリーンリーダーに通知
+    if (progressContainer) {
+      progressContainer.setAttribute('aria-valuenow', percentage);
+      progressContainer.setAttribute('aria-valuetext', `${percentage}パーセント完了`);
+    }
+    
+    console.log(`📊 進捗バー更新: ${percentage}%`);
   }
   
   // フェーズ情報更新
