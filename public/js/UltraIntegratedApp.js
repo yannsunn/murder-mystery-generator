@@ -1297,34 +1297,6 @@ class UltraIntegratedApp {
           </div>
         `;
       }
-    } else {
-      console.error('❌ showResults: 条件を満たしません');
-      console.error('  - contentEl:', !!contentEl);
-      console.error('  - sessionData:', !!sessionData);
-      console.error('  - sessionData.phases:', !!(sessionData && sessionData.phases));
-      
-      // フォールバック: 簡易結果表示
-      if (contentEl) {
-        console.log('🔄 Using fallback display...');
-        contentEl.innerHTML = `
-          <div class="result-content">
-            <h2>生成完了</h2>
-            <p>マーダーミステリーシナリオの生成が完了しました！</p>
-            <div class="result-data">
-              <pre>${JSON.stringify(sessionData, null, 2)}</pre>
-            </div>
-            <button onclick="window.location.reload()" class="btn btn-primary">
-              新しいシナリオを作成
-            </button>
-          </div>
-        `;
-      } else {
-        console.error('❌ contentEl not found - cannot display results');
-        // Toast通知で結果完了を知らせる
-        if (this.uxEnhancer) {
-          this.uxEnhancer.showToast('⚠️ 結果表示に問題が発生しました。ページを再読み込みしてください。', 'warning', 10000);
-        }
-      }
     }
     
     // 状態をリセット
