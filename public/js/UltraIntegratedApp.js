@@ -1240,11 +1240,22 @@ class UltraIntegratedApp {
     }
     
     let characters = '';
+    let characterRelationships = '';
+    let characterList = [];
     
-    // 段階4のコンテンツ構造を解析
+    // 段階4のコンテンツ構造を正確に解析
     if (typeof step4.content === 'object') {
-      characters = step4.content.characters || JSON.stringify(step4.content, null, 2);
-    } else {
+      // 新しい構造に対応
+      if (step4.content.characters) {
+        characters = step4.content.characters;
+      }
+      if (step4.content.character_relationships) {
+        characterRelationships = step4.content.character_relationships;
+      }
+      if (step4.content.character_list) {
+        characterList = step4.content.character_list;
+      }
+    } else if (typeof step4.content === 'string') {
       characters = step4.content;
     }
     
@@ -1253,15 +1264,56 @@ class UltraIntegratedApp {
     }
     
     console.log('✅ Characters found:', characters.substring(0, 200));
+    console.log('✅ Character relationships found:', characterRelationships ? 'Yes' : 'No');
+    console.log('✅ Character list:', characterList);
+    
+    // キャラクターリストがある場合は、個別のハンドアウトとして表示
+    let formattedContent = '';
+    
+    if (characterList && characterList.length > 0) {
+      // キャラクターごとにセクションを作成
+      const handouts = characters.split('---').filter(h => h.trim());
+      
+      formattedContent = `
+        <div class="character-handouts-container">
+          ${handouts.map((handout, index) => {
+            const playerInfo = characterList[index] || { name: `プレイヤー${index + 1}`, playerId: index + 1 };
+            return `
+              <div class="character-handout-section" id="handout-player-${playerInfo.playerId}">
+                <h5 class="handout-title">🎭 ${playerInfo.name} (プレイヤー${playerInfo.playerId})</h5>
+                <div class="handout-content">
+                  ${this.formatContent(handout)}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+      
+      // 関係性情報も追加
+      if (characterRelationships) {
+        formattedContent += `
+          <div class="relationships-section">
+            <h5>🔗 キャラクター関係図</h5>
+            <div class="relationships-content">
+              ${this.formatContent(characterRelationships)}
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      // 従来のフォーマット
+      formattedContent = this.formatContent(characters);
+    }
     
     return `
       <div class="characters-section">
         <div class="characters-intro">
-          <h5>🎭 プレイヤーハンドアウト集</h5>
-          <p>段階4で生成されたキャラクター情報:</p>
+          <h4>🎭 プレイヤーハンドアウト完全版</h4>
+          <p>各プレイヤーに配布する個別ハンドアウトです。それぞれのプレイヤーには自分の情報のみを渡してください。</p>
         </div>
         <div class="characters-content">
-          ${this.formatContent(characters)}
+          ${formattedContent}
         </div>
       </div>
     `;
@@ -1270,40 +1322,109 @@ class UltraIntegratedApp {
   generateTimelineContent(phases) {
     console.log('🔍 Generating timeline content from phases:', phases);
     
-    // 段階5の証拠システムまたは段階3の事件詳細からタイムライン情報を探す
+    // タイムライン情報を複数の段階から統合的に取得
+    const step3 = phases.step3; // 事件詳細・基本タイムライン
     const step5 = phases.step5; // 証拠配置・手がかり体系化
-    const step3 = phases.step3; // 事件詳細・複雑性展開
+    const step6 = phases.step6; // GM進行ガイド（進行管理含む）
     
     let timelineContent = '';
+    let incidentTimeline = '';
+    let evidenceTimeline = '';
+    let sessionTimeline = '';
     
+    // 段階3: 事件タイムライン
+    if (step3 && step3.content) {
+      if (typeof step3.content === 'object' && step3.content.incident_details) {
+        incidentTimeline = step3.content.incident_details;
+      } else if (typeof step3.content === 'string') {
+        incidentTimeline = step3.content;
+      }
+    }
+    
+    // 段階5: 証拠・調査タイムライン
     if (step5 && step5.content) {
-      if (typeof step5.content === 'object') {
-        timelineContent = step5.content.evidence_system || JSON.stringify(step5.content, null, 2);
-      } else {
-        timelineContent = step5.content;
-      }
-    } else if (step3 && step3.content) {
-      if (typeof step3.content === 'object') {
-        timelineContent = step3.content.incident_details || JSON.stringify(step3.content, null, 2);
-      } else {
-        timelineContent = step3.content;
+      if (typeof step5.content === 'object' && step5.content.evidence_system) {
+        evidenceTimeline = step5.content.evidence_system;
+      } else if (typeof step5.content === 'string') {
+        evidenceTimeline = step5.content;
       }
     }
     
-    if (!timelineContent || timelineContent.trim() === '') {
-      return '<p class="no-content">⚠️ 進行管理情報が生成されていません。段階3または段階5を確認してください。</p>';
+    // 段階6: セッション進行タイムライン（GMガイドから抽出）
+    if (step6 && step6.content) {
+      let gmContent = '';
+      if (typeof step6.content === 'object' && step6.content.gamemaster_guide) {
+        gmContent = step6.content.gamemaster_guide;
+      } else if (typeof step6.content === 'string') {
+        gmContent = step6.content;
+      }
+      
+      // GMガイドから進行管理部分を抽出
+      const timelineMatches = gmContent.match(/##\s*30分-1時間完全進行[\s\S]*?(?=##|$)/i);
+      if (timelineMatches) {
+        sessionTimeline = timelineMatches[0];
+      }
     }
     
-    console.log('✅ Timeline found from step5 or step3:', timelineContent.substring(0, 200));
+    // 統合的なタイムラインコンテンツを構築
+    let combinedContent = '';
+    
+    if (sessionTimeline) {
+      combinedContent += `
+        <div class="timeline-segment">
+          <h5>📋 セッション進行タイムライン</h5>
+          ${this.formatContent(sessionTimeline)}
+        </div>
+      `;
+    }
+    
+    if (incidentTimeline) {
+      // 事件タイムライン部分のみを抽出
+      const eventTimelineMatch = incidentTimeline.match(/##\s*事件.*?タイムライン[\s\S]*?(?=##|$)/i);
+      if (eventTimelineMatch) {
+        combinedContent += `
+          <div class="timeline-segment">
+            <h5>🕐 事件タイムライン</h5>
+            ${this.formatContent(eventTimelineMatch[0])}
+          </div>
+        `;
+      }
+    }
+    
+    if (evidenceTimeline) {
+      // 段階別証拠公開タイミングを抽出
+      const evidenceTimelineMatch = evidenceTimeline.match(/##\s*.*?段階別.*?公開[\s\S]*?(?=##|$)/i);
+      if (evidenceTimelineMatch) {
+        combinedContent += `
+          <div class="timeline-segment">
+            <h5>🔍 証拠公開タイムライン</h5>
+            ${this.formatContent(evidenceTimelineMatch[0])}
+          </div>
+        `;
+      }
+    }
+    
+    if (!combinedContent) {
+      // フォールバック: 利用可能なコンテンツを表示
+      timelineContent = incidentTimeline || evidenceTimeline || sessionTimeline || '';
+      
+      if (!timelineContent) {
+        return '<p class="no-content">⚠️ 進行管理情報が生成されていません。段階3、5、6を確認してください。</p>';
+      }
+      
+      combinedContent = this.formatContent(timelineContent);
+    }
+    
+    console.log('✅ Timeline content assembled from multiple sources');
     
     return `
       <div class="timeline-section">
         <div class="timeline-intro">
-          <h5>⏱ セッション進行管理</h5>
-          <p>段階的生成で作成された進行情報:</p>
+          <h4>⏱ セッション進行管理・タイムライン</h4>
+          <p>30分-1時間セッションの効率的な進行のためのタイムラインです。</p>
         </div>
         <div class="timeline-content">
-          ${this.formatContent(timelineContent)}
+          ${combinedContent}
         </div>
       </div>
     `;
@@ -1312,37 +1433,102 @@ class UltraIntegratedApp {
   generateGMGuideContent(phases) {
     console.log('🔍 Generating GM guide content from phases:', phases);
     
-    // 段階6のGM進行ガイドを探す
+    // GMガイドを複数の段階から統合的に構築
+    const step2 = phases.step2; // 事件核心・犯人・動機
     const step6 = phases.step6; // GM進行ガイド・セッション管理
+    const step7 = phases.step7; // 統合・品質確認
     
     if (!step6 || !step6.content) {
       return '<p class="no-content">⚠️ GMガイド情報が段階6で生成されていません。段階的生成を確認してください。</p>';
     }
     
     let gmGuide = '';
+    let incidentCore = '';
+    let finalIntegration = '';
     
-    // 段階6のコンテンツ構造を解析
-    if (typeof step6.content === 'object') {
-      gmGuide = step6.content.gamemaster_guide || JSON.stringify(step6.content, null, 2);
-    } else {
+    // 段階2: 事件の核心情報（GMのみが知る真相）
+    if (step2 && step2.content) {
+      if (typeof step2.content === 'object' && step2.content.incident_core) {
+        incidentCore = step2.content.incident_core;
+      } else if (typeof step2.content === 'string') {
+        incidentCore = step2.content;
+      }
+    }
+    
+    // 段階6: GM進行ガイド
+    if (typeof step6.content === 'object' && step6.content.gamemaster_guide) {
+      gmGuide = step6.content.gamemaster_guide;
+    } else if (typeof step6.content === 'string') {
       gmGuide = step6.content;
+    }
+    
+    // 段階7: 最終統合情報
+    if (step7 && step7.content) {
+      if (typeof step7.content === 'object' && step7.content.final_integration) {
+        finalIntegration = step7.content.final_integration;
+      } else if (typeof step7.content === 'string') {
+        finalIntegration = step7.content;
+      }
     }
     
     if (!gmGuide || gmGuide.trim() === '') {
       return '<p class="no-content">⚠️ GMガイド詳細が空です。段階6の生成を確認してください。</p>';
     }
     
-    console.log('✅ GM Guide found:', gmGuide.substring(0, 200));
+    console.log('✅ GM Guide assembled from multiple sources');
+    
+    // 統合的なGMガイドを構築
+    let combinedContent = `
+      <div class="gm-critical-info">
+        <h5>🔒 GM専用情報（プレイヤーには絶対に見せないでください）</h5>
+      </div>
+    `;
+    
+    // 事件の真相（GM専用）
+    if (incidentCore) {
+      combinedContent += `
+        <div class="gm-truth-section">
+          <h5>💀 事件の真相と核心</h5>
+          <div class="gm-truth-content">
+            ${this.formatContent(incidentCore)}
+          </div>
+        </div>
+      `;
+    }
+    
+    // GM進行ガイド本体
+    combinedContent += `
+      <div class="gm-guide-main">
+        <h5>📋 セッション進行完全ガイド</h5>
+        <div class="gm-guide-content">
+          ${this.formatContent(gmGuide)}
+        </div>
+      </div>
+    `;
+    
+    // 最終チェックリスト
+    if (finalIntegration) {
+      const checklistMatch = finalIntegration.match(/##\s*.*?チェック[\s\S]*?(?=##|$)/i);
+      if (checklistMatch) {
+        combinedContent += `
+          <div class="gm-checklist-section">
+            <h5>✅ 最終品質チェックリスト</h5>
+            <div class="gm-checklist-content">
+              ${this.formatContent(checklistMatch[0])}
+            </div>
+          </div>
+        `;
+      }
+    }
     
     return `
       <div class="gm-guide-section">
         <div class="gm-guide-intro">
-          <h5>🎓 ゲームマスターガイド</h5>
-          <p>段階6で生成されたGM進行情報:</p>
+          <h4>🎓 ゲームマスター完全マニュアル</h4>
+          <p>このセクションはGM専用です。プレイヤーには見せないでください。</p>
+          <p class="gm-warning">⚠️ ネタバレ注意：事件の真相、犯人、トリックがすべて記載されています。</p>
         </div>
-        <div class="gm-guide-content">
-          ${this.formatContent(gmGuide)}
-        </div>
+        ${combinedContent}
       </div>
     `;
   }
@@ -1372,14 +1558,68 @@ class UltraIntegratedApp {
   formatContent(content) {
     if (!content) return '<p>コンテンツが生成されていません。</p>';
     
-    return content
-      .replace(/## /g, '<h4>')
-      .replace(/### /g, '<h5>')
+    // より高度なマークダウン処理
+    let formatted = content;
+    
+    // コードブロックの保護
+    const codeBlocks = [];
+    formatted = formatted.replace(/```[\s\S]*?```/g, (match) => {
+      codeBlocks.push(match);
+      return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+    });
+    
+    // マークダウン変換
+    formatted = formatted
+      .replace(/#### (.*?)\n/g, '<h6>$1</h6>\n')
+      .replace(/### (.*?)\n/g, '<h5>$1</h5>\n')
+      .replace(/## (.*?)\n/g, '<h4>$1</h4>\n')
+      .replace(/# (.*?)\n/g, '<h3>$1</h3>\n')
+      .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/^- (.*?)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n)+/g, '<ul>$&</ul>\n')
+      .replace(/^\d+\. (.*?)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n)+/g, (match) => {
+        if (match.includes('<ul>')) return match;
+        return '<ol>' + match + '</ol>\n';
+      })
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/^>\s*(.*)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/---/g, '<hr>')
       .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>')
-      .replace(/^/, '<p>')
-      .replace(/$/, '</p>');
+      .replace(/\n/g, '<br>');
+    
+    // コードブロックの復元
+    codeBlocks.forEach((block, index) => {
+      const code = block.replace(/```(\w+)?\n?([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+      formatted = formatted.replace(`__CODE_BLOCK_${index}__`, code);
+    });
+    
+    // 段落処理
+    if (!formatted.startsWith('<')) {
+      formatted = '<p>' + formatted;
+    }
+    if (!formatted.endsWith('>')) {
+      formatted = formatted + '</p>';
+    }
+    
+    // 連続する改行やタグの整理
+    formatted = formatted
+      .replace(/<p><h/g, '<h')
+      .replace(/<\/h(\d)><\/p>/g, '</h$1>')
+      .replace(/<p><ul>/g, '<ul>')
+      .replace(/<\/ul><\/p>/g, '</ul>')
+      .replace(/<p><ol>/g, '<ol>')
+      .replace(/<\/ol><\/p>/g, '</ol>')
+      .replace(/<p><blockquote>/g, '<blockquote>')
+      .replace(/<\/blockquote><\/p>/g, '</blockquote>')
+      .replace(/<p><hr><\/p>/g, '<hr>')
+      .replace(/<br><br>/g, '<br>')
+      .replace(/<p><\/p>/g, '');
+    
+    return formatted;
   }
   
   getDisplayText(field, value) {
