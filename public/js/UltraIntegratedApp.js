@@ -118,38 +118,57 @@ class UltraIntegratedApp {
   }
 
   setupEventListeners() {
-    // シンプル版：生成ボタンのみ
-    const generateBtn = document.getElementById('generate-btn');
-    const form = document.getElementById('scenario-form');
-
-    if (form) {
-      form.addEventListener('submit', (e) => {
+    try {
+      console.log('🔧 シンプル版イベントリスナー設定開始');
+      
+      // フォームとボタンの取得
+      const formElement = document.getElementById('scenario-form');
+      const generateBtn = document.getElementById('generate-btn');
+      const newScenarioBtn = document.getElementById('new-scenario');
+      
+      if (!formElement) {
+        console.error('❌ フォームが見つかりません');
+        return;
+      }
+      
+      // フォーム送信処理 - ページリロードを防ぐ
+      formElement.addEventListener('submit', (e) => {
         e.preventDefault();
-        this.handleGenerationStart();
+        e.stopPropagation();
+        
+        console.log('🚀 フォーム送信イベント受信');
+        
+        if (this.validateForm()) {
+          this.generateScenario();
+        }
       });
-    }
-
-    if (generateBtn) {
-      generateBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.handleGenerationStart();
-      });
-    }
-    
-    // 統合マイクロ生成のみ対応（モード選択は無し）
-    console.log('🔬 Integrated micro generation mode only');
-
-    // 結果画面のボタン
-    const newScenarioBtn = document.getElementById('new-scenario');
-
-    if (newScenarioBtn) {
-      newScenarioBtn.addEventListener('click', () => this.resetApp());
-    }
-
-    // フォーム変更監視
-    const form = document.getElementById('scenario-form');
-    if (form) {
-      form.addEventListener('change', () => this.updateSummary());
+      
+      // 生成ボタンの直接クリック処理
+      if (generateBtn) {
+        generateBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          console.log('🎯 生成ボタン直接クリック受信');
+          
+          if (this.validateForm()) {
+            this.generateScenario();
+          }
+        });
+      }
+      
+      // 新規シナリオボタン
+      if (newScenarioBtn) {
+        newScenarioBtn.addEventListener('click', () => this.resetApp());
+      }
+      
+      // フォーム変更監視
+      formElement.addEventListener('change', () => this.updateSummary());
+      
+      console.log('✅ イベントリスナー設定完了');
+      
+    } catch (error) {
+      console.error('❌ イベントリスナー設定エラー:', error);
     }
   }
 
@@ -203,39 +222,28 @@ class UltraIntegratedApp {
     }
   }
 
-  // シンプル版フォームバリデーション
   validateForm() {
-    const form = document.getElementById('scenario-form');
-    if (!form) {
+    const formElement = document.getElementById('scenario-form');
+    if (!formElement) {
       console.error('フォームが見つかりません');
       return false;
     }
     
-    const requiredFields = form.querySelectorAll('[required]');
+    const requiredFields = formElement.querySelectorAll('[required]');
+    console.log(`🔍 必須フィールド数: ${requiredFields.length}`);
     
     for (const field of requiredFields) {
-      // selectタグの場合、valueが存在するかチェック
-      if (field.tagName === 'SELECT') {
-        if (!field.value || field.value === '') {
-          if (uxEnhancer) {
-            const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
-            uxEnhancer.showToast(`⚠️ ${label}を選択してください`, 'warning', 3000);
-          }
-          field.focus();
-          return false;
+      if (!field.value || field.value.trim() === '') {
+        console.error(`❌ 必須フィールドが未入力: ${field.name || field.id}`);
+        if (uxEnhancer) {
+          uxEnhancer.showToast(`必須項目「${field.name || field.id}」を入力してください`, 'error', 3000);
         }
-      } else {
-        // その他の入力フィールド
-        if (!field.value.trim()) {
-          if (uxEnhancer) {
-            const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
-            uxEnhancer.showToast(`⚠️ ${label}を入力してください`, 'warning', 3000);
-          }
-          field.focus();
-          return false;
-        }
+        field.focus();
+        return false;
       }
     }
+    
+    console.log('✅ フォーム検証成功');
     return true;
   }
 
