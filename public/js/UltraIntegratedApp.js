@@ -1182,22 +1182,22 @@ class UltraIntegratedApp {
 
   // 生成UI表示
   showGenerationUI() {
+    console.log('🎬 showGenerationUI開始');
     this.hideElement('main-card');
     this.showElement('loading-container');
     
-    // スケルトンローディング表示
-    if (skeletonLoader) {
-      this.skeletonLoader.show('loading-container', 'generation', {
-        className: 'generation-skeleton'
-      });
-      
-      // 少し遅らせて実際のUIに切り替え
-      setTimeout(() => {
-        this.showActualGenerationUI();
-      }, 800);
-    } else {
-      this.showActualGenerationUI();
-    }
+    // ローディング画面が表示されたことを確認
+    const loadingEl = document.getElementById('loading-container');
+    console.log('📺 loading-container状態:', {
+      element: !!loadingEl,
+      hasHiddenClass: loadingEl?.classList.contains('hidden'),
+      visible: loadingEl && !loadingEl.classList.contains('hidden')
+    });
+    
+    // 🚨 重要修正: SkeletonLoaderを無効化し、直接進捗UIを表示
+    // SkeletonLoaderが要素を隠してしまう問題を回避
+    console.log('📋 進捗UI直接表示 - SkeletonLoader無効化');
+    this.showActualGenerationUI();
   }
 
   // 実際の生成UI表示
