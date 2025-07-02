@@ -971,11 +971,16 @@ class UltraIntegratedApp {
 
   // 結果表示
   showResults(sessionData) {
+    console.log('🎆 showResults 呼び出し:', sessionData);
+    console.log('📄 sessionData.phases:', sessionData?.phases);
+    
     this.hideElement('loading-container');
     this.showElement('result-container');
     
     const contentEl = document.getElementById('scenario-content');
-    if (contentEl && sessionData.phases) {
+    console.log('📄 contentEl:', contentEl);
+    
+    if (contentEl && sessionData && sessionData.phases) {
       // グローバルセッションデータを保存
       window.currentSessionData = sessionData;
       window.app = this; // アプリインスタンスも保存
@@ -1001,7 +1006,35 @@ class UltraIntegratedApp {
         // 初期タブ設定
         this.setupTabSystem();
       }
+    } else {
+      console.error('❌ contentElか sessionData.phases が無い:', {
+        contentEl: !!contentEl,
+        sessionData: !!sessionData,
+        phases: !!sessionData?.phases
+      });
+      
+      // フォールバック: シンプルな結果表示
+      if (contentEl) {
+        contentEl.innerHTML = `
+          <div class="result-fallback">
+            <h2>🎉 シナリオ生成完了</h2>
+            <p>シナリオの生成が完了しました。</p>
+            <div class="result-data">
+              <pre>${JSON.stringify(sessionData, null, 2)}</pre>
+            </div>
+            <button onclick="window.location.reload()" class="btn btn-primary">
+              新しいシナリオを作成
+            </button>
+          </div>
+        `;
+      }
     }
+    
+    // 状態をリセット
+    this.isGenerating = false;
+    this.stopProgressTimer();
+    
+    console.log('✅ showResults 完了 - 状態リセット');
   }
   
   // タブシステムのセットアップ

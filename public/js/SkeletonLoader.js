@@ -439,8 +439,11 @@ class SkeletonLoader {
   }
 }
 
-// グローバルインスタンス
-export const skeletonLoader = new SkeletonLoader();
+// グローバルインスタンス作成
+const skeletonLoader = new SkeletonLoader();
 
-// デフォルトエクスポート
-export default SkeletonLoader;
+// グローバルスコープで利用可能に
+if (typeof window !== 'undefined') {
+  window.SkeletonLoader = SkeletonLoader;
+  window.skeletonLoader = skeletonLoader;
+}

@@ -693,8 +693,11 @@ class UXEnhancer {
   }
 }
 
-// グローバルインスタンス
-export const uxEnhancer = new UXEnhancer();
+// グローバルインスタンス作成
+const uxEnhancer = new UXEnhancer();
 
-// デフォルトエクスポート
-export default UXEnhancer;
+// グローバルスコープで利用可能に
+if (typeof window !== 'undefined') {
+  window.UXEnhancer = UXEnhancer;
+  window.uxEnhancer = uxEnhancer;
+}
