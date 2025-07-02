@@ -839,10 +839,23 @@ class UltraIntegratedApp {
           timeStamp: event.timeStamp
         });
         
+        // ReadyState説明
+        const readyStateMap = {
+          0: 'CONNECTING - 接続試行中',
+          1: 'OPEN - 接続成功・待機中', 
+          2: 'CLOSED - 接続終了'
+        };
+        console.error('📊 接続状態詳細:', readyStateMap[eventSource.readyState] || 'UNKNOWN');
+        
         // EventSourceが失敗した場合はPOSTフォールバックを試行
         if (!finalSessionData) {
           console.log('🔄 EventSource failed, trying POST fallback...');
           eventSource.close();
+          
+          // UX通知
+          if (this.uxEnhancer) {
+            this.uxEnhancer.showToast('🔄 接続方式を切り替えています...', 'info', 3000);
+          }
           
           // POSTフォールバックを実行
           this.fallbackToPostGeneration(sessionId, timeoutId);
