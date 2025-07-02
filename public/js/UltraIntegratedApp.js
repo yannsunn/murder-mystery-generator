@@ -130,16 +130,14 @@ class UltraIntegratedApp {
         return;
       }
       
-      // フォーム送信処理 - ページリロードを防ぐ
+      // フォーム送信処理 - ページリロードを完全に防ぐ
       formElement.addEventListener('submit', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         
-        console.log('🚀 フォーム送信イベント受信');
-        
-        if (this.validateForm()) {
-          this.handleGenerationStart();
-        }
+        console.log('🚨 フォーム送信をブロックしました');
+        return false;
       });
       
       // 生成ボタンの直接クリック処理
@@ -148,17 +146,21 @@ class UltraIntegratedApp {
         generateBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
+          e.stopImmediatePropagation();
           
           console.log('🎯 生成ボタン直接クリック受信');
           console.log('📄 ボタンの犀性:', {
             disabled: generateBtn.disabled,
             className: generateBtn.className,
-            style: generateBtn.style.cssText
+            style: generateBtn.style.cssText,
+            type: generateBtn.type
           });
           
           if (this.validateForm()) {
             this.handleGenerationStart();
           }
+          
+          return false;
         });
       } else {
         console.error('❌ 生成ボタンが見つかりません');
