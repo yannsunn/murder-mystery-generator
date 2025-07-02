@@ -1169,144 +1169,112 @@ class UltraIntegratedApp {
     // 段階4のキャラクター情報を探す
     const step4 = phases.step4;
     if (!step4 || !step4.content) {
-      return '<p class="no-content">⚠️ キャラクター情報が生成されていません。</p>';
+      return '<p class="no-content">⚠️ キャラクター情報が段階4で生成されていません。段階的生成を確認してください。</p>';
     }
     
-    const characters = typeof step4.content === 'object' ? step4.content.characters : step4.content;
+    let characters = '';
     
-    if (!characters) {
-      return '<p>キャラクターハンドアウトが生成されていません。</p>';
+    // 段階4のコンテンツ構造を解析
+    if (typeof step4.content === 'object') {
+      characters = step4.content.characters || JSON.stringify(step4.content, null, 2);
+    } else {
+      characters = step4.content;
     }
     
-    // プレイヤー別ハンドアウトを分離
-    const playerHandouts = this.extractPlayerHandouts(characters);
-    
-    if (playerHandouts.length === 0) {
-      return `
-        <div class="characters-section">
-          ${this.formatContent(characters)}
-        </div>
-      `;
+    if (!characters || characters.trim() === '') {
+      return '<p class="no-content">⚠️ キャラクター詳細が空です。段階4の生成を確認してください。</p>';
     }
+    
+    console.log('✅ Characters found:', characters.substring(0, 200));
     
     return `
       <div class="characters-section">
-        <div class="handout-navigation">
-          <h5>📋 プレイヤー別ハンドアウト</h5>
-          <div class="player-tabs">
-            ${playerHandouts.map((handout, index) => `
-              <button class="player-tab ${index === 0 ? 'active' : ''}" 
-                      onclick="showPlayerHandout(${index})" 
-                      id="player-tab-${index}">
-                👤 ${handout.playerName}
-              </button>
-            `).join('')}
-            <button class="player-tab" onclick="showAllHandouts()">
-              📚 全ハンドアウト
-            </button>
-          </div>
+        <div class="characters-intro">
+          <h5>🎭 プレイヤーハンドアウト集</h5>
+          <p>段階4で生成されたキャラクター情報:</p>
         </div>
-        
-        <div class="handout-content">
-          ${playerHandouts.map((handout, index) => `
-            <div class="player-handout" id="handout-${index}" style="display: ${index === 0 ? 'block' : 'none'};">
-              <div class="handout-header">
-                <h4>🎭 ${handout.playerName} 専用ハンドアウト</h4>
-                <div class="handout-actions">
-                  <button class="btn btn-sm btn-primary" onclick="copyPlayerHandout(${index})">
-                    📋 このハンドアウトをコピー
-                  </button>
-                  <button class="btn btn-sm btn-secondary" onclick="printPlayerHandout(${index})">
-                    🖨️ 印刷
-                  </button>
-                </div>
-              </div>
-              <div class="handout-body">
-                ${this.formatContent(handout.content)}
-              </div>
-            </div>
-          `).join('')}
-          
-          <div class="player-handout" id="handout-all" style="display: none;">
-            <div class="handout-header">
-              <h4>📚 全プレイヤーハンドアウト</h4>
-              <div class="handout-actions">
-                <button class="btn btn-sm btn-primary" onclick="copyAllHandouts()">
-                  📋 全ハンドアウトをコピー
-                </button>
-                <button class="btn btn-sm btn-secondary" onclick="printAllHandouts()">
-                  🖨️ 全て印刷
-                </button>
-              </div>
-            </div>
-            <div class="handout-body">
-              ${this.formatContent(characters)}
-            </div>
-          </div>
+        <div class="characters-content">
+          ${this.formatContent(characters)}
         </div>
       </div>
     `;
   }
-  
-  // プレイヤー別ハンドアウトを抽出する新しいメソッド
-  extractPlayerHandouts(charactersText) {
-    const handouts = [];
-    const sections = charactersText.split(/【プレイヤー\d+専用ハンドアウト/);
+
+  generateTimelineContent(phases) {
+    console.log('🔍 Generating timeline content from phases:', phases);
     
-    if (sections.length < 2) {
-      // 旧形式の場合、プレイヤー別に分割を試行
-      const lines = charactersText.split('\n');
-      let currentHandout = null;
-      
-      lines.forEach(line => {
-        const playerMatch = line.match(/^#+\s*(.+(?:プレイヤー|キャラクター).+)/i);
-        if (playerMatch) {
-          if (currentHandout) {
-            handouts.push(currentHandout);
-          }
-          currentHandout = {
-            playerName: playerMatch[1].replace(/【|】|#+|\s/g, ''),
-            content: line + '\n'
-          };
-        } else if (currentHandout) {
-          currentHandout.content += line + '\n';
-        }
-      });
-      
-      if (currentHandout) {
-        handouts.push(currentHandout);
+    // 段階5の証拠システムまたは段階3の事件詳細からタイムライン情報を探す
+    const step5 = phases.step5; // 証拠配置・手がかり体系化
+    const step3 = phases.step3; // 事件詳細・複雑性展開
+    
+    let timelineContent = '';
+    
+    if (step5 && step5.content) {
+      if (typeof step5.content === 'object') {
+        timelineContent = step5.content.evidence_system || JSON.stringify(step5.content, null, 2);
+      } else {
+        timelineContent = step5.content;
       }
-    } else {
-      // 新形式の場合
-      for (let i = 1; i < sections.length; i++) {
-        const section = sections[i];
-        const playerNameMatch = section.match(/^[^】]*】?\s*([^：\n]+)/);
-        const playerName = playerNameMatch ? playerNameMatch[1].trim() : `プレイヤー${i}`;
-        
-        handouts.push({
-          playerName: playerName,
-          content: '【' + playerName + '専用ハンドアウト】' + section
-        });
+    } else if (step3 && step3.content) {
+      if (typeof step3.content === 'object') {
+        timelineContent = step3.content.incident_details || JSON.stringify(step3.content, null, 2);
+      } else {
+        timelineContent = step3.content;
       }
     }
     
-    return handouts;
-  }
-  
-  generateTimelineContent(phases) {
-    const timeline = phases.step4?.content?.timeline || '';
+    if (!timelineContent || timelineContent.trim() === '') {
+      return '<p class="no-content">⚠️ 進行管理情報が生成されていません。段階3または段階5を確認してください。</p>';
+    }
+    
+    console.log('✅ Timeline found from step5 or step3:', timelineContent.substring(0, 200));
+    
     return `
       <div class="timeline-section">
-        ${this.formatContent(timeline)}
+        <div class="timeline-intro">
+          <h5>⏱ セッション進行管理</h5>
+          <p>段階的生成で作成された進行情報:</p>
+        </div>
+        <div class="timeline-content">
+          ${this.formatContent(timelineContent)}
+        </div>
       </div>
     `;
-  }
   
   generateGMGuideContent(phases) {
-    const gmGuide = phases.step5?.content?.gamemaster_guide || '';
+    console.log('🔍 Generating GM guide content from phases:', phases);
+    
+    // 段階6のGM進行ガイドを探す
+    const step6 = phases.step6; // GM進行ガイド・セッション管理
+    
+    if (!step6 || !step6.content) {
+      return '<p class="no-content">⚠️ GMガイド情報が段階6で生成されていません。段階的生成を確認してください。</p>';
+    }
+    
+    let gmGuide = '';
+    
+    // 段階6のコンテンツ構造を解析
+    if (typeof step6.content === 'object') {
+      gmGuide = step6.content.gamemaster_guide || JSON.stringify(step6.content, null, 2);
+    } else {
+      gmGuide = step6.content;
+    }
+    
+    if (!gmGuide || gmGuide.trim() === '') {
+      return '<p class="no-content">⚠️ GMガイド詳細が空です。段階6の生成を確認してください。</p>';
+    }
+    
+    console.log('✅ GM Guide found:', gmGuide.substring(0, 200));
+    
     return `
       <div class="gm-guide-section">
-        ${this.formatContent(gmGuide)}
+        <div class="gm-guide-intro">
+          <h5>🎓 ゲームマスターガイド</h5>
+          <p>段階6で生成されたGM進行情報:</p>
+        </div>
+        <div class="gm-guide-content">
+          ${this.formatContent(gmGuide)}
+        </div>
       </div>
     `;
   }
