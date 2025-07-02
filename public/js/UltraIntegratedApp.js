@@ -679,6 +679,13 @@ class UltraIntegratedApp {
       
       console.log('🔬 Starting staged generation with real-time progress...');
       
+      // デバッグモード: APIキーが無い場合はモックテストを実行
+      if (window.location.hostname === 'localhost' || window.location.search.includes('debug=true')) {
+        console.log('🧪 デバッグモード: モックテストを実行');
+        this.runMockGeneration();
+        return;
+      }
+      
       // 🔥 BREAKTHROUGH: セッション初期化でURL長制限問題を解決
       console.log('🎯 セッション初期化開始...');
       const initResponse = await fetch('/api/integrated-micro-generator', {
@@ -698,6 +705,7 @@ class UltraIntegratedApp {
       console.log('✅ セッション初期化成功');
       
       // 🎯 セッションIDのみでEventSourceを使用（URL長制限回避）
+      console.log('🌐 EventSource接続開始:', `/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
       eventSource = new EventSource(`/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
       
       let currentStep = 0;
@@ -708,6 +716,13 @@ class UltraIntegratedApp {
         try {
           const data = JSON.parse(event.data);
           console.log('📡 Received progress update:', data);
+          console.log('📊 進捗データ詳細:', {
+            step: data.step,
+            totalSteps: data.totalSteps,
+            progress: data.progress,
+            name: data.name,
+            isComplete: data.isComplete
+          });
           
           if (data.step && data.content) {
             currentStep = data.step;
@@ -715,10 +730,11 @@ class UltraIntegratedApp {
             // 進捗バー更新
             this.updateProgressBar(data.progress || 0);
             
-            // フェーズ情報更新
+            // フェーズ情報更新（デバッグ情報付き）
+            console.log(`🔄 フェーズ更新: ${data.step}/${data.totalSteps} - ${data.name}`);
             this.updatePhaseInfo(
               data.step, 
-              data.totalSteps, 
+              data.totalSteps || 9, // デフォルト値を設定
               data.name || `段階${data.step}`
             );
             
@@ -811,6 +827,17 @@ class UltraIntegratedApp {
       // エラーイベント
       eventSource.addEventListener('error', (event) => {
         console.error('❌ EventSource error:', event);
+        console.error('📊 EventSource状態:', {
+          readyState: eventSource.readyState,
+          url: eventSource.url,
+          withCredentials: eventSource.withCredentials
+        });
+        console.error('📊 詳細エラー情報:', {
+          type: event.type,
+          target: event.target,
+          currentTarget: event.currentTarget,
+          timeStamp: event.timeStamp
+        });
         
         // EventSourceが失敗した場合はPOSTフォールバックを試行
         if (!finalSessionData) {
@@ -919,6 +946,71 @@ class UltraIntegratedApp {
     this.isGenerating = false;
     
     console.log('✅ クリーンアップ完了');
+  }
+
+  // 🧪 モックテスト機能（デバッグ用）
+  runMockGeneration() {
+    console.log('🧪 モックテスト開始: 9段階の進捗をシミュレート');
+    
+    const mockSteps = [
+      { name: '段階0: ランダム全体構造・アウトライン', weight: 15 },
+      { name: '段階1: コンセプト精密化・世界観詳細化', weight: 10 },
+      { name: '段階2: 事件核心・犯人・動機設定', weight: 15 },
+      { name: '段階3: 事件詳細・基本タイムライン', weight: 10 },
+      { name: '段階4: 段階的キャラクター生成システム', weight: 20 },
+      { name: '段階5: 証拠配置・手がかり体系化', weight: 10 },
+      { name: '段階6: GM進行ガイド・セッション管理', weight: 10 },
+      { name: '段階7: 統合・品質確認', weight: 5 },
+      { name: '段階8: 最終レビュー・総合調整完了', weight: 5 }
+    ];
+    
+    let currentWeight = 0;
+    const totalWeight = mockSteps.reduce((sum, step) => sum + step.weight, 0);
+    
+    let stepIndex = 0;
+    const runNextStep = () => {
+      if (stepIndex >= mockSteps.length) {
+        // 完了処理
+        console.log('🎉 モックテスト完了');
+        this.updateProgressBar(100);
+        this.updatePhaseInfo(9, 9, '生成完了');
+        
+        if (this.uxEnhancer) {
+          this.uxEnhancer.showToast('🧪 モックテスト完了！', 'success', 3000);
+        }
+        
+        // モック結果表示
+        const mockSessionData = {
+          phases: {
+            step1: { name: 'モックテスト', content: 'テストデータ', status: 'completed' }
+          }
+        };
+        
+        setTimeout(() => {
+          this.showResults(mockSessionData);
+        }, 1000);
+        
+        return;
+      }
+      
+      const step = mockSteps[stepIndex];
+      currentWeight += step.weight;
+      const progress = Math.round((currentWeight / totalWeight) * 100);
+      
+      console.log(`🔄 モック段階${stepIndex + 1}: ${step.name} (${progress}%)`);
+      
+      // 進捗更新
+      this.updateProgressBar(progress);
+      this.updatePhaseInfo(stepIndex + 1, mockSteps.length, step.name);
+      
+      stepIndex++;
+      
+      // 次の段階を2秒後に実行
+      setTimeout(runNextStep, 2000);
+    };
+    
+    // 最初の段階を開始
+    setTimeout(runNextStep, 1000);
   }
 
   // 🔄 EventSource失敗時のPOSTフォールバック
