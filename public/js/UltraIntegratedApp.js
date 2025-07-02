@@ -25,36 +25,29 @@ try {
 
 class UltraIntegratedApp {
   constructor() {
-    this.currentStep = 1;
-    this.totalSteps = 5;
     this.formData = {};
     this.sessionData = null;
     this.isGenerating = false;
     this.generationProgress = {
       currentPhase: 0,
-      totalPhases: 5,
+      totalPhases: 9,
       status: 'waiting'
     };
     
-    console.log('🚀 Ultra Integrated App - 初期化開始');
+    console.log('🚀 Ultra Integrated App - シンプル版初期化開始');
     this.init();
   }
 
   init() {
     try {
-      console.log('🔍 初期化開始 - DOM要素チェック');
+      console.log('🔍 シンプル版初期化開始 - DOM要素チェック');
       
-      // 必須要素の存在確認
+      // 必須要素の存在確認（シンプル版）
       const requiredElements = [
         'scenario-form',
-        'next-btn',
-        'prev-btn',
         'generate-btn',
-        'step-1',
-        'step-2',
-        'step-3',
-        'step-4',
-        'step-5'
+        'loading-container',
+        'result-container'
       ];
       
       const missingElements = requiredElements.filter(id => !document.getElementById(id));
@@ -64,22 +57,17 @@ class UltraIntegratedApp {
       
       this.setupEventListeners();
       this.setupUXEnhancements();
-      this.updateStepDisplay();
-      this.updateButtonStates();
-      this.restoreFormData();
       
       // 生成モード初期化 - マイクロモードを標準に
       this.generationMode = 'micro';
       this.microApp = null;
       
-      console.log('✅ Ultra Integrated App - 初期化完了');
+      console.log('✅ Ultra Integrated App - シンプル版初期化完了');
       
       // 初期状態のデバッグ情報
       console.log('📊 初期状態:', {
-        currentStep: this.currentStep,
-        totalSteps: this.totalSteps,
         formElements: document.querySelectorAll('#scenario-form select').length,
-        requiredFields: document.querySelectorAll('#step-1 [required]').length
+        requiredFields: document.querySelectorAll('#scenario-form [required]').length
       });
       
     } catch (error) {
@@ -130,21 +118,22 @@ class UltraIntegratedApp {
   }
 
   setupEventListeners() {
-    // ナビゲーションボタン
-    const prevBtn = document.getElementById('prev-btn');
-    const nextBtn = document.getElementById('next-btn');
+    // シンプル版：生成ボタンのみ
     const generateBtn = document.getElementById('generate-btn');
+    const form = document.getElementById('scenario-form');
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.goToPreviousStep());
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.goToNextStep());
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleGenerationStart();
+      });
     }
 
     if (generateBtn) {
-      generateBtn.addEventListener('click', () => this.handleGenerationStart());
+      generateBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleGenerationStart();
+      });
     }
     
     // 統合マイクロ生成のみ対応（モード選択は無し）
@@ -152,7 +141,6 @@ class UltraIntegratedApp {
 
     // 結果画面のボタン
     const newScenarioBtn = document.getElementById('new-scenario');
-    // ZIPダウンロード機能は削除 - Web上完全表示のため
 
     if (newScenarioBtn) {
       newScenarioBtn.addEventListener('click', () => this.resetApp());
@@ -306,7 +294,7 @@ class UltraIntegratedApp {
     }
   }
 
-  // フォームデータ収集
+  // シンプル版フォームデータ収集
   collectFormData() {
     const form = document.getElementById('scenario-form');
     if (!form) return;
@@ -324,11 +312,13 @@ class UltraIntegratedApp {
     this.formData.setting = this.formData.setting || 'closed-space';
     this.formData.worldview = this.formData.worldview || 'realistic';
     this.formData.tone = this.formData.tone || 'serious';
-    this.formData.incident_type = this.formData.incident_type || 'murder';
     this.formData.complexity = this.formData.complexity || 'standard';
+    this.formData.motive = this.formData.motive || 'random';
+    this.formData['victim-type'] = this.formData['victim-type'] || 'random';
+    this.formData.weapon = this.formData.weapon || 'random';
 
-    // チェックボックス
-    const checkboxes = ['red_herring', 'twist_ending', 'secret_roles'];
+    // チェックボックス（新しい名前に対応）
+    const checkboxes = ['generate-images', 'detailed-handouts', 'gm-support'];
     checkboxes.forEach(name => {
       const checkbox = document.getElementById(name);
       if (checkbox) {
