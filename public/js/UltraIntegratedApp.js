@@ -41,17 +41,53 @@ class UltraIntegratedApp {
   }
 
   init() {
-    this.setupEventListeners();
-    this.setupUXEnhancements();
-    this.updateStepDisplay();
-    this.updateButtonStates();
-    this.restoreFormData();
-    
-    // 生成モード初期化 - マイクロモードを標準に
-    this.generationMode = 'micro';
-    this.microApp = null;
-    
-    console.log('✅ Ultra Integrated App - 初期化完了');
+    try {
+      console.log('🔍 初期化開始 - DOM要素チェック');
+      
+      // 必須要素の存在確認
+      const requiredElements = [
+        'scenario-form',
+        'next-btn',
+        'prev-btn',
+        'generate-btn',
+        'step-1',
+        'step-2',
+        'step-3',
+        'step-4',
+        'step-5'
+      ];
+      
+      const missingElements = requiredElements.filter(id => !document.getElementById(id));
+      if (missingElements.length > 0) {
+        console.error('❌ 必須要素が見つかりません:', missingElements);
+      }
+      
+      this.setupEventListeners();
+      this.setupUXEnhancements();
+      this.updateStepDisplay();
+      this.updateButtonStates();
+      this.restoreFormData();
+      
+      // 生成モード初期化 - マイクロモードを標準に
+      this.generationMode = 'micro';
+      this.microApp = null;
+      
+      console.log('✅ Ultra Integrated App - 初期化完了');
+      
+      // 初期状態のデバッグ情報
+      console.log('📊 初期状態:', {
+        currentStep: this.currentStep,
+        totalSteps: this.totalSteps,
+        formElements: document.querySelectorAll('#scenario-form select').length,
+        requiredFields: document.querySelectorAll('#step-1 [required]').length
+      });
+      
+    } catch (error) {
+      console.error('❌ 初期化エラー:', error);
+      if (uxEnhancer) {
+        uxEnhancer.showToast('⚠️ アプリケーションの初期化に問題が発生しました', 'error', 5000);
+      }
+    }
   }
 
   setupUXEnhancements() {
@@ -144,16 +180,29 @@ class UltraIntegratedApp {
   }
 
   goToNextStep() {
+    console.log('🔍 goToNextStep called:', {
+      currentStep: this.currentStep,
+      totalSteps: this.totalSteps
+    });
+    
     if (this.currentStep < this.totalSteps) {
       // バリデーション
+      console.log('📋 バリデーション開始');
       if (!this.validateCurrentStep()) {
+        console.log('❌ バリデーション失敗');
         return;
       }
+      console.log('✅ バリデーション成功');
       
       this.collectFormData();
       this.currentStep++;
       this.updateStepDisplay();
       this.updateButtonStates();
+      
+      console.log('📊 ステップ更新完了:', {
+        newStep: this.currentStep,
+        formData: this.formData
+      });
       
       if (this.currentStep === this.totalSteps) {
         this.updateSummary();
@@ -168,16 +217,34 @@ class UltraIntegratedApp {
 
   validateCurrentStep() {
     const currentStepElement = document.getElementById(`step-${this.currentStep}`);
+    if (!currentStepElement) {
+      console.error(`Step element not found: step-${this.currentStep}`);
+      return false;
+    }
+    
     const requiredFields = currentStepElement.querySelectorAll('[required]');
     
     for (const field of requiredFields) {
-      if (!field.value.trim()) {
-        if (uxEnhancer) {
-          const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
-          uxEnhancer.showToast(`⚠️ ${label}を選択してください`, 'warning', 3000);
+      // selectタグの場合、valueが存在するかチェック
+      if (field.tagName === 'SELECT') {
+        if (!field.value || field.value === '') {
+          if (uxEnhancer) {
+            const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
+            uxEnhancer.showToast(`⚠️ ${label}を選択してください`, 'warning', 3000);
+          }
+          field.focus();
+          return false;
         }
-        field.focus();
-        return false;
+      } else {
+        // その他の入力フィールド
+        if (!field.value.trim()) {
+          if (uxEnhancer) {
+            const label = field.closest('.form-group')?.querySelector('label')?.textContent || 'フィールド';
+            uxEnhancer.showToast(`⚠️ ${label}を入力してください`, 'warning', 3000);
+          }
+          field.focus();
+          return false;
+        }
       }
     }
     return true;
@@ -1240,6 +1307,7 @@ class UltraIntegratedApp {
         </div>
       </div>
     `;
+  }
   
   generateGMGuideContent(phases) {
     console.log('🔍 Generating GM guide content from phases:', phases);

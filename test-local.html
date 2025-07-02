@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ローカルテスト</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .test-info {
+      background: #333;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    pre {
+      background: #222;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .status-ok { color: #4ade80; }
+    .status-error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>Murder Mystery Generator - ローカルテスト</h1>
+  
+  <div class="test-info">
+    <h2>📋 テスト手順</h2>
+    <ol>
+      <li>ブラウザで開発者ツール（F12）を開く</li>
+      <li>Consoleタブで以下のエラーを確認：
+        <ul>
+          <li>構文エラー（SyntaxError）</li>
+          <li>未定義の変数エラー（ReferenceError）</li>
+          <li>初期化エラー</li>
+        </ul>
+      </li>
+      <li>「次へ」ボタンをクリックして動作確認</li>
+    </ol>
+  </div>
+  
+  <div class="test-info">
+    <h2>🔧 修正内容</h2>
+    <ul>
+      <li class="status-ok">✅ 構文エラー修正: generateTimelineContent メソッドの閉じ括弧追加</li>
+      <li class="status-ok">✅ バリデーション改善: SELECT要素の値チェック改善</li>
+      <li class="status-ok">✅ デバッグ情報追加: 初期化とステップ遷移のログ出力</li>
+    </ul>
+  </div>
+  
+  <div class="test-info">
+    <h2>🚀 アプリケーション起動</h2>
+    <p>下のボタンをクリックして、修正済みのアプリケーションを新しいタブで開きます：</p>
+    <button onclick="window.open('./public/index.html', '_blank')" style="
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    ">
+      アプリケーションを開く
+    </button>
+  </div>
+  
+  <div class="test-info">
+    <h2>💡 期待される動作</h2>
+    <ul>
+      <li>ページ読み込み時にエラーが表示されない</li>
+      <li>「次へ」ボタンがクリック可能</li>
+      <li>フォームの必須項目がデフォルト選択されている場合、バリデーションを通過</li>
+      <li>ステップ1から5まで順番に進行可能</li>
+      <li>最終ステップで「生成開始」ボタンが表示される</li>
+    </ul>
+  </div>
+  
+  <script>
+    console.log('🧪 テストページ読み込み完了');
+    console.log('📁 現在のパス:', window.location.pathname);
+    console.log('🔍 修正済みファイル: /public/js/UltraIntegratedApp.js');
+  </script>
+</body>
+</html>
