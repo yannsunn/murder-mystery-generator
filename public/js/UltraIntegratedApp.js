@@ -486,6 +486,29 @@ class UltraIntegratedApp {
               data.name || `段階${data.step}`
             );
             
+            // 🎯 リアルタイムタブ更新: 段階完了時にセッションデータを更新
+            if (window.currentSessionData) {
+              // セッションデータに新しい段階情報を追加
+              if (!window.currentSessionData.phases) {
+                window.currentSessionData.phases = {};
+              }
+              
+              window.currentSessionData.phases[`step${data.step}`] = {
+                name: data.name,
+                content: data.content,
+                status: 'completed',
+                completedAt: new Date().toISOString()
+              };
+              
+              // 現在表示中のタブを更新
+              const activeTab = document.querySelector('.tab-content[style*="block"]');
+              if (activeTab) {
+                const tabName = activeTab.id.replace('tab-', '');
+                console.log(`🔄 Updating active tab: ${tabName}`);
+                this.updateTabContent(tabName, window.currentSessionData);
+              }
+            }
+            
             console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
             
             // UX強化: 段階完了通知
@@ -912,6 +935,10 @@ class UltraIntegratedApp {
     
     const contentEl = document.getElementById('scenario-content');
     if (contentEl && sessionData.phases) {
+      // グローバルセッションデータを保存
+      window.currentSessionData = sessionData;
+      window.app = this; // アプリインスタンスも保存
+      
       // スケルトンローディングで段階的に表示
       if (skeletonLoader) {
         skeletonLoader.show('scenario-content', 'result');
@@ -922,11 +949,100 @@ class UltraIntegratedApp {
           const summaryHtml = this.generateResultSummary(sessionData);
           contentEl.innerHTML = summaryHtml;
           contentEl.classList.add('skeleton-fade-in');
+          
+          // 初期タブ設定
+          this.setupTabSystem();
         }, 600);
       } else {
         const summaryHtml = this.generateResultSummary(sessionData);
         contentEl.innerHTML = summaryHtml;
+        
+        // 初期タブ設定
+        this.setupTabSystem();
       }
+    }
+  }
+  
+  // タブシステムのセットアップ
+  setupTabSystem() {
+    // タブボタンのイベントリスナー
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tabName = e.target.getAttribute('onclick')?.match(/showTab\('(.+?)'\)/)?.[1];
+        if (tabName) {
+          e.preventDefault();
+          this.showTab(tabName);
+        }
+      });
+    });
+  }
+  
+  // タブ表示（リアルタイム更新対応）
+  showTab(tabName) {
+    // 全タブを非表示
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    
+    // 全タブボタンを非アクティブ
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    
+    // 指定タブを表示
+    const targetTab = document.getElementById(`tab-${tabName}`);
+    const targetBtn = document.querySelector(`[onclick*="showTab('${tabName}')"]`);
+    
+    if (targetTab) {
+      targetTab.style.display = 'block';
+      
+      // 現在のセッションデータでコンテンツを更新
+      if (window.currentSessionData) {
+        this.updateTabContent(tabName, window.currentSessionData);
+      }
+    }
+    
+    if (targetBtn) {
+      targetBtn.classList.add('active');
+    }
+  }
+  
+  // タブコンテンツの動的更新
+  updateTabContent(tabName, sessionData) {
+    const tabElement = document.getElementById(`tab-${tabName}`);
+    if (!tabElement) return;
+    
+    let content = '';
+    
+    switch(tabName) {
+      case 'characters':
+        content = this.generateCharactersContent(sessionData.phases, true);
+        break;
+      case 'timeline': 
+        content = this.generateTimelineContent(sessionData.phases, true);
+        break;
+      case 'gm-guide':
+        content = this.generateGMGuideContent(sessionData.phases, true);
+        break;
+      case 'scenario':
+        content = this.generateScenarioContent(sessionData.phases, true);
+        break;
+      case 'overview':
+        content = this.generateOverviewContent(sessionData, true);
+        break;
+      default:
+        return;
+    }
+    
+    // コンテンツ部分のみ更新（ヘッダーは保持）
+    const contentSection = tabElement.querySelector('.characters-content, .timeline-content, .gm-guide-content, .scenario-full-content, .scenario-overview');
+    if (contentSection) {
+      contentSection.innerHTML = content;
+    } else {
+      // フォールバック: 全体更新
+      const h4 = tabElement.querySelector('h4');
+      const title = h4 ? h4.outerHTML : '';
+      tabElement.innerHTML = title + '<div class="dynamic-content">' + content + '</div>';
     }
   }
 
@@ -1084,8 +1200,48 @@ class UltraIntegratedApp {
     `;
   }
 
+  // 美しいローディングコンテンツ生成
+  generateLoadingContent(title, currentPhase, description) {
+    return `
+      <div class="loading-content-container">
+        <div class="loading-header">
+          <h4>${title}</h4>
+          <div class="loading-status">
+            <div class="loading-indicator">
+              <div class="loading-spinner"></div>
+              <span class="loading-text">生成中...</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="loading-details">
+          <div class="current-process">
+            <h5>🔄 ${currentPhase}</h5>
+            <p>${description}</p>
+          </div>
+          
+          <div class="loading-progress">
+            <div class="progress-bar-loading">
+              <div class="progress-fill-loading"></div>
+            </div>
+            <div class="progress-text-loading">AI生成エンジン稼働中...</div>
+          </div>
+        </div>
+        
+        <div class="loading-tips">
+          <h6>💡 このタブは生成完了時に自動更新されます</h6>
+          <ul>
+            <li>✨ プロフェッショナル品質で作成しています</li>
+            <li>🎯 30分-1時間完結用に最適化</li>
+            <li>🔄 他のタブも随時チェックしてください</li>
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+  
   // 各コンテンツ生成メソッド
-  generateOverviewContent(sessionData) {
+  generateOverviewContent(sessionData, isUpdate = false) {
     const formData = sessionData.formData || {};
     const phases = sessionData.phases || {};
     
@@ -1153,7 +1309,7 @@ class UltraIntegratedApp {
     `;
   }
   
-  generateScenarioContent(phases) {
+  generateScenarioContent(phases, isUpdate = false) {
     console.log('🔍 Generating scenario content from phases:', phases);
     
     // 段階的生成の新しい構造に対応
@@ -1176,6 +1332,10 @@ class UltraIntegratedApp {
     });
     
     if (!scenarioContent) {
+      // 生成中の場合は美しいローディング表示
+      if (this.isGenerating || !isUpdate) {
+        return this.generateLoadingContent('📖 完全シナリオ', '段階1-8: 全体シナリオ統合中...', '9段階の生成プロセスを統合して完全なシナリオを構築しています');
+      }
       return '<p class="no-content">⚠️ シナリオコンテンツが生成されていません。段階的生成を確認してください。</p>';
     }
     
@@ -1230,12 +1390,16 @@ class UltraIntegratedApp {
     return nameMap[key] || key.replace(/_/g, ' ').toUpperCase();
   }
 
-  generateCharactersContent(phases) {
+  generateCharactersContent(phases, isUpdate = false) {
     console.log('🔍 Generating characters content from phases:', phases);
     
     // 段階4のキャラクター情報を探す
     const step4 = phases.step4;
     if (!step4 || !step4.content) {
+      // 生成中の場合は美しいローディング表示
+      if (this.isGenerating || !isUpdate) {
+        return this.generateLoadingContent('🎭 キャラクター詳細', '段階4: キャラクター生成中...', 'プロフェッショナル品質のキャラクターハンドアウトを作成しています');
+      }
       return '<p class="no-content">⚠️ キャラクター情報が段階4で生成されていません。段階的生成を確認してください。</p>';
     }
     
@@ -1319,7 +1483,7 @@ class UltraIntegratedApp {
     `;
   }
 
-  generateTimelineContent(phases) {
+  generateTimelineContent(phases, isUpdate = false) {
     console.log('🔍 Generating timeline content from phases:', phases);
     
     // タイムライン情報を複数の段階から統合的に取得
@@ -1409,6 +1573,10 @@ class UltraIntegratedApp {
       timelineContent = incidentTimeline || evidenceTimeline || sessionTimeline || '';
       
       if (!timelineContent) {
+        // 生成中の場合は美しいローディング表示
+        if (this.isGenerating || !isUpdate) {
+          return this.generateLoadingContent('⏱ セッション進行管理', '段階3-6: 進行システム構築中...', '30分-1時間完結用の効率的なタイムラインを作成しています');
+        }
         return '<p class="no-content">⚠️ 進行管理情報が生成されていません。段階3、5、6を確認してください。</p>';
       }
       
@@ -1430,7 +1598,7 @@ class UltraIntegratedApp {
     `;
   }
   
-  generateGMGuideContent(phases) {
+  generateGMGuideContent(phases, isUpdate = false) {
     console.log('🔍 Generating GM guide content from phases:', phases);
     
     // GMガイドを複数の段階から統合的に構築
@@ -1439,6 +1607,10 @@ class UltraIntegratedApp {
     const step7 = phases.step7; // 統合・品質確認
     
     if (!step6 || !step6.content) {
+      // 生成中の場合は美しいローディング表示
+      if (this.isGenerating || !isUpdate) {
+        return this.generateLoadingContent('🎓 ゲームマスター完全マニュアル', '段階6: GM進行ガイド作成中...', 'プロフェッショナルなセッション運営マニュアルを構築しています');
+      }
       return '<p class="no-content">⚠️ GMガイド情報が段階6で生成されていません。段階的生成を確認してください。</p>';
     }
     
@@ -1472,6 +1644,10 @@ class UltraIntegratedApp {
     }
     
     if (!gmGuide || gmGuide.trim() === '') {
+      // 生成中の場合は美しいローディング表示
+      if (this.isGenerating || !isUpdate) {
+        return this.generateLoadingContent('🎓 ゲームマスター完全マニュアル', '段階6: GM進行ガイド詳細化中...', 'セッション成功のための実用的ガイドを作成しています');
+      }
       return '<p class="no-content">⚠️ GMガイド詳細が空です。段階6の生成を確認してください。</p>';
     }
     
@@ -1741,6 +1917,264 @@ class UltraIntegratedApp {
     }
   }
 }
+
+// グローバル関数の実装
+window.showTab = function(tabName) {
+  if (window.app && typeof window.app.showTab === 'function') {
+    window.app.showTab(tabName);
+  } else {
+    console.warn('App instance not found or showTab method not available');
+  }
+};
+
+window.copyScenarioText = function() {
+  try {
+    if (!window.currentSessionData) {
+      alert('シナリオデータが見つかりません。');
+      return;
+    }
+    
+    const phases = window.currentSessionData.phases || {};
+    let fullText = '# マーダーミステリーシナリオ - 完全版\n\n';
+    
+    // 各段階のコンテンツを順番に結合
+    Object.keys(phases).sort().forEach(stepKey => {
+      const step = phases[stepKey];
+      if (step && step.content && step.status === 'completed') {
+        fullText += `## ${step.name}\n\n`;
+        if (typeof step.content === 'object') {
+          Object.entries(step.content).forEach(([key, value]) => {
+            if (typeof value === 'string' && value.trim()) {
+              fullText += `### ${key.replace(/_/g, ' ').toUpperCase()}\n${value}\n\n`;
+            }
+          });
+        } else {
+          fullText += `${step.content}\n\n`;
+        }
+        fullText += '---\n\n';
+      }
+    });
+    
+    navigator.clipboard.writeText(fullText).then(() => {
+      if (window.uxEnhancer) {
+        window.uxEnhancer.showToast('📋 シナリオ全体をクリップボードにコピーしました', 'success', 3000);
+      } else {
+        alert('シナリオ全体をクリップボードにコピーしました！');
+      }
+    }).catch(err => {
+      console.error('コピーに失敗:', err);
+      alert('コピーに失敗しました。手動でテキストを選択してください。');
+    });
+  } catch (error) {
+    console.error('copyScenarioText error:', error);
+    alert('コピー中にエラーが発生しました。');
+  }
+};
+
+window.copyTabContent = function() {
+  try {
+    const activeTab = document.querySelector('.tab-content[style*="block"]');
+    if (!activeTab) {
+      alert('アクティブなタブが見つかりません。');
+      return;
+    }
+    
+    const tabContent = activeTab.innerText || activeTab.textContent;
+    navigator.clipboard.writeText(tabContent).then(() => {
+      if (window.uxEnhancer) {
+        window.uxEnhancer.showToast('📄 表示中タブの内容をコピーしました', 'success', 3000);
+      } else {
+        alert('表示中タブの内容をクリップボードにコピーしました！');
+      }
+    }).catch(err => {
+      console.error('タブコピーに失敗:', err);
+      alert('コピーに失敗しました。');
+    });
+  } catch (error) {
+    console.error('copyTabContent error:', error);
+    alert('タブのコピー中にエラーが発生しました。');
+  }
+};
+
+window.saveAsText = function() {
+  try {
+    if (!window.currentSessionData) {
+      alert('シナリオデータが見つかりません。');
+      return;
+    }
+    
+    const phases = window.currentSessionData.phases || {};
+    let fullText = 'マーダーミステリーシナリオ - 完全版\n';
+    fullText += '=' * 50 + '\n\n';
+    
+    // タイトル抽出
+    const step1 = phases.step1;
+    if (step1?.content?.concept) {
+      const titleMatch = step1.content.concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
+      if (titleMatch) {
+        fullText += `作品タイトル: ${titleMatch[1].trim()}\n`;
+      }
+    }
+    
+    fullText += `生成日時: ${new Date().toLocaleString('ja-JP')}\n`;
+    fullText += `参加人数: ${window.currentSessionData.formData?.participants || '5'}人\n\n`;
+    
+    // 各段階のコンテンツを追加
+    Object.keys(phases).sort().forEach(stepKey => {
+      const step = phases[stepKey];
+      if (step && step.content && step.status === 'completed') {
+        fullText += `${step.name}\n${'='.repeat(step.name.length)}\n\n`;
+        if (typeof step.content === 'object') {
+          Object.entries(step.content).forEach(([key, value]) => {
+            if (typeof value === 'string' && value.trim()) {
+              fullText += `${key.replace(/_/g, ' ').toUpperCase()}\n${'-'.repeat(key.length)}\n${value}\n\n`;
+            }
+          });
+        } else {
+          fullText += `${step.content}\n\n`;
+        }
+        fullText += '\n';
+      }
+    });
+    
+    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `マーダーミステリー_${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    if (window.uxEnhancer) {
+      window.uxEnhancer.showToast('💾 テキストファイルとして保存しました', 'success', 3000);
+    } else {
+      alert('テキストファイルとして保存しました！');
+    }
+  } catch (error) {
+    console.error('saveAsText error:', error);
+    alert('ファイル保存中にエラーが発生しました。');
+  }
+};
+
+window.searchContent = function() {
+  const searchInput = document.getElementById('content-search');
+  if (!searchInput) return;
+  
+  const searchTerm = searchInput.value.trim().toLowerCase();
+  if (!searchTerm) {
+    alert('検索キーワードを入力してください。');
+    return;
+  }
+  
+  // アクティブなタブ内を検索
+  const activeTab = document.querySelector('.tab-content[style*="block"]');
+  if (!activeTab) {
+    alert('検索可能なタブが見つかりません。');
+    return;
+  }
+  
+  // 既存のハイライトをクリア
+  clearSearch();
+  
+  const walker = document.createTreeWalker(
+    activeTab,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+  
+  let matches = 0;
+  const textNodes = [];
+  let node;
+  
+  while (node = walker.nextNode()) {
+    textNodes.push(node);
+  }
+  
+  textNodes.forEach(textNode => {
+    const text = textNode.textContent.toLowerCase();
+    if (text.includes(searchTerm)) {
+      const regex = new RegExp(`(${searchTerm})`, 'gi');
+      const highlightedText = textNode.textContent.replace(regex, '<mark class="search-highlight">$1</mark>');
+      
+      const wrapper = document.createElement('span');
+      wrapper.innerHTML = highlightedText;
+      textNode.parentNode.replaceChild(wrapper, textNode);
+      matches++;
+    }
+  });
+  
+  if (matches > 0) {
+    if (window.uxEnhancer) {
+      window.uxEnhancer.showToast(`🔍 ${matches}件の検索結果が見つかりました`, 'info', 3000);
+    } else {
+      alert(`${matches}件の検索結果が見つかりました。`);
+    }
+    
+    // 最初の結果にスクロール
+    const firstHighlight = activeTab.querySelector('.search-highlight');
+    if (firstHighlight) {
+      firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    if (window.uxEnhancer) {
+      window.uxEnhancer.showToast('🔍 検索結果が見つかりませんでした', 'warning', 3000);
+    } else {
+      alert('検索結果が見つかりませんでした。');
+    }
+  }
+};
+
+window.clearSearch = function() {
+  // 検索ハイライトをクリア
+  document.querySelectorAll('.search-highlight').forEach(highlight => {
+    const parent = highlight.parentNode;
+    parent.replaceChild(document.createTextNode(highlight.textContent), highlight);
+    parent.normalize();
+  });
+  
+  // 検索フィールドをクリア
+  const searchInput = document.getElementById('content-search');
+  if (searchInput) {
+    searchInput.value = '';
+  }
+};
+
+window.applyFilter = function() {
+  const filterSelect = document.getElementById('content-filter');
+  if (!filterSelect) return;
+  
+  const filterValue = filterSelect.value;
+  const activeTab = document.querySelector('.tab-content[style*="block"]');
+  if (!activeTab) return;
+  
+  // フィルターロジックを実装（必要に応じて拡張）
+  if (window.uxEnhancer) {
+    window.uxEnhancer.showToast(`🎯 フィルター適用: ${filterValue}`, 'info', 2000);
+  }
+};
+
+window.openImageModal = function(url, description) {
+  // 画像モーダルを開く（簡易実装）
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); z-index: 10000; display: flex;
+    align-items: center; justify-content: center; cursor: pointer;
+  `;
+  
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = description;
+  img.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px;';
+  
+  modal.appendChild(img);
+  modal.onclick = () => document.body.removeChild(modal);
+  
+  document.body.appendChild(modal);
+};
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
