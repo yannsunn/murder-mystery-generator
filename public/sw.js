@@ -48,10 +48,24 @@ self.addEventListener('install', (event) => {
         // 静的アセットを個別にキャッシュしてエラー耐性を向上
         return Promise.allSettled(
           STATIC_ASSETS.map(url => 
-            cache.add(url).catch(error => {
-              console.warn(`⚠️ Failed to cache ${url}:`, error);
-              return null; // エラーを無視して続行
-            })
+            fetch(url)
+              .then(response => {
+                if (response.ok) {
+                  return cache.put(url, response);
+                } else {
+                  console.warn(`⚠️ Bad response for ${url}:`, response.status);
+                  return null;
+                }
+              })
+              .catch(error => {
+                // Chrome拡張やCSP違反は静かに無視
+                if (error.message.includes('extension') || 
+                    error.message.includes('Content Security Policy')) {
+                  return null;
+                }
+                console.warn(`⚠️ Failed to cache ${url}:`, error);
+                return null;
+              })
           )
         );
       })
@@ -97,13 +111,26 @@ self.addEventListener('activate', (event) => {
  */
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
   
-  // Chrome拡張やDeveloper Toolsのリクエストをスキップ
+  // 安全なURLチェック
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch (error) {
+    console.warn('⚠️ Invalid URL, skipping:', request.url);
+    return;
+  }
+  
+  // Chrome拡張やDeveloper Toolsのリクエストを完全スキップ
   if (url.protocol === 'chrome-extension:' || 
       url.protocol === 'moz-extension:' || 
       url.protocol === 'safari-extension:' ||
-      url.hostname === 'localhost' && url.port === '9222') {
+      url.protocol === 'edge-extension:' ||
+      url.protocol === 'ms-browser-extension:' ||
+      url.hostname === 'localhost' && url.port === '9222' ||
+      url.hostname.includes('extension') ||
+      request.url.includes('extension://')) {
+    console.log('🔇 Skipping extension request:', request.url);
     return;
   }
   

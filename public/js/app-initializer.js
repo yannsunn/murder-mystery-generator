@@ -7,11 +7,14 @@
 let app;
 
 function initializeApp() {
-  // 重複初期化防止
-  if (window.appInitialized) {
-    console.log('⚠️ App already initialized, skipping...');
+  // 重複初期化防止 - より厳格なチェック
+  if (window.appInitialized || window.app) {
+    console.log('⚠️ App already initialized, skipping duplicate initialization');
     return;
   }
+  
+  // 初期化中フラグを即座に設定
+  window.appInitialized = true;
   
   console.log('🔍 初期DOM状態チェック:', {
     generateBtn: !!document.getElementById('generate-btn'),
@@ -37,7 +40,7 @@ function initializeApp() {
     if (!window.app) {
       app = new UltraIntegratedApp();
       window.app = app; // グローバルに保存
-      window.appInitialized = true; // 初期化完了フラグ
+      // window.appInitialized は既に上で設定済み
     }
     console.log('✅ UltraIntegratedApp initialized successfully');
     
