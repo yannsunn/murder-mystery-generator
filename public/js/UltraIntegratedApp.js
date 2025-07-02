@@ -176,7 +176,7 @@ class UltraIntegratedApp {
     if (this.currentStep < this.totalSteps) {
       // バリデーション
       console.log('📋 バリデーション開始');
-      if (!this.validateCurrentStep()) {
+      if (!this.validateForm()) {
         console.log('❌ バリデーション失敗');
         return;
       }
@@ -203,14 +203,15 @@ class UltraIntegratedApp {
     }
   }
 
-  validateCurrentStep() {
-    const currentStepElement = document.getElementById(`step-${this.currentStep}`);
-    if (!currentStepElement) {
-      console.error(`Step element not found: step-${this.currentStep}`);
+  // シンプル版フォームバリデーション
+  validateForm() {
+    const form = document.getElementById('scenario-form');
+    if (!form) {
+      console.error('フォームが見つかりません');
       return false;
     }
     
-    const requiredFields = currentStepElement.querySelectorAll('[required]');
+    const requiredFields = form.querySelectorAll('[required]');
     
     for (const field of requiredFields) {
       // selectタグの場合、valueが存在するかチェック
@@ -405,6 +406,16 @@ class UltraIntegratedApp {
   
   // 🎯 生成開始ハンドラー（マイクロモード専用）
   async handleGenerationStart() {
+    console.log('🎯 生成開始ハンドラー呼び出し');
+    
+    // フォームバリデーション
+    if (!this.validateForm()) {
+      console.log('❌ フォームバリデーション失敗');
+      return;
+    }
+    
+    console.log('✅ フォームバリデーション成功');
+    
     // マイクロモード専用に統一
     await this.startMicroGeneration();
   }
@@ -414,6 +425,10 @@ class UltraIntegratedApp {
     if (this.isGenerating) return;
 
     console.log('🔬 Starting Integrated Micro Generation...');
+    
+    // 前のセッションデータを完全にクリア
+    this.sessionData = null;
+    window.currentSessionData = null;
     
     // フォームデータを収集
     this.collectFormData();
@@ -444,7 +459,8 @@ class UltraIntegratedApp {
       // 進捗とタイマーを開始
       this.startProgressTimer();
       
-      const sessionId = `integrated_micro_${Date.now()}`;
+      // より確実にユニークなセッションIDを生成
+      const sessionId = `integrated_micro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       console.log('🔬 Starting staged generation with real-time progress...');
       
