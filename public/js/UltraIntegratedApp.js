@@ -762,8 +762,10 @@ class UltraIntegratedApp {
       // 完了イベント
       eventSource.addEventListener('complete', (event) => {
         try {
+          console.log('🎉 Complete event received:', event.data);
           const finalResult = JSON.parse(event.data);
           console.log('🎉 All stages completed!', finalResult);
+          console.log('📋 Final sessionData:', finalResult.sessionData);
           
           finalSessionData = finalResult.sessionData;
           
@@ -776,16 +778,30 @@ class UltraIntegratedApp {
             this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
           }
           
-          // 結果表示
-          setTimeout(() => {
-            this.showResults(finalSessionData);
-          }, 1000);
+          console.log('📋 Calling showResults with:', finalSessionData);
+          
+          // 結果表示 - デバッグ強化
+          if (finalSessionData && finalSessionData.phases) {
+            setTimeout(() => {
+              console.log('🎯 Executing showResults...');
+              this.showResults(finalSessionData);
+            }, 1000);
+          } else {
+            console.error('❌ No valid sessionData for showResults:', finalSessionData);
+            // 強制的に結果表示を試行
+            setTimeout(() => {
+              console.log('🔄 Forcing showResults with available data...');
+              this.showResults(finalResult.sessionData || finalResult);
+            }, 1000);
+          }
           
           // EventSource終了
           eventSource.close();
+          clearTimeout(timeoutId);
           
         } catch (parseError) {
           console.error('❌ Final result parse error:', parseError);
+          console.error('❌ Raw event data:', event.data);
         }
       });
       
@@ -962,7 +978,11 @@ class UltraIntegratedApp {
             // 次の行でデータを読み取り
           } else if (line.includes('"isComplete":true')) {
             try {
+              console.log('🎉 POST Fallback: Complete data received:', line);
               const finalData = JSON.parse(line.substring(line.indexOf('{')));
+              console.log('🎉 POST Fallback: Parsed final data:', finalData);
+              console.log('📋 POST Fallback: sessionData:', finalData.sessionData);
+              
               if (finalData.sessionData) {
                 this.updateProgressBar(100);
                 this.updatePhaseInfo(9, 9, '生成完了');
@@ -971,14 +991,26 @@ class UltraIntegratedApp {
                   this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
                 }
                 
+                console.log('📋 POST Fallback: Calling showResults with:', finalData.sessionData);
+                
                 setTimeout(() => {
+                  console.log('🎯 POST Fallback: Executing showResults...');
                   this.showResults(finalData.sessionData);
                 }, 1000);
                 
                 break;
+              } else {
+                console.error('❌ POST Fallback: No sessionData found in finalData:', finalData);
+                // 強制的に結果表示を試行
+                setTimeout(() => {
+                  console.log('🔄 POST Fallback: Forcing showResults with available data...');
+                  this.showResults(finalData);
+                }, 1000);
+                break;
               }
             } catch (parseError) {
-              console.error('❌ Final parse error:', parseError);
+              console.error('❌ POST Fallback: Final parse error:', parseError);
+              console.error('❌ POST Fallback: Raw line:', line);
             }
           }
         }
@@ -1194,15 +1226,30 @@ class UltraIntegratedApp {
   // 結果表示
   showResults(sessionData) {
     console.log('🎆 showResults 呼び出し:', sessionData);
+    console.log('📄 sessionData type:', typeof sessionData);
     console.log('📄 sessionData.phases:', sessionData?.phases);
+    
+    // UI要素の存在確認
+    const loadingContainer = document.getElementById('loading-container');
+    const resultContainer = document.getElementById('result-container');
+    console.log('📄 loadingContainer:', !!loadingContainer);
+    console.log('📄 resultContainer:', !!resultContainer);
     
     this.hideElement('loading-container');
     this.showElement('result-container');
     
     const contentEl = document.getElementById('scenario-content');
-    console.log('📄 contentEl:', contentEl);
+    console.log('📄 contentEl:', !!contentEl, contentEl);
+    
+    // 条件チェックの詳細ログ
+    console.log('📄 Condition check:');
+    console.log('  - contentEl exists:', !!contentEl);
+    console.log('  - sessionData exists:', !!sessionData);
+    console.log('  - sessionData.phases exists:', !!(sessionData && sessionData.phases));
+    console.log('  - sessionData structure:', Object.keys(sessionData || {}));
     
     if (contentEl && sessionData && sessionData.phases) {
+      console.log('✅ All conditions met, proceeding with result display');
       // グローバルセッションデータを保存
       window.currentSessionData = sessionData;
       window.app = this; // アプリインスタンスも保存
@@ -1249,6 +1296,34 @@ class UltraIntegratedApp {
             </button>
           </div>
         `;
+      }
+    } else {
+      console.error('❌ showResults: 条件を満たしません');
+      console.error('  - contentEl:', !!contentEl);
+      console.error('  - sessionData:', !!sessionData);
+      console.error('  - sessionData.phases:', !!(sessionData && sessionData.phases));
+      
+      // フォールバック: 簡易結果表示
+      if (contentEl) {
+        console.log('🔄 Using fallback display...');
+        contentEl.innerHTML = `
+          <div class="result-content">
+            <h2>生成完了</h2>
+            <p>マーダーミステリーシナリオの生成が完了しました！</p>
+            <div class="result-data">
+              <pre>${JSON.stringify(sessionData, null, 2)}</pre>
+            </div>
+            <button onclick="window.location.reload()" class="btn btn-primary">
+              新しいシナリオを作成
+            </button>
+          </div>
+        `;
+      } else {
+        console.error('❌ contentEl not found - cannot display results');
+        // Toast通知で結果完了を知らせる
+        if (this.uxEnhancer) {
+          this.uxEnhancer.showToast('⚠️ 結果表示に問題が発生しました。ページを再読み込みしてください。', 'warning', 10000);
+        }
       }
     }
     
