@@ -712,17 +712,84 @@ class UltraIntegratedApp {
       let finalSessionData = null;
       
       // Server-Sent Events リスナー
+      
+      // 🎯 CRITICAL: progress イベント専用リスナー
+      eventSource.addEventListener('progress', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('📊 Progress event received:', data);
+          
+          // EventSourceデータが来た場合は古いシミュレーションを停止
+          this.stopProgressTimer();
+          
+          // 進捗情報を更新
+          this.updateProgressBar(data.progress || 0);
+          this.updatePhaseInfo(
+            data.step, 
+            data.totalSteps || 9,
+            data.stepName || `段階${data.step}`
+          );
+          
+          // 推定時間更新
+          if (data.estimatedTimeRemaining !== undefined) {
+            this.updateEstimatedTime(data.estimatedTimeRemaining * 60); // 分を秒に変換
+          }
+          
+        } catch (error) {
+          console.error('❌ Progress event parse error:', error);
+        }
+      });
+      
+      // start イベント専用リスナー
+      eventSource.addEventListener('start', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('🚀 Start event received:', data);
+          
+          // EventSourceデータが来た場合は古いシミュレーションを停止
+          this.stopProgressTimer();
+          
+          if (this.uxEnhancer) {
+            this.uxEnhancer.showToast(data.message || '生成開始', 'success', 3000);
+          }
+        } catch (error) {
+          console.error('❌ Start event parse error:', error);
+        }
+      });
+      
+      // complete イベント専用リスナー  
+      eventSource.addEventListener('complete', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('✅ Complete event received:', data);
+          
+          finalSessionData = data.sessionData;
+          this.sessionData = finalSessionData;
+          window.currentSessionData = finalSessionData;
+          
+          // 進捗を100%に設定
+          this.updateProgressBar(100);
+          this.updatePhaseInfo(9, 9, '生成完了');
+          
+          eventSource.close();
+          this.isGenerating = false;
+          this.stopProgressTimer();
+          
+          if (timeoutId) clearTimeout(timeoutId);
+          
+          console.log('🎉 Generation completed successfully');
+          this.showResults(finalSessionData);
+          
+        } catch (error) {
+          console.error('❌ Complete event parse error:', error);
+        }
+      });
+      
+      // 後方互換性のためのフォールバック（古いonmessage）
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📡 Received progress update:', data);
-          console.log('📊 進捗データ詳細:', {
-            step: data.step,
-            totalSteps: data.totalSteps,
-            progress: data.progress,
-            name: data.name,
-            isComplete: data.isComplete
-          });
+          console.log('📡 Received fallback message:', data);
           
           if (data.step && data.content) {
             currentStep = data.step;
@@ -730,8 +797,12 @@ class UltraIntegratedApp {
             // 進捗バー更新
             this.updateProgressBar(data.progress || 0);
             
-            // フェーズ情報更新（デバッグ情報付き）
+            // フェーズ情報更新（デバッグ情報付き） - EventSourceデータを強制使用
             console.log(`🔄 フェーズ更新: ${data.step}/${data.totalSteps} - ${data.name}`);
+            
+            // EventSourceデータが来た場合は古いシミュレーションを停止
+            this.stopProgressTimer();
+            
             this.updatePhaseInfo(
               data.step, 
               data.totalSteps || 9, // デフォルト値を設定
@@ -778,51 +849,6 @@ class UltraIntegratedApp {
         }
       };
       
-      // 完了イベント
-      eventSource.addEventListener('complete', (event) => {
-        try {
-          console.log('🎉 Complete event received:', event.data);
-          const finalResult = JSON.parse(event.data);
-          console.log('🎉 All stages completed!', finalResult);
-          console.log('📋 Final sessionData:', finalResult.sessionData);
-          
-          finalSessionData = finalResult.sessionData;
-          
-          // 進捗を100%に設定
-          this.updateProgressBar(100);
-          this.updatePhaseInfo(9, 9, '生成完了');
-          
-          // UX強化: 生成完了通知
-          if (this.uxEnhancer) {
-            this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
-          }
-          
-          console.log('📋 Calling showResults with:', finalSessionData);
-          
-          // 結果表示 - デバッグ強化
-          if (finalSessionData && finalSessionData.phases) {
-            setTimeout(() => {
-              console.log('🎯 Executing showResults...');
-              this.showResults(finalSessionData);
-            }, 1000);
-          } else {
-            console.error('❌ No valid sessionData for showResults:', finalSessionData);
-            // 強制的に結果表示を試行
-            setTimeout(() => {
-              console.log('🔄 Forcing showResults with available data...');
-              this.showResults(finalResult.sessionData || finalResult);
-            }, 1000);
-          }
-          
-          // EventSource終了
-          eventSource.close();
-          clearTimeout(timeoutId);
-          
-        } catch (parseError) {
-          console.error('❌ Final result parse error:', parseError);
-          console.error('❌ Raw event data:', event.data);
-        }
-      });
       
       // エラーイベント
       eventSource.addEventListener('error', (event) => {
@@ -863,13 +889,6 @@ class UltraIntegratedApp {
         }
       });
       
-      // 開始イベント
-      eventSource.addEventListener('start', (event) => {
-        console.log('🚀 Staged generation started');
-        if (this.uxEnhancer) {
-          this.uxEnhancer.showToast('🚀 段階的生成開始', 'info', 3000);
-        }
-      });
       
       // 代替: POSTリクエストによる段階的処理
       if (!window.EventSource) {
