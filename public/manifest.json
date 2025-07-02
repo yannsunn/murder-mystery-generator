@@ -1,0 +1,53 @@
+{
+  "name": "Murder Mystery Generator",
+  "short_name": "Mystery Gen",
+  "description": "AI駆動マーダーミステリー生成システム",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#6d28d9",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "games", "productivity"],
+  "shortcuts": [
+    {
+      "name": "ランダム生成",
+      "short_name": "Random",
+      "description": "完全ランダムでミステリーを生成",
+      "url": "/?mode=random",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='65' x='50' text-anchor='middle' font-size='60' fill='%236d28d9'>🎲</text></svg>",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "カスタム生成",
+      "short_name": "Custom",
+      "description": "設定を指定してミステリーを生成",
+      "url": "/?mode=custom",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='65' x='50' text-anchor='middle' font-size='60' fill='%236d28d9'>🎭</text></svg>",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

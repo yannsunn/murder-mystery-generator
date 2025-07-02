@@ -95,9 +95,43 @@ function initializeApp() {
   };
 }
 
+/**
+ * 🚀 PWA Service Worker 登録
+ */
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('✅ Service Worker registered successfully:', registration);
+          
+          // 更新チェック
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // 新しいバージョンが利用可能
+                if (window.uxEnhancer) {
+                  window.uxEnhancer.showToast('🔄 新しいバージョンが利用可能です', 'info', 5000);
+                }
+              }
+            });
+          });
+        })
+        .catch(error => {
+          console.error('❌ Service Worker registration failed:', error);
+        });
+    });
+  }
+}
+
 // DOM読み込み完了時またはすでに読み込み済みの場合に初期化
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeApp);
+  document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+    registerServiceWorker();
+  });
 } else {
   initializeApp();
+  registerServiceWorker();
 }
