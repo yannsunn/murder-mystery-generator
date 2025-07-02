@@ -3,19 +3,17 @@
  * 完全統合型フロントエンド - 自動フェーズ実行対応
  */
 
-// Global variables for UX enhancers
-let skeletonLoader = null;
-let uxEnhancer = null;
-
-// Initialize UX enhancers from global scope
+// Initialize UX enhancers from global scope - 重複宣言を防ぐ
 function initializeUXEnhancers() {
-  skeletonLoader = window.skeletonLoader || null;
-  uxEnhancer = window.uxEnhancer || null;
+  const skeletonLoader = window.skeletonLoader || null;
+  const uxEnhancer = window.uxEnhancer || null;
   
   console.log('🎯 UX Enhancers status:', {
     skeletonLoader: !!skeletonLoader,
     uxEnhancer: !!uxEnhancer
   });
+  
+  return { skeletonLoader, uxEnhancer };
 }
 
 class UltraIntegratedApp {
@@ -32,7 +30,9 @@ class UltraIntegratedApp {
     console.log('🚀 Ultra Integrated App - シンプル版初期化開始');
     
     // UX enhancersを初期化
-    initializeUXEnhancers();
+    const { skeletonLoader, uxEnhancer } = initializeUXEnhancers();
+    this.skeletonLoader = skeletonLoader;
+    this.uxEnhancer = uxEnhancer;
     
     this.init();
   }
@@ -71,19 +71,19 @@ class UltraIntegratedApp {
       
     } catch (error) {
       console.error('❌ 初期化エラー:', error);
-      if (uxEnhancer) {
-        uxEnhancer.showToast('⚠️ アプリケーションの初期化に問題が発生しました', 'error', 5000);
+      if (this.uxEnhancer) {
+        this.uxEnhancer.showToast('⚠️ アプリケーションの初期化に問題が発生しました', 'error', 5000);
       }
     }
   }
 
   setupUXEnhancements() {
-    if (!uxEnhancer) return;
+    if (!this.uxEnhancer) return;
 
     // インタラクティブ要素にエフェクトを追加
-    uxEnhancer.addInteractiveEffect('.btn');
-    uxEnhancer.addInteractiveEffect('.checkbox-label');
-    uxEnhancer.addInteractiveEffect('.radio-label');
+    this.uxEnhancer.addInteractiveEffect('.btn');
+    this.uxEnhancer.addInteractiveEffect('.checkbox-label');
+    this.uxEnhancer.addInteractiveEffect('.radio-label');
 
     // ツールチップを追加
     this.addTooltips();
@@ -93,7 +93,7 @@ class UltraIntegratedApp {
     document.addEventListener('swipeRight', () => this.goToPreviousStep());
 
     // 成功通知の表示
-    uxEnhancer.showToast('🚀 アプリケーション初期化完了', 'success', 3000);
+    this.uxEnhancer.showToast('🚀 アプリケーション初期化完了', 'success', 3000);
   }
 
   addTooltips() {
@@ -303,8 +303,8 @@ class UltraIntegratedApp {
       this.updateButtonStates();
       
       // UX強化: ステップ変更の通知
-      if (uxEnhancer) {
-        uxEnhancer.showToast(`ステップ ${this.currentStep} に戻りました`, 'info', 2000);
+      if (this.uxEnhancer) {
+        this.uxEnhancer.showToast(`ステップ ${this.currentStep} に戻りました`, 'info', 2000);
       }
     }
   }
@@ -336,11 +336,11 @@ class UltraIntegratedApp {
       
       if (this.currentStep === this.totalSteps) {
         this.updateSummary();
-        if (uxEnhancer) {
-          uxEnhancer.showToast('🎯 設定完了！生成の準備ができました', 'success', 3000);
+        if (this.uxEnhancer) {
+          this.uxEnhancer.showToast('🎯 設定完了！生成の準備ができました', 'success', 3000);
         }
-      } else if (uxEnhancer) {
-        uxEnhancer.showToast(`ステップ ${this.currentStep} に進みました`, 'info', 2000);
+      } else if (this.uxEnhancer) {
+        this.uxEnhancer.showToast(`ステップ ${this.currentStep} に進みました`, 'info', 2000);
       }
     }
   }
@@ -358,8 +358,8 @@ class UltraIntegratedApp {
     for (const field of requiredFields) {
       if (!field.value || field.value.trim() === '') {
         console.error(`❌ 必須フィールドが未入力: ${field.name || field.id}`);
-        if (uxEnhancer) {
-          uxEnhancer.showToast(`必須項目「${field.name || field.id}」を入力してください`, 'error', 3000);
+        if (this.uxEnhancer) {
+          this.uxEnhancer.showToast(`必須項目「${field.name || field.id}」を入力してください`, 'error', 3000);
         }
         field.focus();
         return false;
@@ -580,15 +580,15 @@ class UltraIntegratedApp {
     console.log('🎯 生成開始ハンドラー呼び出し');
     console.log('📊 現在の状態:', {
       isGenerating: this.isGenerating,
-      uxEnhancer: !!uxEnhancer,
-      skeletonLoader: !!skeletonLoader
+      uxEnhancer: !!this.uxEnhancer,
+      skeletonLoader: !!this.skeletonLoader
     });
     
     // すでに生成中の場合は停止
     if (this.isGenerating) {
       console.warn('⚠️ すでに生成中です');
       if (uxEnhancer) {
-        uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
+        this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
       return;
     }
@@ -613,7 +613,7 @@ class UltraIntegratedApp {
     if (this.isGenerating) {
       console.warn('⚠️ すでに生成中です');
       if (uxEnhancer) {
-        uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
+        this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
       return;
     }
@@ -644,8 +644,8 @@ class UltraIntegratedApp {
     console.log('📋 Collected formData:', this.formData);
     
     // UX強化: 生成開始通知
-    if (uxEnhancer) {
-      uxEnhancer.showToast('🔬 統合マイクロ生成を開始します', 'info', 3000);
+    if (this.uxEnhancer) {
+      this.uxEnhancer.showToast('🔬 統合マイクロ生成を開始します', 'info', 3000);
     }
 
     try {
@@ -741,8 +741,8 @@ class UltraIntegratedApp {
             console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
             
             // UX強化: 段階完了通知
-            if (uxEnhancer) {
-              uxEnhancer.showToast(
+            if (this.uxEnhancer) {
+              this.uxEnhancer.showToast(
                 `段階${data.step}完了: ${data.name}`, 
                 'info', 
                 2000
@@ -768,8 +768,8 @@ class UltraIntegratedApp {
           this.updatePhaseInfo(9, 9, '生成完了');
           
           // UX強化: 生成完了通知
-          if (uxEnhancer) {
-            uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
+          if (this.uxEnhancer) {
+            this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
           }
           
           // 結果表示
@@ -803,8 +803,8 @@ class UltraIntegratedApp {
       // 開始イベント
       eventSource.addEventListener('start', (event) => {
         console.log('🚀 Staged generation started');
-        if (uxEnhancer) {
-          uxEnhancer.showToast('🚀 段階的生成開始', 'info', 3000);
+        if (this.uxEnhancer) {
+          this.uxEnhancer.showToast('🚀 段階的生成開始', 'info', 3000);
         }
       });
       
@@ -863,7 +863,7 @@ class UltraIntegratedApp {
       
       // UX強化: エラー通知
       if (uxEnhancer) {
-        uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
+        this.uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
       }
       
       this.showError(error.message);
@@ -947,8 +947,8 @@ class UltraIntegratedApp {
                 
                 console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
                 
-                if (uxEnhancer) {
-                  uxEnhancer.showToast(`段階${data.step}完了: ${data.name}`, 'info', 2000);
+                if (this.uxEnhancer) {
+                  this.uxEnhancer.showToast(`段階${data.step}完了: ${data.name}`, 'info', 2000);
                 }
               }
             } catch (parseError) {
@@ -963,8 +963,8 @@ class UltraIntegratedApp {
                 this.updateProgressBar(100);
                 this.updatePhaseInfo(9, 9, '生成完了');
                 
-                if (uxEnhancer) {
-                  uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
+                if (this.uxEnhancer) {
+                  this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
                 }
                 
                 setTimeout(() => {
@@ -989,7 +989,7 @@ class UltraIntegratedApp {
       clearTimeout(timeoutId);
       
       if (uxEnhancer) {
-        uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
+        this.uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
       }
       
       this.showError(fallbackError.message);
@@ -1148,7 +1148,7 @@ class UltraIntegratedApp {
     
     // スケルトンローディング表示
     if (skeletonLoader) {
-      skeletonLoader.show('loading-container', 'generation', {
+      this.skeletonLoader.show('loading-container', 'generation', {
         className: 'generation-skeleton'
       });
       
@@ -1164,7 +1164,7 @@ class UltraIntegratedApp {
   // 実際の生成UI表示
   showActualGenerationUI() {
     if (skeletonLoader) {
-      skeletonLoader.hide('loading-container');
+      this.skeletonLoader.hide('loading-container');
     }
     
     // プログレス初期化
@@ -1205,11 +1205,11 @@ class UltraIntegratedApp {
       
       // スケルトンローディングで段階的に表示
       if (skeletonLoader) {
-        skeletonLoader.show('scenario-content', 'result');
+        this.skeletonLoader.show('scenario-content', 'result');
         
         // 段階的にコンテンツを表示
         setTimeout(() => {
-          skeletonLoader.hide('scenario-content');
+          this.skeletonLoader.hide('scenario-content');
           const summaryHtml = this.generateResultSummary(sessionData);
           contentEl.innerHTML = summaryHtml;
           contentEl.classList.add('skeleton-fade-in');
@@ -2213,7 +2213,7 @@ class UltraIntegratedApp {
   showError(message) {
     // スケルトンローディングを停止
     if (skeletonLoader) {
-      skeletonLoader.hideAll();
+      this.skeletonLoader.hideAll();
     }
     
     this.hideElement('loading-container');
