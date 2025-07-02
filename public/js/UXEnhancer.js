@@ -3,7 +3,7 @@
  * ユーザーエクスペリエンス強化システム - インタラクション・フィードバック・アクセシビリティ
  */
 
-export class UXEnhancer {
+class UXEnhancer {
   constructor() {
     this.isInitialized = false;
     this.activeToasts = new Map();

@@ -234,13 +234,31 @@
     </div>
   </main>
 
-  <!-- JavaScript -->
+  <!-- JavaScript Dependencies -->
+  <script src="js/SkeletonLoader.js"></script>
+  <script src="js/UXEnhancer.js"></script>
   <script src="js/UltraIntegratedApp.js"></script>
   <script>
     // シンプル化されたアプリ初期化
     let app;
     document.addEventListener('DOMContentLoaded', function() {
-      app = new UltraIntegratedApp();
+      console.log('🎆 DOM Content Loaded - アプリ初期化開始');
+      
+      // UX enhancersを先に初期化
+      if (typeof SkeletonLoader !== 'undefined' && !window.skeletonLoader) {
+        window.skeletonLoader = new SkeletonLoader();
+        console.log('✅ SkeletonLoader initialized globally');
+      }
+      if (typeof UXEnhancer !== 'undefined' && !window.uxEnhancer) {
+        window.uxEnhancer = new UXEnhancer();
+        console.log('✅ UXEnhancer initialized globally');
+      }
+      
+      // メインアプリを初期化
+      setTimeout(() => {
+        app = new UltraIntegratedApp();
+        console.log('✅ UltraIntegratedApp initialized');
+      }, 100);
       
       // グローバル関数（タブ切り替え用）
       window.showTab = function(tabName) {

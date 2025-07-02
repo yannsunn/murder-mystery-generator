@@ -3,7 +3,7 @@
  * スケルトンローディングとプログレッシブUI強化
  */
 
-export class SkeletonLoader {
+class SkeletonLoader {
   constructor() {
     this.activeSkeletons = new Map();
     this.animations = {

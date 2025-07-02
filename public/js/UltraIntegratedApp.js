@@ -3,24 +3,19 @@
  * 完全統合型フロントエンド - 自動フェーズ実行対応
  */
 
-// スケルトンローダーとUXエンハンサーのインポート（モジュール対応）
-let SkeletonLoader, skeletonLoader, UXEnhancer, uxEnhancer;
-try {
-  if (typeof module !== 'undefined' && module.exports) {
-    // Node.js環境
-    ({ SkeletonLoader, skeletonLoader } = require('./SkeletonLoader.js'));
-    ({ UXEnhancer, uxEnhancer } = require('./UXEnhancer.js'));
-  } else {
-    // ブラウザ環境 - 動的インポート
-    if (typeof SkeletonLoader !== 'undefined') {
-      skeletonLoader = new SkeletonLoader();
-    }
-    if (typeof UXEnhancer !== 'undefined') {
-      uxEnhancer = new UXEnhancer();
-    }
-  }
-} catch (error) {
-  console.warn('Modules not available:', error.message);
+// Global variables for UX enhancers
+let skeletonLoader = null;
+let uxEnhancer = null;
+
+// Initialize UX enhancers from global scope
+function initializeUXEnhancers() {
+  skeletonLoader = window.skeletonLoader || null;
+  uxEnhancer = window.uxEnhancer || null;
+  
+  console.log('🎯 UX Enhancers status:', {
+    skeletonLoader: !!skeletonLoader,
+    uxEnhancer: !!uxEnhancer
+  });
 }
 
 class UltraIntegratedApp {
@@ -35,6 +30,10 @@ class UltraIntegratedApp {
     };
     
     console.log('🚀 Ultra Integrated App - シンプル版初期化開始');
+    
+    // UX enhancersを初期化
+    initializeUXEnhancers();
+    
     this.init();
   }
 
@@ -139,22 +138,30 @@ class UltraIntegratedApp {
         console.log('🚀 フォーム送信イベント受信');
         
         if (this.validateForm()) {
-          this.generateScenario();
+          this.handleGenerationStart();
         }
       });
       
       // 生成ボタンの直接クリック処理
       if (generateBtn) {
+        console.log('✅ 生成ボタンが見つかりました:', generateBtn);
         generateBtn.addEventListener('click', (e) => {
           e.preventDefault();
           e.stopPropagation();
           
           console.log('🎯 生成ボタン直接クリック受信');
+          console.log('📄 ボタンの犀性:', {
+            disabled: generateBtn.disabled,
+            className: generateBtn.className,
+            style: generateBtn.style.cssText
+          });
           
           if (this.validateForm()) {
-            this.generateScenario();
+            this.handleGenerationStart();
           }
         });
+      } else {
+        console.error('❌ 生成ボタンが見つかりません');
       }
       
       // 新規シナリオボタン
@@ -415,6 +422,20 @@ class UltraIntegratedApp {
   // 🎯 生成開始ハンドラー（マイクロモード専用）
   async handleGenerationStart() {
     console.log('🎯 生成開始ハンドラー呼び出し');
+    console.log('📊 現在の状態:', {
+      isGenerating: this.isGenerating,
+      uxEnhancer: !!uxEnhancer,
+      skeletonLoader: !!skeletonLoader
+    });
+    
+    // すでに生成中の場合は停止
+    if (this.isGenerating) {
+      console.warn('⚠️ すでに生成中です');
+      if (uxEnhancer) {
+        uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
+      }
+      return;
+    }
     
     // フォームバリデーション
     if (!this.validateForm()) {
