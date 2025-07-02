@@ -587,7 +587,7 @@ class UltraIntegratedApp {
     // すでに生成中の場合は停止
     if (this.isGenerating) {
       console.warn('⚠️ すでに生成中です');
-      if (uxEnhancer) {
+      if (this.uxEnhancer) {
         this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
       return;
@@ -612,7 +612,7 @@ class UltraIntegratedApp {
     // すでに生成中の場合は停止
     if (this.isGenerating) {
       console.warn('⚠️ すでに生成中です');
-      if (uxEnhancer) {
+      if (this.uxEnhancer) {
         this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
       return;
@@ -648,12 +648,16 @@ class UltraIntegratedApp {
       this.uxEnhancer.showToast('🔬 統合マイクロ生成を開始します', 'info', 3000);
     }
 
+    // 🔥 BREAKTHROUGH: スコープ問題解決 - 変数を適切なスコープで宣言
+    let eventSource = null;
+    let timeoutId = null;
+
     try {
       this.isGenerating = true;
       this.showGenerationUI();
       
       // 5分タイムアウト設定
-      const timeoutId = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (this.isGenerating) {
           console.error('⏰ Generation timeout reached');
           this.showError('生成がタイムアウトしました。再度お試しください。');
@@ -691,7 +695,7 @@ class UltraIntegratedApp {
       console.log('✅ セッション初期化成功');
       
       // 🎯 セッションIDのみでEventSourceを使用（URL長制限回避）
-      const eventSource = new EventSource(`/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
+      eventSource = new EventSource(`/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
       
       let currentStep = 0;
       let finalSessionData = null;
@@ -862,7 +866,7 @@ class UltraIntegratedApp {
       this.cleanup(eventSource, timeoutId);
       
       // UX強化: エラー通知
-      if (uxEnhancer) {
+      if (this.uxEnhancer) {
         this.uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
       }
       
@@ -988,7 +992,7 @@ class UltraIntegratedApp {
       this.stopProgressTimer();
       clearTimeout(timeoutId);
       
-      if (uxEnhancer) {
+      if (this.uxEnhancer) {
         this.uxEnhancer.showToast('❌ 生成中にエラーが発生しました', 'error', 5000);
       }
       
