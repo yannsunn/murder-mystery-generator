@@ -1097,9 +1097,9 @@ export default async function handler(req, res) {
 
   // GET リクエスト対応（EventSource用）
   if (req.method === 'GET') {
-    const { formData, sessionId } = req.query;
+    const { formData, sessionId, action } = req.query;
     
-    if (!formData) {
+    if (!formData && action !== 'init') {
       return res.status(400).json({
         success: false,
         error: 'formData is required in query params'
@@ -1108,8 +1108,9 @@ export default async function handler(req, res) {
     
     // クエリパラメータをbody形式に変換
     req.body = {
-      formData: JSON.parse(formData),
-      sessionId: sessionId || `integrated_micro_${Date.now()}`
+      formData: formData ? JSON.parse(formData) : {},
+      sessionId: sessionId || `integrated_micro_${Date.now()}`,
+      action: action || null
     };
   } else if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -1143,12 +1144,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { formData, sessionId } = req.body;
+    const { formData, sessionId, action } = req.body;
     
     console.log('🔬 Starting integrated micro generation...');
     console.log('📋 Raw request body:', JSON.stringify(req.body, null, 2));
     console.log('📋 Received formData:', JSON.stringify(formData, null, 2));
     console.log('🆔 Session ID:', sessionId);
+    console.log('⚡ Action:', action);
+
+    // action: 'init'の場合はセッション初期化のみ実行
+    if (action === 'init') {
+      console.log('🎯 Init action detected - セッション初期化のみ実行');
+      
+      const initSessionData = {
+        sessionId: sessionId || `integrated_micro_${Date.now()}`,
+        formData,
+        startTime: new Date().toISOString(),
+        phases: {},
+        status: 'initialized',
+        generationType: 'integrated_micro',
+        action: 'init'
+      };
+
+      // 初期化完了レスポンス
+      return res.status(200).json({
+        success: true,
+        message: 'セッション初期化完了',
+        sessionData: initSessionData,
+        action: 'init',
+        initialized: true
+      });
+    }
     
     if (!formData) {
       return res.status(400).json({

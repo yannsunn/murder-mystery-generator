@@ -495,11 +495,26 @@ class UltraIntegratedApp {
       
       console.log('🔬 Starting staged generation with real-time progress...');
       
-      // 🎯 段階的処理用のEventSourceを使用
-      const eventSource = new EventSource('/api/integrated-micro-generator?' + new URLSearchParams({
-        formData: JSON.stringify(this.formData),
-        sessionId: sessionId
-      }));
+      // 🔥 BREAKTHROUGH: セッション初期化でURL長制限問題を解決
+      console.log('🎯 セッション初期化開始...');
+      const initResponse = await fetch('/api/integrated-micro-generator', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'init',
+          formData: this.formData,
+          sessionId: sessionId
+        })
+      });
+      
+      if (!initResponse.ok) {
+        throw new Error(`セッション初期化失敗: ${initResponse.status}`);
+      }
+      
+      console.log('✅ セッション初期化成功');
+      
+      // 🎯 セッションIDのみでEventSourceを使用（URL長制限回避）
+      const eventSource = new EventSource(`/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
       
       let currentStep = 0;
       let finalSessionData = null;
@@ -666,9 +681,8 @@ class UltraIntegratedApp {
     } catch (error) {
       console.error('❌ Integrated Micro Generation failed:', error);
       
-      // タイマー停止
-      this.stopProgressTimer();
-      clearTimeout(timeoutId);
+      // 🔥 BREAKTHROUGH: 強化されたエラーハンドリング
+      this.cleanup(eventSource, timeoutId);
       
       // UX強化: エラー通知
       if (uxEnhancer) {
@@ -677,9 +691,34 @@ class UltraIntegratedApp {
       
       this.showError(error.message);
     } finally {
-      this.isGenerating = false;
-      this.stopProgressTimer();
+      // 🔥 BREAKTHROUGH: 確実なリソース解放
+      this.cleanup(eventSource, timeoutId);
     }
+  }
+
+  // 🔥 BREAKTHROUGH: 強化されたクリーンアップ機能
+  cleanup(eventSource, timeoutId) {
+    console.log('🧹 リソースクリーンアップ開始');
+    
+    // EventSourceを安全に閉じる
+    if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+      eventSource.close();
+      console.log('✅ EventSource closed');
+    }
+    
+    // タイムアウトをクリア
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      console.log('✅ Timeout cleared');
+    }
+    
+    // プログレスタイマーを停止
+    this.stopProgressTimer();
+    
+    // 生成フラグをリセット
+    this.isGenerating = false;
+    
+    console.log('✅ クリーンアップ完了');
   }
 
   // 🔄 EventSource失敗時のPOSTフォールバック
