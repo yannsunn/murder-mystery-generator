@@ -171,6 +171,26 @@ class UltraIntegratedApp {
         newScenarioBtn.addEventListener('click', () => this.resetApp());
       }
       
+      // ランダム生成ボタン
+      const randomGenerateBtn = document.getElementById('random-generate-btn');
+      if (randomGenerateBtn) {
+        console.log('✅ ランダム生成ボタンが見つかりました:', randomGenerateBtn);
+        randomGenerateBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          
+          console.log('🎲 ランダム生成ボタンクリック受信');
+          
+          // ランダムモードでマイクロ生成を開始
+          this.handleRandomGeneration();
+          
+          return false;
+        });
+      } else {
+        console.warn('⚠️ ランダム生成ボタンが見つかりません');
+      }
+      
       // フォーム変更監視
       formElement.addEventListener('change', () => this.updateSummary());
       
@@ -355,6 +375,46 @@ class UltraIntegratedApp {
     }
   }
 
+  // 🎲 ランダムフォームデータ収集
+  collectRandomFormData() {
+    console.log('🎲 ランダムフォームデータを生成中...');
+    
+    // ランダム選択肢の定義
+    const randomOptions = {
+      participants: ['3', '4', '5', '6', '7', '8'],
+      era: ['modern', 'showa', 'taisho', 'meiji', 'edo', 'heian', 'fantasy', 'sci-fi'],
+      setting: ['closed-space', 'remote-island', 'luxury-cruise', 'old-mansion', 'mountain-villa', 'urban-hotel', 'school', 'office'],
+      worldview: ['realistic', 'mystery', 'horror', 'fantasy', 'sci-fi', 'historical', 'comedy'],
+      tone: ['serious', 'light', 'dark', 'comedic', 'dramatic', 'suspenseful'],
+      complexity: ['simple', 'standard', 'complex', 'expert'],
+      motive: ['random', 'revenge', 'inheritance', 'love', 'jealousy', 'business', 'secret', 'accident'],
+      'victim-type': ['random', 'wealthy', 'young', 'elder', 'authority', 'outsider', 'insider'],
+      weapon: ['random', 'poison', 'knife', 'gun', 'blunt', 'rope', 'environmental', 'other']
+    };
+    
+    // ランダムに選択
+    this.formData = {};
+    Object.keys(randomOptions).forEach(key => {
+      const options = randomOptions[key];
+      const randomIndex = Math.floor(Math.random() * options.length);
+      this.formData[key] = options[randomIndex];
+    });
+    
+    // チェックボックスをランダムに設定
+    const checkboxes = ['generate-images', 'detailed-handouts', 'gm-support'];
+    checkboxes.forEach(name => {
+      this.formData[name] = Math.random() > 0.5; // 50%の確率でtrue
+    });
+    
+    // 生成モードを段階的に固定
+    this.formData.generation_mode = 'staged';
+    
+    // ランダムモードフラグを追加
+    this.formData.randomMode = true;
+    
+    console.log('✅ ランダムフォームデータ生成完了:', this.formData);
+  }
+
   updateSummary() {
     const summaryEl = document.getElementById('settings-summary');
     if (!summaryEl) return;
@@ -448,6 +508,29 @@ class UltraIntegratedApp {
     console.log('✅ フォームバリデーション成功');
     
     // マイクロモード専用に統一
+    await this.startMicroGeneration();
+  }
+  
+  // 🎲 ランダム生成ハンドラー
+  async handleRandomGeneration() {
+    console.log('🎲 ランダム生成開始ハンドラー呼び出し');
+    
+    // すでに生成中の場合は停止
+    if (this.isGenerating) {
+      console.warn('⚠️ すでに生成中です');
+      if (uxEnhancer) {
+        uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
+      }
+      return;
+    }
+    
+    // ランダムフォームデータを収集
+    this.collectRandomFormData();
+    
+    console.log('✅ ランダムフォームデータ設定完了');
+    console.log('📊 ランダムデータ:', this.formData);
+    
+    // ランダムモードでマイクロ生成を開始
     await this.startMicroGeneration();
   }
   
