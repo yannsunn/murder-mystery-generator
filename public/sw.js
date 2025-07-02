@@ -22,6 +22,12 @@ const STATIC_ASSETS = [
   '/manifest.json'
 ];
 
+// 外部リソースは別途処理
+const EXTERNAL_FONTS = [
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
+  'https://fonts.gstatic.com'
+];
+
 // キャッシュしないパス
 const NEVER_CACHE = [
   '/api/',
@@ -39,14 +45,24 @@ self.addEventListener('install', (event) => {
     caches.open(STATIC_CACHE)
       .then(cache => {
         console.log('📦 Caching static assets...');
-        return cache.addAll(STATIC_ASSETS);
+        // 静的アセットを個別にキャッシュしてエラー耐性を向上
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url => 
+            cache.add(url).catch(error => {
+              console.warn(`⚠️ Failed to cache ${url}:`, error);
+              return null; // エラーを無視して続行
+            })
+          )
+        );
       })
       .then(() => {
-        console.log('✅ Static assets cached successfully');
+        console.log('✅ Static assets caching completed (with possible warnings)');
         return self.skipWaiting(); // 即座にアクティブ化
       })
       .catch(error => {
         console.error('❌ Failed to cache static assets:', error);
+        // エラーが発生してもService Workerの登録は続行
+        return self.skipWaiting();
       })
   );
 });
@@ -83,6 +99,14 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
+  // Chrome拡張やDeveloper Toolsのリクエストをスキップ
+  if (url.protocol === 'chrome-extension:' || 
+      url.protocol === 'moz-extension:' || 
+      url.protocol === 'safari-extension:' ||
+      url.hostname === 'localhost' && url.port === '9222') {
+    return;
+  }
+  
   // キャッシュしないパスをスキップ
   if (NEVER_CACHE.some(path => url.pathname.startsWith(path))) {
     return;
@@ -90,6 +114,18 @@ self.addEventListener('fetch', (event) => {
   
   // GET リクエストのみ処理
   if (request.method !== 'GET') {
+    return;
+  }
+  
+  // 外部フォントは特別処理（CSP制約のため）
+  if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    // 外部フォントはネットワークファーストで、失敗時は無視
+    event.respondWith(
+      fetch(request).catch(() => {
+        console.log('📝 External font request failed, continuing without cache');
+        return new Response('', { status: 404 });
+      })
+    );
     return;
   }
   

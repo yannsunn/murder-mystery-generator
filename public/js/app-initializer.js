@@ -126,12 +126,19 @@ function registerServiceWorker() {
 }
 
 // DOM読み込み完了時またはすでに読み込み済みの場合に初期化
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-    registerServiceWorker();
-  });
-} else {
+function startApplication() {
+  // 既に初期化済みの場合はスキップ
+  if (window.appInitialized) {
+    console.log('⚠️ Application already initialized, skipping duplicate initialization');
+    return;
+  }
+  
   initializeApp();
   registerServiceWorker();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startApplication);
+} else {
+  startApplication();
 }
