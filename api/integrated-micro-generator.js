@@ -1550,6 +1550,8 @@ export default async function handler(req, res) {
       logger.info('🚀 並列AI処理モードで実行');
     } else {
       logger.debug('📝 段階的処理モードで実行');
+    }
+    
     if (false) {
       logger.debug('🚀 Using parallel generation for independent tasks');
       const parallelResults = await parallelEngine.generateConcurrently(optimizedFlow.tasks, context);
