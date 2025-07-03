@@ -1,0 +1,258 @@
+# 🎯 Cursor Rules - プロジェクト別環境変数管理システム
+
+## 📋 プロジェクト構成
+
+### 🏗️ 環境変数管理システム
+```
+murder_mystery_netlify/
+├── .env                           # 開発環境（gitignore対象）
+├── .env.local                     # ローカル開発専用（gitignore対象）
+├── .env.example                   # テンプレート（Git管理対象）
+├── .env.production               # 本番環境設定（Git管理対象）
+├── env-configs/                  # プロジェクト別設定
+│   ├── shared.env               # 共通設定
+│   └── murder-mystery.env       # プロジェクト固有設定
+├── scripts/
+│   ├── env-loader.js            # 環境変数ローダー
+│   └── project-manager.js       # プロジェクト管理
+└── README-PROJECT-MANAGEMENT.md # 管理ドキュメント
+```
+
+### 📊 プロジェクト別Supabase管理
+
+#### 🎭 Murder Mystery Generator
+```
+プロジェクト名: murder-mystery
+Supabaseプロジェクト: cjnsewifvnhakvhqlgoy
+URL: https://cjnsewifvnhakvhqlgoy.supabase.co
+```
+
+**データベース構成:**
+- **scenarios** テーブル: 生成されたシナリオの保存
+  - id (UUID, Primary Key)
+  - title (text)
+  - description (text)
+  - characters (jsonb)
+  - scenario_data (jsonb)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+
+- **user_sessions** テーブル: ユーザーセッション管理
+  - id (UUID, Primary Key)
+  - session_id (text, Unique)
+  - user_data (jsonb)
+  - last_activity (timestamp)
+  - created_at (timestamp)
+
+**Row Level Security (RLS):**
+- 匿名ユーザーによる読み取り・書き込み許可
+- セッションベースのデータ分離
+
+**API使用状況:**
+- シナリオ生成: GROQ API（主）/ OpenAI API（フォールバック）
+- データ永続化: Supabase Database
+- ファイル出力: JSZip（クライアントサイド）
+
+#### 🚀 Project A（サンプル）
+```
+プロジェクト名: project-a
+Supabaseプロジェクト: [未設定]
+URL: [未設定]
+```
+
+**予定データベース構成:**
+- **users** テーブル: ユーザー管理
+- **projects** テーブル: プロジェクト管理
+- **activities** テーブル: アクティビティログ
+
+#### 🎯 Project B（サンプル）
+```
+プロジェクト名: project-b
+Supabaseプロジェクト: [未設定]
+URL: [未設定]
+```
+
+**予定データベース構成:**
+- **items** テーブル: アイテム管理
+- **categories** テーブル: カテゴリ管理
+- **analytics** テーブル: 分析データ
+
+## 🔧 開発ルール
+
+### 1. 環境変数管理
+```bash
+# 新しいプロジェクト作成時
+1. env-configs/{project-name}.env ファイル作成
+2. scripts/project-manager.js にプロジェクト設定追加
+3. npm run project:load {project-name} で読み込み確認
+4. npm run project:health {project-name} で検証
+```
+
+### 2. Supabase設定パターン
+```javascript
+// 各プロジェクトの必須環境変数
+SUPABASE_URL=https://{project-id}.supabase.co
+SUPABASE_ANON_KEY={anon-key}
+SUPABASE_SERVICE_KEY={service-key}  // 管理機能用
+
+// プロジェクト固有設定
+PROJECT_NAME={project-name}
+PROJECT_VERSION={version}
+DATABASE_URL=sqlite://./data/{project-name}.db  // ローカル開発用
+```
+
+### 3. データベース設計原則
+- **UUID主キー**: 全テーブルでUUIDを使用
+- **タイムスタンプ**: created_at, updated_at を必須とする
+- **JSONB活用**: 柔軟なデータ構造にJSONBを使用
+- **RLS有効**: 必要に応じてRow Level Securityを設定
+
+### 4. セキュリティ設定
+```sql
+-- RLS有効化テンプレート
+ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY;
+
+-- 匿名ユーザーポリシー例
+CREATE POLICY "Allow anonymous access" ON {table_name}
+    FOR ALL USING (true);
+
+-- セッションベースポリシー例
+CREATE POLICY "Session-based access" ON {table_name}
+    FOR ALL USING (session_id = current_setting('app.session_id'));
+```
+
+## 🚀 操作コマンド
+
+### プロジェクト管理
+```bash
+# プロジェクト一覧表示
+npm run project:list
+
+# プロジェクト読み込み
+npm run project:load {project-name}
+
+# 現在のプロジェクト状態表示
+npm run project:status
+
+# ヘルスチェック
+npm run project:health {project-name}
+
+# 全プロジェクトステータス確認
+npm run project:check-all
+
+# Vercelにデプロイ
+npm run project:deploy {project-name} {environment}
+```
+
+### 環境変数管理
+```bash
+# 環境変数読み込み
+npm run env:load {project-name}
+
+# 環境変数状態表示
+npm run env:status
+
+# 環境変数テンプレート生成
+npm run env:example
+```
+
+## 📊 新規プロジェクト追加手順
+
+### 1. Supabaseプロジェクト作成
+- Supabaseダッシュボードで新規プロジェクト作成
+- データベース設計・テーブル作成
+- RLS設定・ポリシー作成
+- API Keys取得
+
+### 2. 環境設定ファイル作成
+```bash
+# env-configs/{project-name}.env
+SUPABASE_URL=https://{project-id}.supabase.co
+SUPABASE_ANON_KEY={anon-key}
+SUPABASE_SERVICE_KEY={service-key}
+PROJECT_NAME={project-name}
+PROJECT_VERSION=1.0.0
+DATABASE_URL=sqlite://./data/{project-name}.db
+```
+
+### 3. プロジェクト管理設定
+```javascript
+// scripts/project-manager.js のPROJECT_CONFIGS に追加
+'{project-name}': {
+  name: '{Project Display Name}',
+  description: '{Project Description}',
+  requiredVars: ['GROQ_API_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'],
+  optionalVars: ['OPENAI_API_KEY', 'SUPABASE_SERVICE_KEY'],
+  vercelProject: '{vercel-project-name}'
+}
+```
+
+### 4. このファイル更新
+- プロジェクト情報を上記「プロジェクト別Supabase管理」セクションに追加
+- データベース構成を詳細に記述
+- 特有の設定・制約事項を記載
+
+## 🔒 セキュリティガイドライン
+
+### API Key管理
+- 本番環境のキーは`.env.local`または環境変数で管理
+- 開発環境用とテスト環境用を分離
+- 定期的なキーローテーション
+
+### データベースセキュリティ
+- RLS（Row Level Security）の適切な設定
+- 最小権限の原則でポリシー作成
+- 機密データの暗号化
+
+### Vercelデプロイ
+- 環境変数の暗号化設定
+- ドメインアクセス制限
+- ヘルスチェック機能の活用
+
+## 🎯 開発フロー
+
+### 1. 日常開発
+```bash
+# 1. プロジェクト読み込み
+npm run project:load murder-mystery
+
+# 2. 開発サーバー起動
+npm run dev
+
+# 3. 機能実装・テスト
+npm run test
+
+# 4. ヘルスチェック
+npm run project:health murder-mystery
+```
+
+### 2. デプロイ準備
+```bash
+# 1. 全プロジェクト状態確認
+npm run project:check-all
+
+# 2. 環境変数確認
+npm run env:status
+
+# 3. 本番デプロイ
+npm run project:deploy murder-mystery production
+```
+
+## 📈 拡張計画
+
+### 予定機能
+- [ ] 複数Supabaseプロジェクト間のデータ同期
+- [ ] 環境変数の暗号化管理
+- [ ] 自動バックアップ機能
+- [ ] 監視・アラート機能
+- [ ] CI/CDパイプライン統合
+
+### 技術スタック拡張
+- [ ] PostgreSQL直接接続対応
+- [ ] Redis キャッシュ層追加
+- [ ] GraphQL API層追加
+- [ ] WebSocket リアルタイム通信
+
+---
+
+**🎯 このルールに従って、効率的で安全なマルチプロジェクト開発を実現します。**

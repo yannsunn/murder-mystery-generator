@@ -17,9 +17,25 @@
     "deploy": "vercel --prod",
     "clean": "rm -rf node_modules package-lock.json && npm install",
     "audit": "npm audit fix",
-    "env:example": "node -e \"import('./api/config/env-manager.js').then(m => console.log(m.envManager.generateEnvExample()))\""
+    "env:example": "node -e \"import('./api/config/env-manager.js').then(m => console.log(m.envManager.generateEnvExample()))\"",
+    "project:list": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.listProjects())\"",
+    "project:load": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.loadProject(process.argv[2]))\"",
+    "project:status": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.showCurrentProject())\"",
+    "project:health": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.healthCheck(process.argv[2]))\"",
+    "project:deploy": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.deployToVercel(process.argv[2], process.argv[3] || 'production'))\"",
+    "project:check-all": "node -e \"import('./scripts/project-manager.js').then(m => m.projectManager.checkAllProjects())\"",
+    "env:load": "node -e \"import('./scripts/env-loader.js').then(m => m.envLoader.loadProject(process.argv[2]))\"",
+    "env:status": "node -e \"import('./scripts/env-loader.js').then(m => m.envLoader.displayStatus())\"",
+    "db:setup": "node scripts/quick-setup.js",
+    "db:check": "node -e \"import('./api/supabase-client.js').then(m => m.testSupabaseConnection().then(console.log))\"",
+    "db:test": "curl 'http://localhost:3000/api/setup-database?action=check-tables' || echo 'Server not running'",
+    "ultra-deploy": "node scripts/ultra-deployment-system.js",
+    "deploy:safe": "NODE_ENV=staging npm run ultra-deploy",
+    "deploy:production": "NODE_ENV=production npm run ultra-deploy",
+    "monitor:health": "node scripts/health-monitor.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.50.3",
     "jszip": "^3.10.1"
   },
   "devDependencies": {

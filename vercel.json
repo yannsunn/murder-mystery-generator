@@ -1,21 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -69,7 +52,7 @@
       ]
     },
     {
-      "source": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "source": "/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -82,6 +65,10 @@
     {
       "source": "/",
       "destination": "/public/index.html"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }

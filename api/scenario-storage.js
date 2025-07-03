@@ -7,6 +7,11 @@ import { envManager } from './config/env-manager.js';
 import { setSecurityHeaders } from './security-utils.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { createSecurityMiddleware } from './middleware/rate-limiter.js';
+import { 
+  saveScenarioToSupabase, 
+  getScenarioFromSupabase, 
+  saveUserSessionToSupabase 
+} from './supabase-client.js';
 
 export const config = {
   maxDuration: 30,
@@ -63,6 +68,17 @@ export async function saveScenario(req, res) {
     storedData.updatedAt = new Date().toISOString();
     scenarioStorage.set(sessionId, storedData);
 
+    // 🗄️ Supabaseに自動保存
+    if (isComplete) {
+      console.log('📋 シナリオ完成 - Supabaseに保存中...');
+      const supabaseResult = await saveScenarioToSupabase(sessionId, storedData);
+      if (supabaseResult.success) {
+        console.log('✅ Supabaseに保存完了:', sessionId);
+      } else {
+        console.warn('⚠️  Supabase保存失敗:', supabaseResult.error);
+      }
+    }
+
     // 既存のタイムアウトをクリア
     if (timeoutHandlers.has(sessionId)) {
       clearTimeout(timeoutHandlers.get(sessionId));
@@ -111,13 +127,25 @@ export async function getScenario(req, res) {
       });
     }
 
-    const storedData = scenarioStorage.get(sessionId);
+    let storedData = scenarioStorage.get(sessionId);
     
+    // メモリにない場合はSupabaseから取得を試行
     if (!storedData) {
-      return res.status(404).json({
-        success: false,
-        error: 'シナリオが見つかりません'
-      });
+      console.log('📋 メモリにデータなし - Supabaseから取得を試行:', sessionId);
+      const supabaseResult = await getScenarioFromSupabase(sessionId);
+      
+      if (supabaseResult.success) {
+        storedData = supabaseResult.data.scenario_data;
+        console.log('✅ Supabaseからデータを取得しました:', sessionId);
+        
+        // メモリにもキャッシュ
+        scenarioStorage.set(sessionId, storedData);
+      } else {
+        return res.status(404).json({
+          success: false,
+          error: 'シナリオが見つかりません'
+        });
+      }
     }
 
     return res.status(200).json({
