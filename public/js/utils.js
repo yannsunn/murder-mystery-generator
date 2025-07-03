@@ -503,5 +503,10 @@ window.utils = {
   Utils
 };
 
-// エクスポート
-export { DOM, Format, Validate, Storage, API, Utils };
+// グローバル公開
+window.DOM = DOM;
+window.Format = Format;
+window.Validate = Validate;
+window.Storage = Storage;
+window.API = API;
+window.Utils = Utils;

@@ -3,9 +3,8 @@
  * 11ファイル→3ファイル統合の中核
  */
 
-// ログとリソース管理のインポート
-import './logger-frontend.js';
-import './resource-manager-frontend.js';
+// ログとリソース管理はグローバル変数として使用
+// logger と resourceManager は既に読み込まれているはず
 
 /**
  * 🎯 メインアプリケーションクラス
@@ -44,12 +43,13 @@ class UltraOptimizedApp {
       // DOM要素取得
       this.elements.form = document.getElementById('scenario-form');
       this.elements.generateBtn = document.getElementById('generate-btn');
+      this.elements.randomGenerateBtn = document.getElementById('random-generate-btn');
       this.elements.loadingContainer = document.getElementById('loading-container');
       this.elements.resultContainer = document.getElementById('result-container');
       
-      // 要素チェック
+      // 要素チェック（randomGenerateBtnは必須ではない）
       const missingElements = Object.entries(this.elements)
-        .filter(([key, el]) => !el)
+        .filter(([key, el]) => !el && key !== 'randomGenerateBtn')
         .map(([key]) => key);
         
       if (missingElements.length > 0) {
@@ -84,6 +84,13 @@ class UltraOptimizedApp {
     resourceManager.addEventListener(this.elements.generateBtn, 'click', () => {
       this.handleGenerate();
     });
+    
+    // ランダム生成ボタン
+    if (this.elements.randomGenerateBtn) {
+      resourceManager.addEventListener(this.elements.randomGenerateBtn, 'click', () => {
+        this.handleRandomGenerate();
+      });
+    }
     
     // キーボードショートカット
     resourceManager.addEventListener(document, 'keydown', (e) => {
@@ -123,6 +130,35 @@ class UltraOptimizedApp {
     } catch (error) {
       logger.error('生成エラー:', error);
       this.showError('シナリオ生成中にエラーが発生しました');
+      this.resetUI();
+    }
+  }
+
+  /**
+   * ランダム生成処理
+   */
+  async handleRandomGenerate() {
+    if (this.isGenerating) {
+      logger.warn('既に生成中です');
+      return;
+    }
+    
+    try {
+      logger.info('🎲 ランダム生成開始');
+      
+      // ランダム生成用のデータを作成
+      this.formData = this.createRandomFormData();
+      
+      // UI更新
+      this.isGenerating = true;
+      this.showLoading();
+      
+      // EventSource接続
+      await this.connectEventSource();
+      
+    } catch (error) {
+      logger.error('ランダム生成エラー:', error);
+      this.showError('ランダム生成中にエラーが発生しました');
       this.resetUI();
     }
   }
@@ -244,13 +280,48 @@ class UltraOptimizedApp {
   }
 
   /**
+   * ランダムフォームデータ作成
+   */
+  createRandomFormData() {
+    const randomChoices = {
+      participants: ['4', '5', '6', '7', '8'],
+      era: ['modern', 'showa', 'near-future', 'fantasy'],
+      setting: ['closed-space', 'mountain-villa', 'military-facility', 'underwater-facility', 'city'],
+      worldview: ['realistic', 'occult', 'sci-fi', 'mystery'],
+      tone: ['serious', 'light', 'horror', 'comedy'],
+      complexity: ['simple', 'standard', 'complex'],
+      motive: ['random', 'money', 'revenge', 'love', 'jealousy', 'secret'],
+      'victim-type': ['random', 'wealthy', 'celebrity', 'businessman', 'ordinary'],
+      weapon: ['random', 'knife', 'poison', 'blunt', 'unusual']
+    };
+    
+    const data = {};
+    
+    // ランダム選択
+    for (const [key, options] of Object.entries(randomChoices)) {
+      data[key] = options[Math.floor(Math.random() * options.length)];
+    }
+    
+    // チェックボックスはランダム
+    data['generate-images'] = Math.random() > 0.5 ? 'true' : 'false';
+    data['detailed-handouts'] = Math.random() > 0.3 ? 'true' : 'false';
+    data['gm-support'] = Math.random() > 0.2 ? 'true' : 'false';
+    
+    // カスタム要求は空
+    data['custom-request'] = '';
+    
+    logger.debug('ランダム生成されたフォームデータ:', data);
+    return data;
+  }
+
+  /**
    * フォームバリデーション
    */
   validateFormData(data) {
     const errors = [];
     
     // 必須フィールドチェック
-    const requiredFields = ['participants', 'era', 'setting', 'tone', 'incident_type', 'complexity'];
+    const requiredFields = ['participants', 'era', 'setting', 'tone', 'complexity'];
     
     for (const field of requiredFields) {
       if (!data[field]) {
@@ -566,5 +637,5 @@ if (document.readyState === 'loading') {
   window.ultraApp = new UltraOptimizedApp();
 }
 
-// エクスポート
-export { UltraOptimizedApp };
+// グローバル公開
+window.UltraOptimizedApp = UltraOptimizedApp;

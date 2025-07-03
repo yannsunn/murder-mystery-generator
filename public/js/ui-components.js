@@ -423,5 +423,8 @@ window.uiComponents = {
   realTimeEnhancer: new RealTimeEnhancer()
 };
 
-// エクスポート
-export { SkeletonLoader, UXEnhancer, HandoutManager, RealTimeEnhancer };
+// グローバル公開
+window.SkeletonLoader = SkeletonLoader;
+window.UXEnhancer = UXEnhancer;
+window.HandoutManager = HandoutManager;
+window.RealTimeEnhancer = RealTimeEnhancer;

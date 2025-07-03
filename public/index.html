@@ -268,89 +268,45 @@
   <!-- Critical Foundation - Immediate load -->
   <script src="js/logger-frontend.js"></script>
   <script src="js/resource-manager-frontend.js"></script>
+  
+  <!-- Core Application - Load after foundation -->
+  <script src="js/app-core.js"></script>
+  
+  <!-- UI Components - Load after core -->
+  <script src="js/ui-components.js"></script>
+  <script src="js/utils.js"></script>
+  
+  <!-- Enhanced features - Load with defer -->
   <script src="js/bundle-optimizer.js" defer></script>
-  
-  <!-- Advanced Cache & Storage - High priority -->
   <script src="js/advanced-cache-engine.js" defer></script>
-  
-  <!-- Parallel Processing & Workers - High priority -->
   <script src="js/parallel-worker-manager.js" defer></script>
   <script src="js/shared-buffer-optimizer.js" defer></script>
-  
-  <!-- AI & Intelligence - Medium priority -->
   <script src="js/smart-suggestion-system.js" defer></script>
   <script src="js/offline-enhancement-engine.js" defer></script>
-  
-  <!-- Core Application - Medium priority -->
-  <script src="js/app-core.js" defer></script>
-  
-  <!-- UI Components - Medium priority -->
-  <script src="js/ui-components.js" defer></script>
-  <script src="js/utils.js" defer></script>
-  
-  <!-- Ultra Integration Manager - After all components -->
   <script src="js/ultra-integration-manager.js" defer></script>
-  
-  <!-- Final Performance Optimizer - Last component -->
   <script src="js/final-performance-optimizer.js" defer></script>
   
   <!-- System Initialization -->
-  <script type="module">
+  <script>
     // Initialize ultra system after all components are loaded
     window.addEventListener('load', async () => {
       try {
-        // Wait for all components to be available
-        const waitForComponent = (name, timeout = 5000) => {
-          return new Promise((resolve, reject) => {
-            const startTime = Date.now();
-            const check = () => {
-              if (window[name]) {
-                resolve(window[name]);
-              } else if (Date.now() - startTime > timeout) {
-                reject(new Error(`Component ${name} not loaded within timeout`));
-              } else {
-                setTimeout(check, 100);
-              }
-            };
-            check();
-          });
-        };
+        // Check if logger is available
+        if (typeof logger !== 'undefined') {
+          logger.success('🚀 Ultra System ready!');
+        } else {
+          console.log('🚀 Ultra System ready!');
+        }
         
-        // Initialize components in order
-        await Promise.allSettled([
-          waitForComponent('advancedCacheEngine'),
-          waitForComponent('parallelWorkerManager'),
-          waitForComponent('sharedBufferOptimizer'),
-          waitForComponent('smartSuggestionSystem'),
-          waitForComponent('offlineEnhancementEngine')
-        ]);
-        
-        // Initialize ultra integration manager
-        if (window.ultraIntegrationManager) {
-          logger.success('🚀 Ultra System fully integrated and ready!');
-          
-          // Show integration status
-          setTimeout(() => {
-            const stats = window.ultraSystem?.stats();
-            if (stats) {
-              logger.info('📊 System Integration Stats:', stats.integration);
-            }
-          }, 2000);
+        // Check if UltraOptimizedApp is available
+        if (typeof window.ultraApp !== 'undefined') {
+          console.log('✅ UltraOptimizedApp initialized successfully');
+        } else {
+          console.warn('⚠️ UltraOptimizedApp not found');
         }
         
       } catch (error) {
-        logger.error('Ultra system initialization failed:', error);
-      }
-    });
-    
-    // Legacy compatibility - Low priority lazy load
-    window.addEventListener('load', () => {
-      if (window.bundleOptimizer) {
-        window.bundleOptimizer.addToQueue({
-          type: 'js',
-          url: 'js/input-validator.js',
-          id: 'legacy-validator'
-        }, null, 1);
+        console.error('Ultra system initialization failed:', error);
       }
     });
   </script>
