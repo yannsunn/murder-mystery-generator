@@ -20,9 +20,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="ultra-modern-styles.css">
-  <link rel="stylesheet" href="css/accessibility.css">
-  <link rel="stylesheet" href="css/mobile-responsive.css">
+  <!-- Critical CSS - Above the fold -->
+  <link rel="stylesheet" href="css/optimized-bundle.css">
+  
+  <!-- Non-critical CSS - Lazy loaded -->
+  <link rel="preload" href="ultra-modern-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="ultra-modern-styles.css"></noscript>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
@@ -261,11 +264,95 @@
     </div>
   </main>
 
-  <!-- JavaScript Dependencies - セキュリティ強化版 -->
-  <script src="js/input-validator.js" defer></script>
-  <script src="js/SkeletonLoader.js" defer></script>
-  <script src="js/UXEnhancer.js" defer></script>
-  <script src="js/UltraIntegratedApp.js" defer></script>
-  <script src="js/app-initializer.js" defer></script>
+  <!-- JavaScript - Ultra Integration Optimized -->
+  <!-- Critical Foundation - Immediate load -->
+  <script src="js/logger-frontend.js"></script>
+  <script src="js/resource-manager-frontend.js"></script>
+  <script src="js/bundle-optimizer.js" defer></script>
+  
+  <!-- Advanced Cache & Storage - High priority -->
+  <script src="js/advanced-cache-engine.js" defer></script>
+  
+  <!-- Parallel Processing & Workers - High priority -->
+  <script src="js/parallel-worker-manager.js" defer></script>
+  <script src="js/shared-buffer-optimizer.js" defer></script>
+  
+  <!-- AI & Intelligence - Medium priority -->
+  <script src="js/smart-suggestion-system.js" defer></script>
+  <script src="js/offline-enhancement-engine.js" defer></script>
+  
+  <!-- Core Application - Medium priority -->
+  <script src="js/app-core.js" defer></script>
+  
+  <!-- UI Components - Medium priority -->
+  <script src="js/ui-components.js" defer></script>
+  <script src="js/utils.js" defer></script>
+  
+  <!-- Ultra Integration Manager - After all components -->
+  <script src="js/ultra-integration-manager.js" defer></script>
+  
+  <!-- Final Performance Optimizer - Last component -->
+  <script src="js/final-performance-optimizer.js" defer></script>
+  
+  <!-- System Initialization -->
+  <script type="module">
+    // Initialize ultra system after all components are loaded
+    window.addEventListener('load', async () => {
+      try {
+        // Wait for all components to be available
+        const waitForComponent = (name, timeout = 5000) => {
+          return new Promise((resolve, reject) => {
+            const startTime = Date.now();
+            const check = () => {
+              if (window[name]) {
+                resolve(window[name]);
+              } else if (Date.now() - startTime > timeout) {
+                reject(new Error(`Component ${name} not loaded within timeout`));
+              } else {
+                setTimeout(check, 100);
+              }
+            };
+            check();
+          });
+        };
+        
+        // Initialize components in order
+        await Promise.allSettled([
+          waitForComponent('advancedCacheEngine'),
+          waitForComponent('parallelWorkerManager'),
+          waitForComponent('sharedBufferOptimizer'),
+          waitForComponent('smartSuggestionSystem'),
+          waitForComponent('offlineEnhancementEngine')
+        ]);
+        
+        // Initialize ultra integration manager
+        if (window.ultraIntegrationManager) {
+          logger.success('🚀 Ultra System fully integrated and ready!');
+          
+          // Show integration status
+          setTimeout(() => {
+            const stats = window.ultraSystem?.stats();
+            if (stats) {
+              logger.info('📊 System Integration Stats:', stats.integration);
+            }
+          }, 2000);
+        }
+        
+      } catch (error) {
+        logger.error('Ultra system initialization failed:', error);
+      }
+    });
+    
+    // Legacy compatibility - Low priority lazy load
+    window.addEventListener('load', () => {
+      if (window.bundleOptimizer) {
+        window.bundleOptimizer.addToQueue({
+          type: 'js',
+          url: 'js/input-validator.js',
+          id: 'legacy-validator'
+        }, null, 1);
+      }
+    });
+  </script>
 </body>
 </html>

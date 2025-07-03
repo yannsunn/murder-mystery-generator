@@ -15,6 +15,8 @@ import { parallelEngine, intelligentCache } from './utils/performance-optimizer.
 import { randomMysteryGenerator } from './utils/random-mystery-generator.js';
 import { logger } from './utils/logger.js';
 import { resourceManager } from './utils/resource-manager.js';
+import { executeOptimizedQueryWithMonitoring } from './utils/database-optimizer.js';
+import { saveScenarioToSupabase } from './supabase-client.js';
 
 export const config = {
   maxDuration: 300, // 5分 - 30分-1時間高精度生成のため十分な時間
@@ -1541,7 +1543,13 @@ export default async function handler(req, res) {
     }
     
     // 並列処理はスキップ（段階的処理のため）
-    logger.debug('📝 段階的処理のため並列処理をスキップ');
+    const useParallelMode = formData.parallelMode === true || formData.turboMode === true;
+    logger.debug(`🚀 並列モード: ${useParallelMode ? '有効' : '無効'}`);
+    
+    if (useParallelMode && !isEventSource) {
+      logger.info('🚀 並列AI処理モードで実行');
+    } else {
+      logger.debug('📝 段階的処理モードで実行');
     if (false) {
       logger.debug('🚀 Using parallel generation for independent tasks');
       const parallelResults = await parallelEngine.generateConcurrently(optimizedFlow.tasks, context);
@@ -1684,6 +1692,30 @@ export default async function handler(req, res) {
     sessionData.status = 'completed';
     sessionData.completedAt = new Date().toISOString();
     sessionData.context = context;
+
+    // 📊 データベースに最適化保存
+    try {
+      const saveResult = await saveScenarioToSupabase(sessionId, {
+        title: sessionData.phases?.step1?.content?.concept?.match(/\*\*作品タイトル\*\*:\s*(.+?)\n/)?.[1] || 'マーダーミステリー',
+        description: sessionData.phases?.step1?.content?.concept?.match(/\*\*基本コンセプト\*\*:\s*(.+?)\n/)?.[1] || '',
+        characters: sessionData.phases?.step4?.content?.characters || '',
+        ...sessionData
+      });
+      
+      if (saveResult.success) {
+        logger.success('✅ シナリオをデータベースに最適化保存完了');
+        sessionData.saved = true;
+        sessionData.saveTimestamp = new Date().toISOString();
+      } else {
+        logger.warn('⚠️ データベース保存に失敗:', saveResult.error);
+        sessionData.saved = false;
+        sessionData.saveError = saveResult.error;
+      }
+    } catch (saveError) {
+      logger.error('💾 データベース保存エラー:', saveError);
+      sessionData.saved = false;
+      sessionData.saveError = saveError.message;
+    }
 
     logger.debug('🎉 Integrated micro generation completed successfully!');
     logger.debug(`📸 Generated ${generatedImages.filter(img => img.status === 'success').length} images`);

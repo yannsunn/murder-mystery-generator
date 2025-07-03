@@ -1,10 +1,13 @@
 /**
- * 🗄️ Supabase Client - データベース接続とCRUD操作
+ * 🗄️ Supabase Client - 接続プール最適化版
  * 生成されたシナリオをSupabaseに自動保存
+ * パフォーマンス向上とクエリ最適化
  */
 
 import { createClient } from '@supabase/supabase-js';
 import { envManager } from './config/env-manager.js';
+import { databasePool, executeOptimizedQuery, initializeDatabasePool } from './utils/database-pool.js';
+import { logger } from './utils/logger.js';
 
 // Supabase接続情報
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -16,27 +19,29 @@ let supabase = null;
 let supabaseAdmin = null;
 
 /**
- * Supabase初期化
+ * Supabase初期化（接続プール対応版）
  */
-export function initializeSupabase() {
+export async function initializeSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.warn('⚠️  Supabase環境変数が設定されていません');
+    logger.warn('⚠️  Supabase環境変数が設定されていません');
     return false;
   }
 
   try {
-    // 匿名ユーザー用クライアント
+    // 従来の接続も保持（互換性のため）
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // 管理者用クライアント（サービスキーがある場合）
     if (SUPABASE_SERVICE_KEY) {
       supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     }
 
-    console.log('✅ Supabase接続が初期化されました');
+    // 新しい接続プールを初期化
+    await initializeDatabasePool();
+
+    logger.success('✅ Supabase接続プール初期化完了');
     return true;
   } catch (error) {
-    console.error('❌ Supabase初期化エラー:', error);
+    logger.error('❌ Supabase初期化エラー:', error);
     return false;
   }
 }
@@ -97,14 +102,9 @@ export async function ensureTablesExist() {
 }
 
 /**
- * シナリオをSupabaseに保存
+ * シナリオをSupabaseに保存（最適化版）
  */
 export async function saveScenarioToSupabase(sessionId, scenarioData) {
-  if (!supabase) {
-    console.warn('⚠️  Supabaseが初期化されていません');
-    return { success: false, error: 'Supabase未初期化' };
-  }
-
   try {
     const data = {
       id: sessionId,
@@ -116,53 +116,47 @@ export async function saveScenarioToSupabase(sessionId, scenarioData) {
       updated_at: new Date().toISOString()
     };
 
-    const { data: result, error } = await supabase
-      .from('scenarios')
-      .upsert(data, { onConflict: 'id' });
+    // 接続プール経由で最適化実行
+    const result = await executeOptimizedQuery({
+      table: 'scenarios',
+      operation: 'upsert',
+      data: data,
+      options: {
+        upsertOptions: { onConflict: 'id' }
+      }
+    });
 
-    if (error) {
-      console.error('❌ Supabaseシナリオ保存エラー:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log('✅ シナリオをSupabaseに保存しました:', sessionId);
-    return { success: true, data: result };
+    logger.success(`✅ シナリオ保存完了: ${sessionId}`);
+    return { success: true, data: result.data };
 
   } catch (error) {
-    console.error('❌ シナリオ保存例外:', error);
+    logger.error('❌ シナリオ保存エラー:', error);
     return { success: false, error: error.message };
   }
 }
 
 /**
- * Supabaseからシナリオを取得
+ * Supabaseからシナリオを取得（最適化版）
  */
 export async function getScenarioFromSupabase(sessionId) {
-  if (!supabase) {
-    console.warn('⚠️  Supabaseが初期化されていません');
-    return { success: false, error: 'Supabase未初期化' };
-  }
-
   try {
-    const { data, error } = await supabase
-      .from('scenarios')
-      .select('*')
-      .eq('id', sessionId)
-      .single();
+    const result = await executeOptimizedQuery({
+      table: 'scenarios',
+      operation: 'select',
+      filters: { id: sessionId },
+      options: { select: '*' },
+      cacheKey: `scenario_${sessionId}`
+    });
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return { success: false, error: 'シナリオが見つかりません' };
-      }
-      console.error('❌ Supabaseシナリオ取得エラー:', error);
-      return { success: false, error: error.message };
+    if (!result.data || result.data.length === 0) {
+      return { success: false, error: 'シナリオが見つかりません' };
     }
 
-    console.log('✅ シナリオをSupabaseから取得しました:', sessionId);
-    return { success: true, data };
+    logger.success(`✅ シナリオ取得完了: ${sessionId}`);
+    return { success: true, data: result.data[0] };
 
   } catch (error) {
-    console.error('❌ シナリオ取得例外:', error);
+    logger.error('❌ シナリオ取得エラー:', error);
     return { success: false, error: error.message };
   }
 }
@@ -204,31 +198,27 @@ export async function saveUserSessionToSupabase(sessionId, userData) {
 }
 
 /**
- * 全シナリオ一覧を取得
+ * 全シナリオ一覧を取得（最適化版）
  */
-export async function getAllScenariosFromSupabase(limit = 50) {
-  if (!supabase) {
-    console.warn('⚠️  Supabaseが初期化されていません');
-    return { success: false, error: 'Supabase未初期化' };
-  }
-
+export async function getAllScenariosFromSupabase(limit = 50, offset = 0) {
   try {
-    const { data, error } = await supabase
-      .from('scenarios')
-      .select('id, title, description, created_at, updated_at')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    const result = await executeOptimizedQuery({
+      table: 'scenarios',
+      operation: 'select',
+      options: {
+        select: 'id, title, description, created_at, updated_at',
+        orderBy: { column: 'created_at', ascending: false },
+        limit: limit,
+        offset: offset
+      },
+      cacheKey: `scenarios_list_${limit}_${offset}`
+    });
 
-    if (error) {
-      console.error('❌ Supabaseシナリオ一覧取得エラー:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ ${data.length}件のシナリオを取得しました`);
-    return { success: true, data };
+    logger.success(`✅ ${result.data.length}件のシナリオ取得完了`);
+    return { success: true, data: result.data };
 
   } catch (error) {
-    console.error('❌ シナリオ一覧取得例外:', error);
+    logger.error('❌ シナリオ一覧取得エラー:', error);
     return { success: false, error: error.message };
   }
 }
@@ -258,8 +248,10 @@ export async function testSupabaseConnection() {
   }
 }
 
-// 起動時にSupabaseを初期化
-initializeSupabase();
+// 起動時にSupabaseを初期化（非同期対応）
+initializeSupabase().catch(error => {
+  logger.error('Supabase初期化失敗:', error);
+});
 
 export { supabase, supabaseAdmin };
 export default { 
