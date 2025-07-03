@@ -1098,21 +1098,48 @@ export default async function handler(req, res) {
 
   // GET リクエスト対応（EventSource用）
   if (req.method === 'GET') {
-    const { formData, sessionId, action } = req.query;
+    const { formData, sessionId, action, stream } = req.query;
     
-    if (!formData && action !== 'init') {
-      return res.status(400).json({
-        success: false,
-        error: 'formData is required in query params'
-      });
+    // EventSource接続の場合は特別処理
+    if (stream === 'true') {
+      console.log('🌐 EventSource接続検出');
+      
+      try {
+        // クエリパラメータをbody形式に変換
+        req.body = {
+          formData: formData ? JSON.parse(formData) : {},
+          sessionId: sessionId || `integrated_micro_${Date.now()}`,
+          action: action || null,
+          stream: true
+        };
+        console.log('✅ EventSource用データ変換完了');
+      } catch (parseError) {
+        console.error('❌ formData parse error:', parseError);
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'Access-Control-Allow-Origin': '*',
+        });
+        res.write(`event: error\ndata: {"error": "formDataの解析に失敗しました"}\n\n`);
+        res.end();
+        return;
+      }
+    } else {
+      // 通常のGETリクエスト
+      if (!formData && action !== 'init') {
+        return res.status(400).json({
+          success: false,
+          error: 'formData is required in query params'
+        });
+      }
+      
+      req.body = {
+        formData: formData ? JSON.parse(formData) : {},
+        sessionId: sessionId || `integrated_micro_${Date.now()}`,
+        action: action || null
+      };
     }
-    
-    // クエリパラメータをbody形式に変換
-    req.body = {
-      formData: formData ? JSON.parse(formData) : {},
-      sessionId: sessionId || `integrated_micro_${Date.now()}`,
-      action: action || null
-    };
   } else if (req.method !== 'POST') {
     return res.status(405).json({ 
       success: false, 
@@ -1314,31 +1341,45 @@ export default async function handler(req, res) {
 
     // 🎯 段階的レスポンス実装: 各段階で進捗を送信
     let isFirstStep = true;
+    let isEventSource = req.body.stream === true || req.headers.accept?.includes('text/event-stream');
     
-    // ヘッダー設定を段階的レスポンス用に調整（EventSource対応）
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream; charset=utf-8',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Cache-Control',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-    });
+    // EventSource接続かどうかで処理を分岐
+    if (isEventSource) {
+      // EventSourceヘッダー設定
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+      });
+      
+      // 接続確認
+      res.write(`event: connected\ndata: {"message": "段階的生成を開始します", "sessionId": "${sessionData.sessionId}"}\n\n`);
+      console.log('🌐 EventSource接続確立 - 段階的生成開始');
+    }
     
     const sendProgressUpdate = (stepIndex, stepName, result, isComplete = false) => {
+      if (!isEventSource) return; // EventSourceでない場合はスキップ
+      
       const progressData = {
         step: stepIndex + 1,
         totalSteps: INTEGRATED_GENERATION_FLOW.length,
-        name: stepName,
+        stepName: stepName,
         content: result,
         progress: Math.round(((currentWeight) / totalWeight) * 100),
         isComplete,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        estimatedTimeRemaining: Math.max(0, Math.floor((totalWeight - currentWeight) * 2 / totalWeight))
       };
       
-      const jsonData = JSON.stringify(progressData);
-      res.write(`data: ${jsonData}\n\n`);
-      console.log(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
+      try {
+        res.write(`event: progress\ndata: ${JSON.stringify(progressData)}\n\n`);
+        console.log(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
+      } catch (writeError) {
+        console.error('❌ Progress write error:', writeError);
+      }
     };
     
     // 真の段階的実行 - 各段階でレスポンス送信
@@ -1349,8 +1390,8 @@ export default async function handler(req, res) {
       
       try {
         // 段階開始通知
-        if (isFirstStep) {
-          res.write(`event: start\ndata: {"message": "段階的生成開始"}\n\n`);
+        if (isFirstStep && isEventSource) {
+          res.write(`event: start\ndata: {"message": "段階的生成開始", "totalSteps": ${INTEGRATED_GENERATION_FLOW.length}}\n\n`);
           isFirstStep = false;
         }
         
@@ -1446,7 +1487,9 @@ export default async function handler(req, res) {
         console.error(`❌ Step ${i + 1} failed: ${stepError.message}`);
         
         // エラー情報を送信
-        res.write(`event: error\ndata: {"step": ${i + 1}, "error": "${stepError.message}"}\n\n`);
+        if (isEventSource) {
+          res.write(`event: error\ndata: {"step": ${i + 1}, "error": "${stepError.message}"}\n\n`);
+        }
         
         // 致命的エラーではない場合は続行
         if (step.weight < 30) {
@@ -1617,21 +1660,40 @@ export default async function handler(req, res) {
       isComplete: true
     };
     
-    res.write(`event: complete\ndata: ${JSON.stringify(finalResponse)}\n\n`);
-    res.end();
+    if (isEventSource) {
+      res.write(`event: complete\ndata: ${JSON.stringify(finalResponse)}\n\n`);
+      res.end();
+    } else {
+      return res.status(200).json(finalResponse);
+    }
     
     console.log('📡 段階的生成完了 - 全9段階実行済み');
 
   } catch (error) {
     console.error('🚨 Integrated micro generation error:', error);
     console.error('🚨 Error stack:', error.stack);
-    return res.status(500).json({
+    
+    const errorResponse = {
       success: false,
       error: error.message || 'Generation failed',
       errorType: error.name || error.type || 'UnknownError',
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       timestamp: new Date().toISOString()
-    });
+    };
+    
+    // EventSource判定を再実行
+    const isEventSourceError = req.body?.stream === true || req.headers.accept?.includes('text/event-stream');
+    
+    if (isEventSourceError) {
+      try {
+        res.write(`event: error\ndata: ${JSON.stringify(errorResponse)}\n\n`);
+        res.end();
+      } catch (writeError) {
+        console.error('Error writing to response:', writeError);
+      }
+    } else {
+      return res.status(500).json(errorResponse);
+    }
   }
 }
 
