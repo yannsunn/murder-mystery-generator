@@ -264,19 +264,24 @@
     </div>
   </main>
 
-  <!-- JavaScript - Ultra Integration Optimized -->
+  <!-- JavaScript - Fixed Loading Order -->
   <!-- Critical Foundation - Immediate load -->
   <script src="js/logger-frontend.js"></script>
   <script src="js/resource-manager-frontend.js"></script>
   
-  <!-- Core Application - Load after foundation -->
-  <script src="js/app-core.js"></script>
+  <!-- Wait for DOM ready, then load core -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load core after DOM is ready
+      const coreScript = document.createElement('script');
+      coreScript.src = 'js/app-core.js';
+      document.head.appendChild(coreScript);
+    });
+  </script>
   
-  <!-- UI Components - Load after core -->
-  <script src="js/ui-components.js"></script>
-  <script src="js/utils.js"></script>
-  
-  <!-- Enhanced features - Load with defer -->
+  <!-- Enhanced features - Load with defer (Optional) -->
+  <script src="js/ui-components.js" defer></script>
+  <script src="js/utils.js" defer></script>
   <script src="js/bundle-optimizer.js" defer></script>
   <script src="js/advanced-cache-engine.js" defer></script>
   <script src="js/parallel-worker-manager.js" defer></script>
