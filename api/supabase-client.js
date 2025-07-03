@@ -249,9 +249,11 @@ export async function testSupabaseConnection() {
 }
 
 // 起動時にSupabaseを初期化（非同期対応）
-initializeSupabase().catch(error => {
-  logger.error('Supabase初期化失敗:', error);
-});
+setTimeout(() => {
+  initializeSupabase().catch(error => {
+    logger.error('Supabase初期化失敗:', error);
+  });
+}, 0);
 
 export { supabase, supabaseAdmin };
 export default { 
