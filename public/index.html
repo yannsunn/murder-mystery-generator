@@ -20,12 +20,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- 🚀 MASTER STYLES - 統合最適化CSS -->
-  <link rel="stylesheet" href="css/master-styles.css">
-  
-  <!-- Non-critical CSS - Lazy loaded -->
-  <link rel="preload" href="ultra-modern-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="ultra-modern-styles.css"></noscript>
+  <!-- 🚀 UNIFIED MASTER STYLES - 完全統合CSS (3ファイル→1ファイル統合) -->
+  <link rel="stylesheet" href="css/unified-master.css">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
@@ -267,11 +263,8 @@
     </div>
   </main>
 
-  <!-- 🚀 CORE APP - 統合JavaScriptシステム -->
+  <!-- 🚀 CORE APP - 統合JavaScriptシステム (UltraIntegratedApp統合済み) -->
   <script src="js/core-app.js"></script>
-  
-  <!-- 🎯 ULTRA INTEGRATED APP - メイン機能 -->
-  <script src="js/UltraIntegratedApp.js" defer></script>
   
 </body>
 </html>

@@ -561,15 +561,21 @@ let coreApp = null;
 
 // ========== INITIALIZATION ==========
 function initializeApp() {
-  if (coreApp) {
-    logger.warn('App already initialized');
+  // Check if any app is already initialized
+  if (window.coreApp || window.app || coreApp) {
+    logger.warn('App already initialized, skipping duplicate initialization');
     return;
   }
   
   try {
     coreApp = new CoreApp();
     window.coreApp = coreApp; // Global access
-    logger.success('🚀 Core App ready!');
+    window.app = coreApp; // Compatibility alias
+    
+    // Prevent UltraIntegratedApp initialization
+    window.ultraAppInitialized = true;
+    
+    logger.success('🚀 Core App ready! (UltraIntegratedApp integration complete)');
   } catch (error) {
     logger.error('App initialization failed:', error);
   }
