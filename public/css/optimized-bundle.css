@@ -23,11 +23,22 @@
   --text-secondary: #e2e8f0;
   --text-muted: #94a3b8;
   
-  /* レスポンシブブレークポイント */
-  --breakpoint-sm: 576px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 992px;
-  --breakpoint-xl: 1200px;
+  /* 🎯 LIMIT BREAKTHROUGH レスポンシブブレークポイント */
+  --breakpoint-xs: 320px;  /* 極小スマホ */
+  --breakpoint-sm: 576px;  /* スマホ縦 */
+  --breakpoint-md: 768px;  /* タブレット縦 */
+  --breakpoint-lg: 992px;  /* タブレット横・小型PC */
+  --breakpoint-xl: 1200px; /* デスクトップ */
+  --breakpoint-xxl: 1400px; /* 大型デスクトップ */
+  --breakpoint-ultra: 1920px; /* 4K・ウルトラワイド */
+  
+  /* 🎯 デバイス別最適化変数 */
+  --mobile-padding: 1rem;
+  --tablet-padding: 2rem;
+  --desktop-padding: 3rem;
+  --mobile-font-scale: 0.9;
+  --tablet-font-scale: 1.0;
+  --desktop-font-scale: 1.1;
   
   /* アニメーション設定 */
   --animation-duration: 0.3s;
@@ -48,8 +59,12 @@
 }
 
 html {
-  font-size: 16px;
+  /* 🎯 LIMIT BREAKTHROUGH レスポンシブフォントサイズ */
+  font-size: clamp(14px, 2.5vw, 18px);
   scroll-behavior: smooth;
+  /* タッチデバイス最適化 */
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -62,27 +77,84 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* メインコンテナ - Critical */
+/* 🎯 LIMIT BREAKTHROUGH メインコンテナ - 全デバイス最適化 */
 .main-container {
   min-height: 100vh;
+  min-height: 100dvh; /* 動的ビューポート対応 */
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
-  padding: 2rem 1rem;
+  padding: var(--mobile-padding);
+  
+  /* タブレット最適化 */
+  @media (min-width: 768px) {
+    padding: var(--tablet-padding);
+  }
+  
+  /* デスクトップ最適化 */
+  @media (min-width: 1200px) {
+    padding: var(--desktop-padding);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  /* 超大型画面最適化 */
+  @media (min-width: 1920px) {
+    max-width: 1600px;
+    padding: 4rem;
+  }
 }
 
-/* フォーム基本スタイル - Critical */
-.scenario-form {
-  max-width: 800px;
+/* 🎯 LIMIT BREAKTHROUGH フォーム - 全デバイス最適化 */
+.scenario-form, .card {
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   background: var(--bg-glass);
   backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 2rem;
+  border-radius: 16px;
+  padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: var(--shadow-xl);
+  
+  /* モバイル最適化 */
+  @media (max-width: 576px) {
+    border-radius: 12px;
+    padding: 0.75rem;
+    margin: 0.5rem;
+  }
+  
+  /* タブレット最適化 */
+  @media (min-width: 768px) {
+    max-width: 900px;
+    padding: 2rem;
+    border-radius: 20px;
+  }
+  
+  /* デスクトップ最適化 */
+  @media (min-width: 1200px) {
+    max-width: 1100px;
+    padding: 3rem;
+    border-radius: 24px;
+  }
+  
+  /* 超大型画面最適化 */
+  @media (min-width: 1920px) {
+    max-width: 1300px;
+    padding: 4rem;
+  }
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  
+  /* タブレット以上で間隔拡大 */
+  @media (min-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* デスクトップで更に拡大 */
+  @media (min-width: 1200px) {
+    margin-bottom: 2rem;
+  }
 }
 
 .form-label {
@@ -95,9 +167,31 @@ body {
   letter-spacing: 0.05em;
 }
 
-.form-input, .form-select, .form-textarea {
+/* 🎯 LIMIT BREAKTHROUGH フォーム要素 - タッチ最適化 */
+.form-input, .form-select, .form-textarea, .form-control {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.875rem 1rem;
+  min-height: 48px; /* タッチターゲット最小サイズ */
+  font-size: 16px; /* iOS ズーム防止 */
+  
+  /* モバイル最適化 */
+  @media (max-width: 576px) {
+    padding: 1rem;
+    font-size: 16px; /* 重要: iOSズーム防止 */
+    border-radius: 12px;
+  }
+  
+  /* タブレット最適化 */
+  @media (min-width: 768px) {
+    padding: 1rem 1.25rem;
+    font-size: 15px;
+  }
+  
+  /* デスクトップ最適化 */
+  @media (min-width: 1200px) {
+    padding: 1.125rem 1.5rem;
+    font-size: 14px;
+  }
   background: var(--bg-form);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;

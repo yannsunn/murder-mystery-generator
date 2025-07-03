@@ -23,20 +23,29 @@
   <!-- Critical CSS - Above the fold -->
   <link rel="stylesheet" href="css/optimized-bundle.css">
   
+  <!-- 🎯 LIMIT BREAKTHROUGH Responsive CSS - Immediate load for better UX -->
+  <link rel="stylesheet" href="css/responsive-ultra.css">
+  
+  <!-- 🎯 ULTRA ACCESSIBILITY - 視認性・アクセシビリティ限界突破 -->
+  <link rel="stylesheet" href="css/ultra-accessibility.css">
+  
   <!-- Non-critical CSS - Lazy loaded -->
   <link rel="preload" href="ultra-modern-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="ultra-modern-styles.css"></noscript>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
-<body>
+<body class="ultra-high-contrast dark-optimized respect-motion">
+  <!-- 🎯 アクセシビリティ - スキップリンク -->
+  <a href="#main-content" class="skip-link">メインコンテンツへスキップ</a>
+  
   <header>
     <h1>Murder Mystery Generator</h1>
     <p>AI駆動マーダーミステリー生成システム</p>
   </header>
 
-  <main class="main-container">
-    <div class="card" id="main-card">
+  <main class="main-container" id="main-content" role="main" aria-label="マーダーミステリー生成システム">
+    <div class="card bg-ultra-contrast" id="main-card">
       <div class="card-header">
         <h2>シナリオ生成システム</h2>
         <p>プロフェッショナル品質のマーダーミステリーシナリオを効率的に生成</p>
@@ -206,7 +215,7 @@
         <div class="form-actions" role="group" aria-labelledby="generation-buttons-label">
           <h4 id="generation-buttons-label" class="visually-hidden">シナリオ生成オプション</h4>
           
-          <button type="button" id="generate-btn" class="btn btn-primary"
+          <button type="button" id="generate-btn" class="btn btn-primary btn-ultra-visible touch-target"
                   aria-describedby="generate-btn-desc">
             🚀 シナリオ生成開始
           </button>
@@ -215,7 +224,7 @@
           </div>
           
           <!-- 🎲 完全ランダム生成ボタン -->
-          <button type="button" id="random-generate-btn" class="btn btn-secondary" style="margin-left: 15px;"
+          <button type="button" id="random-generate-btn" class="btn btn-secondary btn-ultra-visible touch-target" style="margin-left: 15px;"
                   aria-describedby="random-btn-desc">
             🎲 完全ランダム生成
           </button>
@@ -232,7 +241,7 @@
     </div>
 
     <!-- ローディング画面 -->
-    <div id="loading-container" class="hidden" role="status" aria-live="polite" aria-label="シナリオ生成進行状況">
+    <div id="loading-container" class="hidden loading-ultra-visible" role="status" aria-live="polite" aria-label="シナリオ生成進行状況">
       <div class="loading-content">
         <div class="loading-header">
           <h2>🎭 マーダーミステリー生成中...</h2>

@@ -1,0 +1,440 @@
+/**
+ * 🎯 LIMIT BREAKTHROUGH RESPONSIVE ULTRA CSS
+ * 完全レスポンシブ・全デバイス最適化・視認性限界突破
+ */
+
+/* 🎯 LIMIT BREAKTHROUGH フォームグリッド - 完全レスポンシブ */
+.form-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr; /* モバイル: 1列 */
+  
+  /* タブレット縦: 2列 */
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  /* タブレット横・小型PC: 3列 */
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  
+  /* 大型デスクトップ: 4列 */
+  @media (min-width: 1400px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH ボタン - 全デバイス最適化 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 48px; /* タッチターゲット最小サイズ */
+  min-width: 120px;
+  
+  /* モバイル最適化 */
+  @media (max-width: 576px) {
+    width: 100%;
+    padding: 1.125rem 1rem;
+    font-size: 1.1rem;
+    border-radius: 16px;
+    margin-bottom: 0.75rem;
+  }
+  
+  /* タブレット最適化 */
+  @media (min-width: 768px) and (max-width: 1199px) {
+    padding: 1rem 2.5rem;
+    font-size: 1rem;
+    min-width: 160px;
+  }
+  
+  /* デスクトップ最適化 */
+  @media (min-width: 1200px) {
+    padding: 1.25rem 3rem;
+    font-size: 1.1rem;
+    min-width: 200px;
+  }
+  
+  /* ホバー効果 (タッチデバイス以外) */
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+  }
+  
+  /* タッチ効果 */
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-primary {
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: var(--secondary-gradient);
+  color: white;
+  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.4);
+}
+
+/* 🎯 LIMIT BREAKTHROUGH フォームアクション - レスポンシブ配置 */
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  
+  /* タブレット以上: 横並び */
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+  
+  /* デスクトップ: 更に広い間隔 */
+  @media (min-width: 1200px) {
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH ヘッダー - レスポンシブタイポグラフィ */
+header {
+  text-align: center;
+  padding: 1rem;
+  
+  h1 {
+    font-size: clamp(1.75rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    
+    /* モバイル最適化 */
+    @media (max-width: 576px) {
+      line-height: 1.2;
+    }
+  }
+  
+  p {
+    font-size: clamp(0.875rem, 2.5vw, 1.25rem);
+    color: var(--text-muted);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH セクションヘッダー */
+.form-section h3 {
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+  margin-bottom: 1rem;
+  
+  @media (min-width: 768px) {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.text-gradient {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* 🎯 LIMIT BREAKTHROUGH ローディング画面 - 全デバイス対応 */
+#loading-container {
+  padding: 2rem 1rem;
+  
+  .loading-content {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  
+  .loading-header h2 {
+    font-size: clamp(1.25rem, 4vw, 2rem);
+    margin-bottom: 1rem;
+  }
+  
+  .progress-container {
+    margin: 2rem 0;
+    
+    @media (max-width: 576px) {
+      margin: 1.5rem 0;
+    }
+  }
+  
+  .progress-bar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    
+    @media (min-width: 768px) {
+      height: 12px;
+      border-radius: 6px;
+    }
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: inherit;
+    transition: width 0.3s ease;
+  }
+  
+  .progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-size: clamp(0.75rem, 2vw, 0.875rem);
+    
+    @media (max-width: 576px) {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+    }
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH カード - 全デバイス対応 */
+.card-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  
+  h2 {
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH フォームセクション */
+.form-section {
+  margin-bottom: 2rem;
+  
+  @media (min-width: 768px) {
+    margin-bottom: 2.5rem;
+  }
+  
+  @media (min-width: 1200px) {
+    margin-bottom: 3rem;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH フォームヒント */
+.form-hint {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* 🎯 LIMIT BREAKTHROUGH チェックボックス */
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  input[type="checkbox"] {
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    accent-color: #667eea;
+    
+    @media (max-width: 576px) {
+      width: 24px;
+      height: 24px;
+    }
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH ユーティリティクラス */
+.hidden {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 🎯 LIMIT BREAKTHROUGH スクロール最適化 */
+html {
+  scroll-padding-top: 2rem;
+}
+
+/* スムーススクロール強化 */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH ダークモード対応 */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #f1f5f9;
+    --bg-tertiary: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH 高コントラスト対応 */
+@media (prefers-contrast: high) {
+  :root {
+    --text-primary: #ffffff;
+    --bg-primary: #000000;
+    --border-color: #ffffff;
+  }
+  
+  .btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH モーション軽減対応 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH タッチデバイス最適化 */
+@media (pointer: coarse) {
+  /* タッチターゲット拡大 */
+  button, 
+  input, 
+  select, 
+  textarea,
+  .btn {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* タッチハイライト除去 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH 印刷対応 */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+  }
+  
+  .btn {
+    border: 1px solid black !important;
+  }
+  
+  .hidden {
+    display: none !important;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH 極小スマホ対応 (320px以下) */
+@media (max-width: 320px) {
+  .main-container {
+    padding: 0.5rem;
+  }
+  
+  .card, .scenario-form {
+    padding: 0.5rem;
+    margin: 0.25rem;
+    border-radius: 8px;
+  }
+  
+  .form-grid {
+    gap: 0.75rem;
+  }
+  
+  .btn {
+    padding: 1rem 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH 大型タブレット最適化 (1024px-1199px) */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .main-container {
+    padding: 2.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.75rem;
+  }
+}
+
+/* 🎯 LIMIT BREAKTHROUGH 超大型ディスプレイ最適化 (2560px以上) */
+@media (min-width: 2560px) {
+  .main-container {
+    max-width: 1800px;
+    padding: 5rem;
+  }
+  
+  .card, .scenario-form {
+    max-width: 1500px;
+    padding: 5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3rem;
+  }
+  
+  .btn {
+    padding: 1.5rem 4rem;
+    font-size: 1.25rem;
+    min-width: 250px;
+  }
+}
