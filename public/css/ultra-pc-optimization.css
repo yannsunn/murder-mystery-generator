@@ -1,0 +1,406 @@
+/**
+ * 🖥️ ULTRA PC OPTIMIZATION - デスクトップ視認性限界突破
+ * 大画面・ワイドスクリーン・4K・ウルトラワイド完全対応
+ */
+
+/* 🖥️ デスクトップ専用レイアウト最適化 */
+@media (min-width: 1200px) {
+  
+  /* 🎯 大画面専用: メインコンテナ最適化 */
+  .main-container {
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+    padding: 4rem 3rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 3rem !important;
+  }
+  
+  /* 🎯 大画面専用: カード最適化 */
+  .card,
+  .scenario-form,
+  #main-card {
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 4rem !important;
+    border-radius: 24px !important;
+    border-width: 4px !important;
+    box-shadow: 
+      0 0 40px rgba(0, 255, 136, 0.3),
+      0 0 80px rgba(0, 255, 136, 0.1),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+  }
+  
+  /* 🎯 大画面専用: ヘッダー強化 */
+  header {
+    padding: 3rem 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+  
+  header h1 {
+    font-size: 4.5rem !important;
+    letter-spacing: 4px !important;
+    margin-bottom: 1.5rem !important;
+    text-shadow: 
+      0 0 20px #000000,
+      0 0 40px #000000,
+      0 0 60px #000000,
+      0 0 80px rgba(0, 255, 136, 0.5) !important;
+  }
+  
+  header p {
+    font-size: 1.75rem !important;
+    margin-bottom: 3rem !important;
+    max-width: 800px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  
+  /* 🎯 大画面専用: カードヘッダー */
+  .card-header {
+    padding-bottom: 3rem !important;
+    margin-bottom: 3rem !important;
+    border-bottom: 3px solid var(--ultra-border-accent) !important;
+  }
+  
+  .card-header h2 {
+    font-size: 3rem !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .card-header p {
+    font-size: 1.4rem !important;
+    max-width: 700px !important;
+    margin: 0 auto !important;
+  }
+  
+  /* 🎯 大画面専用: フォームグリッド最適化 */
+  .form-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 3rem !important;
+    margin: 3rem 0 !important;
+  }
+  
+  /* 🎯 大画面専用: フォーム要素サイズ拡大 */
+  .form-control,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  input,
+  select,
+  textarea {
+    padding: 1.5rem 2rem !important;
+    font-size: 1.125rem !important;
+    border-radius: 12px !important;
+    border-width: 3px !important;
+    min-height: 60px !important;
+  }
+  
+  /* 🎯 大画面専用: ラベル強化 */
+  .form-label {
+    font-size: 1.125rem !important;
+    margin-bottom: 1rem !important;
+    letter-spacing: 1px !important;
+  }
+  
+  /* 🎯 大画面専用: セクション間隔拡大 */
+  .form-section {
+    margin: 4rem 0 !important;
+    padding: 3rem !important;
+    border-radius: 16px !important;
+    border-width: 2px !important;
+  }
+  
+  .form-section h3 {
+    font-size: 2.25rem !important;
+    margin-bottom: 2rem !important;
+    letter-spacing: 1.5px !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  /* 🎯 大画面専用: ボタン最適化 */
+  .btn,
+  button {
+    padding: 1.75rem 4rem !important;
+    font-size: 1.25rem !important;
+    border-radius: 16px !important;
+    border-width: 4px !important;
+    min-width: 280px !important;
+    min-height: 70px !important;
+    letter-spacing: 2px !important;
+  }
+  
+  .btn:hover,
+  .btn:focus,
+  button:hover,
+  button:focus {
+    transform: translateY(-4px) scale(1.03) !important;
+    box-shadow: 
+      0 0 60px rgba(0, 255, 136, 0.8),
+      0 20px 40px rgba(0, 255, 136, 0.3) !important;
+  }
+  
+  /* 🎯 大画面専用: フォームアクション */
+  .form-actions {
+    padding: 4rem !important;
+    margin-top: 4rem !important;
+    gap: 3rem !important;
+    border-radius: 20px !important;
+    border-width: 3px !important;
+  }
+  
+  /* 🎯 大画面専用: チェックボックス */
+  .checkbox-label {
+    padding: 1.5rem 2rem !important;
+    font-size: 1.125rem !important;
+    border-radius: 12px !important;
+    gap: 1.5rem !important;
+  }
+  
+  input[type="checkbox"] {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  /* 🎯 大画面専用: ヒント文字サイズ */
+  .form-hint,
+  .random-mode-info {
+    font-size: 1rem !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: 8px !important;
+    margin-top: 1rem !important;
+  }
+}
+
+/* 🖥️ 超大型ディスプレイ最適化 (1600px+) */
+@media (min-width: 1600px) {
+  
+  .main-container {
+    max-width: 1800px !important;
+    padding: 5rem 4rem !important;
+    gap: 4rem !important;
+  }
+  
+  .card,
+  .scenario-form,
+  #main-card {
+    max-width: 1400px !important;
+    padding: 5rem !important;
+    border-radius: 28px !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4rem !important;
+  }
+  
+  header h1 {
+    font-size: 5.5rem !important;
+    letter-spacing: 6px !important;
+  }
+  
+  header p {
+    font-size: 2rem !important;
+  }
+  
+  .card-header h2 {
+    font-size: 3.5rem !important;
+  }
+  
+  .form-section h3 {
+    font-size: 2.5rem !important;
+  }
+  
+  .btn,
+  button {
+    padding: 2rem 5rem !important;
+    font-size: 1.4rem !important;
+    min-width: 320px !important;
+    min-height: 80px !important;
+  }
+}
+
+/* 🖥️ 4K・ウルトラワイド最適化 (2560px+) */
+@media (min-width: 2560px) {
+  
+  .main-container {
+    max-width: 2200px !important;
+    padding: 6rem 5rem !important;
+    gap: 5rem !important;
+  }
+  
+  .card,
+  .scenario-form,
+  #main-card {
+    max-width: 1800px !important;
+    padding: 6rem !important;
+    border-radius: 32px !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 5rem !important;
+  }
+  
+  header h1 {
+    font-size: 7rem !important;
+    letter-spacing: 8px !important;
+  }
+  
+  header p {
+    font-size: 2.5rem !important;
+  }
+  
+  .card-header h2 {
+    font-size: 4.5rem !important;
+  }
+  
+  .form-section h3 {
+    font-size: 3rem !important;
+  }
+  
+  .form-control,
+  .form-input,
+  .form-select,
+  .form-textarea,
+  input,
+  select,
+  textarea {
+    padding: 2rem 2.5rem !important;
+    font-size: 1.4rem !important;
+    border-radius: 16px !important;
+    min-height: 80px !important;
+  }
+  
+  .form-label {
+    font-size: 1.4rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .btn,
+  button {
+    padding: 2.5rem 6rem !important;
+    font-size: 1.6rem !important;
+    min-width: 400px !important;
+    min-height: 100px !important;
+    border-radius: 20px !important;
+  }
+  
+  .checkbox-label {
+    padding: 2rem 3rem !important;
+    font-size: 1.4rem !important;
+    gap: 2rem !important;
+  }
+  
+  input[type="checkbox"] {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .form-hint,
+  .random-mode-info {
+    font-size: 1.2rem !important;
+    padding: 1.5rem 2rem !important;
+  }
+}
+
+/* 🖥️ デスクトップ専用: ホバー効果強化 */
+@media (min-width: 1200px) and (hover: hover) {
+  
+  .form-control:hover,
+  .form-input:hover,
+  .form-select:hover,
+  .form-textarea:hover,
+  input:hover,
+  select:hover,
+  textarea:hover {
+    border-color: var(--ultra-border-accent) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2) !important;
+  }
+  
+  .checkbox-label:hover {
+    background: rgba(0, 255, 136, 0.15) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(0, 255, 136, 0.2) !important;
+  }
+  
+  .form-section:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--ultra-border-accent) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.15) !important;
+  }
+}
+
+/* 🖥️ デスクトップ専用: キーボードナビゲーション強化 */
+@media (min-width: 1200px) {
+  
+  *:focus {
+    outline: 4px solid var(--ultra-text-accent) !important;
+    outline-offset: 3px !important;
+    border-radius: 8px !important;
+  }
+  
+  .btn:focus,
+  button:focus {
+    outline: 6px solid var(--ultra-text-accent) !important;
+    outline-offset: 4px !important;
+  }
+}
+
+/* 🖥️ デスクトップ専用: パフォーマンス最適化 */
+@media (min-width: 1200px) {
+  
+  * {
+    will-change: auto !important;
+  }
+  
+  .btn,
+  button,
+  .form-control,
+  .checkbox-label,
+  .form-section {
+    will-change: transform, box-shadow !important;
+  }
+  
+  /* GPU加速有効化 */
+  .card,
+  .scenario-form,
+  #main-card {
+    transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+  }
+}
+
+/* 🖥️ デスクトップ専用: 印刷最適化 */
+@media print and (min-width: 1200px) {
+  
+  .main-container {
+    max-width: none !important;
+    padding: 2rem !important;
+  }
+  
+  .card,
+  .scenario-form,
+  #main-card {
+    max-width: none !important;
+    padding: 2rem !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 1rem !important;
+  }
+  
+  .btn,
+  button {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    min-width: auto !important;
+    min-height: auto !important;
+  }
+}
