@@ -716,18 +716,34 @@ class UltraIntegratedApp {
       
       // 🔥 BREAKTHROUGH: セッション初期化でURL長制限問題を解決
       logger.debug('🎯 セッション初期化開始...');
+      const requestBody = {
+        action: 'init',
+        formData: this.formData,
+        sessionId: sessionId
+      };
+      
+      logger.debug('📋 送信リクエスト詳細:', {
+        url: '/api/integrated-micro-generator',
+        method: 'POST',
+        body: requestBody,
+        bodySize: JSON.stringify(requestBody).length
+      });
+      
       const initResponse = await fetch('/api/integrated-micro-generator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'init',
-          formData: this.formData,
-          sessionId: sessionId
-        })
+        body: JSON.stringify(requestBody)
       });
       
       if (!initResponse.ok) {
-        throw new Error(`セッション初期化失敗: ${initResponse.status}`);
+        const errorText = await initResponse.text();
+        logger.error('❌ 初期化レスポンス詳細:', {
+          status: initResponse.status,
+          statusText: initResponse.statusText,
+          headers: Object.fromEntries(initResponse.headers.entries()),
+          body: errorText
+        });
+        throw new Error(`セッション初期化失敗: ${initResponse.status} - ${errorText}`);
       }
       
       logger.debug('✅ セッション初期化成功');
