@@ -4,6 +4,7 @@
  */
 
 import { envManager } from '../config/env-manager.js';
+import { logger } from './logger.js';
 
 export const AI_CONFIG = {
   maxDuration: 30,
@@ -39,18 +40,18 @@ export class UnifiedAIClient {
       this.openaiKey = envManager.get('OPENAI_API_KEY');
     } catch (error) {
       // envManagerが失敗した場合、直接process.envから取得
-      console.warn('EnvManager failed, using direct process.env access:', error.message);
+      logger.warn('EnvManager failed, using direct process.env access:', error.message);
       this.groqKey = process.env.GROQ_API_KEY;
       this.openaiKey = process.env.OPENAI_API_KEY;
     }
 
     // 最終確認とログ
-    console.log('🔑 AI Client Environment Check:');
-    console.log(`   GROQ: ${this.groqKey ? '✅ Configured' : '❌ Missing'}`);
-    console.log(`   OpenAI: ${this.openaiKey ? '✅ Configured' : '❌ Missing'}`);
+    logger.info('🔑 AI Client Environment Check:');
+    logger.info(`   GROQ: ${this.groqKey ? '✅ Configured' : '❌ Missing'}`);
+    logger.info(`   OpenAI: ${this.openaiKey ? '✅ Configured' : '❌ Missing'}`);
     
     if (!this.groqKey && !this.openaiKey) {
-      console.error('❌ No AI providers configured! Please set GROQ_API_KEY or OPENAI_API_KEY');
+      logger.error('❌ No AI providers configured! Please set GROQ_API_KEY or OPENAI_API_KEY');
     }
   }
 
@@ -205,10 +206,10 @@ export class UnifiedAIClient {
     
     for (const provider of providers) {
       try {
-        console.log(`🤖 Trying ${provider.toUpperCase()} provider...`);
+        logger.debug(`🤖 Trying ${provider.toUpperCase()} provider...`);
         return await this.makeAPICall(provider, systemPrompt, userPrompt);
       } catch (error) {
-        console.warn(`❌ ${provider.toUpperCase()} failed:`, error.message);
+        logger.warn(`❌ ${provider.toUpperCase()} failed:`, error.message);
         lastError = error;
         continue;
       }
@@ -236,7 +237,7 @@ export class UnifiedAIClient {
         lastError = error;
         
         if (attempt < maxRetries) {
-          console.warn(`Attempt ${attempt + 1} failed, retrying in ${retryDelay}ms:`, error.message);
+          logger.warn(`Attempt ${attempt + 1} failed, retrying in ${retryDelay}ms:`, error.message);
           await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
         }
       }

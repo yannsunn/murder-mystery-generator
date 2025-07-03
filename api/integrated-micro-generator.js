@@ -13,6 +13,8 @@ import { createValidationMiddleware } from './middleware/input-validator.js';
 import { qualityAssessor } from './utils/quality-assessor.js';
 import { parallelEngine, intelligentCache } from './utils/performance-optimizer.js';
 import { randomMysteryGenerator } from './utils/random-mystery-generator.js';
+import { logger } from './utils/logger.js';
+import { resourceManager } from './utils/resource-manager.js';
 
 export const config = {
   maxDuration: 300, // 5分 - 30分-1時間高精度生成のため十分な時間
@@ -26,7 +28,7 @@ const INTEGRATED_GENERATION_FLOW = [
     name: '段階0: ランダム全体構造・アウトライン',
     weight: 15,
     handler: async (formData, context) => {
-      console.log('🎲 段階0: ランダム全体構造生成開始');
+      logger.debug('🎲 段階0: ランダム全体構造生成開始');
       
       const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのマーダーミステリークリエイターです。
 30分-1時間セッション用のマーダーミステリーの大まかな全体構造をランダムに生成してください。
@@ -77,7 +79,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階0: ランダム全体構造完成');
+      logger.debug('✅ 段階0: ランダム全体構造完成');
       return { random_outline: result.content };
     }
   },
@@ -86,7 +88,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
     name: '段階1: コンセプト精密化・世界観詳細化',
     weight: 10,
     handler: async (formData, context) => {
-      console.log('🎨 段階1: コンセプト精密化開始');
+      logger.debug('🎨 段階1: コンセプト精密化開始');
       
       const randomOutline = context.random_outline || '';
       
@@ -168,7 +170,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階1: 基本コンセプト完成');
+      logger.debug('✅ 段階1: 基本コンセプト完成');
       return { concept: result.content };
     }
   },
@@ -178,7 +180,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
     name: '段階2: 事件核心・犯人・動機設定',
     weight: 12,
     handler: async (formData, context) => {
-      console.log('🕵️ 段階2: 事件核心部詳細設計開始');
+      logger.debug('🕵️ 段階2: 事件核心部詳細設計開始');
       
       const randomOutline = context.random_outline || '';
       const concept = context.concept || '';
@@ -228,7 +230,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階2: 事件核心部完成');
+      logger.debug('✅ 段階2: 事件核心部完成');
       return { incident_core: result.content };
     }
   },
@@ -238,7 +240,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
     name: '段階3: 事件詳細・基本タイムライン',
     weight: 15,
     handler: async (formData, context) => {
-      console.log('⏰ 段階3: 事件詳細・タイムライン構築開始');
+      logger.debug('⏰ 段階3: 事件詳細・タイムライン構築開始');
       
       const concept = context.concept || '';
       const incidentCore = context.incident_core || '';
@@ -301,7 +303,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階3: 事件詳細・タイムライン完成');
+      logger.debug('✅ 段階3: 事件詳細・タイムライン完成');
       return { incident_details: result.content };
     }
   },
@@ -318,14 +320,14 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         const incidentDetails = context.incident_details || '';
         const participantCount = parseInt(formData.participants) || 5;
         
-        console.log(`👥 段階的キャラクター生成開始: ${participantCount}人`);
+        logger.debug(`👥 段階的キャラクター生成開始: ${participantCount}人`);
         
         let allCharacters = [];
         let characterRelationships = '';
         
         // 段階1: 各キャラクターを個別に生成
         for (let i = 1; i <= participantCount; i++) {
-          console.log(`🎭 プレイヤー${i}のキャラクター生成中...`);
+          logger.debug(`🎭 プレイヤー${i}のキャラクター生成中...`);
           
           const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
 30分-1時間セッション用の魅力的で複雑なキャラクターを一人ずつ丁寧に作成してください。`;
@@ -388,11 +390,11 @@ ${allCharacters.length > 0 ? allCharacters.map((c, idx) => `**プレイヤー${i
           };
           
           allCharacters.push(character);
-          console.log(`✅ プレイヤー${i} (${character.name}) 生成完了`);
+          logger.debug(`✅ プレイヤー${i} (${character.name}) 生成完了`);
         }
         
         // 段階2: 全体の関係性を調整し、つじつまを合わせる
-        console.log('🔗 全体の関係性調整中...');
+        logger.debug('🔗 全体の関係性調整中...');
         
         const relationshipSystemPrompt = `あなたはマーダーミステリーの関係性調整のエキスパートです。
 各キャラクター間の関係性を調整し、全体のつじつまを合わせてください。`;
@@ -434,7 +436,7 @@ ${allCharacters.map((c1, i) =>
         characterRelationships = relationshipResult.content;
         
         // 段階3: 各キャラクターのハンドアウトを関係性情報で更新
-        console.log('🔄 ハンドアウトの関係性情報更新中...');
+        logger.debug('🔄 ハンドアウトの関係性情報更新中...');
         
         for (let i = 0; i < allCharacters.length; i++) {
           const character = allCharacters[i];
@@ -463,13 +465,13 @@ ${characterRelationships}
 
           const updatedHandout = await aiClient.generateWithRetry(systemPrompt, userPrompt);
           allCharacters[i].handout = updatedHandout.content;
-          console.log(`✅ ${character.name}のハンドアウト更新完了`);
+          logger.debug(`✅ ${character.name}のハンドアウト更新完了`);
         }
         
         // 最終結果をフォーマット
         const finalCharacterHandouts = allCharacters.map(c => c.handout).join('\n\n---\n\n');
         
-        console.log('🎉 段階的キャラクター生成完了!');
+        logger.debug('🎉 段階的キャラクター生成完了!');
         
         return {
           characters: finalCharacterHandouts,
@@ -479,7 +481,7 @@ ${characterRelationships}
         };
         
       } catch (error) {
-        console.error('❌ 段階的キャラクター生成エラー:', error);
+        logger.error('❌ 段階的キャラクター生成エラー:', error);
         
         // フォールバック: シンプルなキャラクター生成
         const participantCount = parseInt(formData.participants) || 5;
@@ -495,7 +497,7 @@ ${characterRelationships}
     name: '段階5: 証拠配置・手がかり体系化',
     weight: 18,
     handler: async (formData, context) => {
-      console.log('🔍 段階5: 証拠配置・手がかり体系化開始');
+      logger.debug('🔍 段階5: 証拠配置・手がかり体系化開始');
       
       const concept = context.concept || '';
       const incidentCore = context.incident_core || '';
@@ -574,7 +576,7 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階5: 証拠配置・手がかり体系化完成');
+      logger.debug('✅ 段階5: 証拠配置・手がかり体系化完成');
       return { evidence_system: result.content };
     }
   },
@@ -584,7 +586,7 @@ ${characterRelationships}
     name: '段階6: GM進行ガイド・セッション管理',
     weight: 20,
     handler: async (formData, context) => {
-      console.log('🎓 段階6: GM進行ガイド・セッション管理作成開始');
+      logger.debug('🎓 段階6: GM進行ガイド・セッション管理作成開始');
       
       const concept = context.concept || '';
       const incidentCore = context.incident_core || '';
@@ -817,7 +819,7 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階6: GM進行ガイド完成');
+      logger.debug('✅ 段階6: GM進行ガイド完成');
       return { gamemaster_guide: result.content };
     }
   },
@@ -827,7 +829,7 @@ ${characterRelationships}
     name: '段階7: 統合・品質確認',
     weight: 10,
     handler: async (formData, context) => {
-      console.log('🔧 段階7: 最終統合・全体つじつま調整開始');
+      logger.debug('🔧 段階7: 最終統合・全体つじつま調整開始');
       
       const concept = context.concept || '';
       const incidentCore = context.incident_core || '';
@@ -891,7 +893,7 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('✅ 段階7: 最終統合・全体調整完成');
+      logger.debug('✅ 段階7: 最終統合・全体調整完成');
       return { final_integration: result.content };
     }
   },
@@ -901,7 +903,7 @@ ${characterRelationships}
     name: '段階8: 最終レビュー・総合調整完了',
     weight: 8,
     handler: async (formData, context) => {
-      console.log('🏆 段階8: 全体最終確認・総合品質保証開始');
+      logger.debug('🏆 段階8: 全体最終確認・総合品質保証開始');
       
       const randomOutline = context.random_outline || '';
       const concept = context.concept || '';
@@ -977,7 +979,7 @@ ${characterRelationships}
 `;
 
       const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-      console.log('🎉 段階8: 最終総合レビュー完了 - プロ品質保証済み');
+      logger.debug('🎉 段階8: 最終総合レビュー完了 - プロ品質保証済み');
       return { comprehensive_review: result.content };
     }
   }
@@ -987,7 +989,7 @@ ${characterRelationships}
 function createImagePrompts(sessionData) {
   // アートワーク生成がトグルで有効化されているかチェック
   if (!sessionData.formData?.generate_artwork) {
-    console.log('🎨 アートワーク生成は無効化されています（ユーザー設定）');
+    logger.debug('🎨 アートワーク生成は無効化されています（ユーザー設定）');
     return [];
   }
   
@@ -1016,7 +1018,7 @@ function createImagePrompts(sessionData) {
     });
   }
   
-  console.log(`🎨 アートワーク生成が有効化されました - ${prompts.length}個のプロンプト生成`);
+  logger.debug(`🎨 アートワーク生成が有効化されました - ${prompts.length}個のプロンプト生成`);
   return prompts;
 }
 
@@ -1026,19 +1028,19 @@ async function generateImages(imagePrompts) {
   
   // プロンプトが空の場合はスキップ
   if (!imagePrompts || imagePrompts.length === 0) {
-    console.log('🎨 アートワーク生成はスキップされました');
+    logger.debug('🎨 アートワーク生成はスキップされました');
     return images;
   }
   
   // APIキーが設定されていない場合はスキップ
   if (!process.env.OPENAI_API_KEY) {
-    console.log('⚠️ OPENAI_API_KEY not set, skipping image generation');
+    logger.debug('⚠️ OPENAI_API_KEY not set, skipping image generation');
     return images;
   }
   
   for (const promptData of imagePrompts) {
     try {
-      console.log(`🎨 Generating image: ${promptData.type}`);
+      logger.debug(`🎨 Generating image: ${promptData.type}`);
       
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
@@ -1063,10 +1065,10 @@ async function generateImages(imagePrompts) {
           revised_prompt: data.data[0].revised_prompt,
           status: 'success'
         });
-        console.log(`✅ Image generated: ${promptData.type}`);
+        logger.debug(`✅ Image generated: ${promptData.type}`);
       } else {
         const error = await response.text();
-        console.error(`❌ Image generation failed: ${error}`);
+        logger.error(`❌ Image generation failed: ${error}`);
         images.push({
           ...promptData,
           error: 'Generation failed',
@@ -1074,7 +1076,7 @@ async function generateImages(imagePrompts) {
         });
       }
     } catch (error) {
-      console.error(`❌ Image generation error: ${error.message}`);
+      logger.error(`❌ Image generation error: ${error.message}`);
       images.push({
         ...promptData,
         error: error.message,
@@ -1088,7 +1090,7 @@ async function generateImages(imagePrompts) {
 
 // メインハンドラー
 export default async function handler(req, res) {
-  console.log('🔬 Integrated Micro Generator called');
+  logger.debug('🔬 Integrated Micro Generator called');
   
   setSecurityHeaders(res);
   
@@ -1102,7 +1104,37 @@ export default async function handler(req, res) {
     
     // EventSource接続の場合は特別処理
     if (stream === 'true') {
-      console.log('🌐 EventSource接続検出');
+      logger.debug('🌐 EventSource接続検出');
+      
+      // リソースマネージャーにEventSourceを登録
+      const eventSourceId = sessionId || `eventsource_${Date.now()}`;
+      
+      // 接続クリーンアップの設定
+      const connectionManager = {
+        close: () => {
+          try {
+            if (!res.headersSent) {
+              res.end();
+            }
+            logger.debug(`EventSource connection closed: ${eventSourceId}`);
+          } catch (error) {
+            logger.warn(`EventSource close error: ${error.message}`);
+          }
+        }
+      };
+      
+      resourceManager.registerConnection(eventSourceId, connectionManager);
+      
+      // クライアント切断時の自動クリーンアップ
+      req.on('close', () => {
+        logger.debug(`Client disconnected: ${eventSourceId}`);
+        resourceManager.cleanupConnection(eventSourceId);
+      });
+      
+      req.on('error', (error) => {
+        logger.warn(`EventSource error: ${error.message}`);
+        resourceManager.cleanupConnection(eventSourceId);
+      });
       
       try {
         // クエリパラメータをbody形式に変換
@@ -1110,11 +1142,12 @@ export default async function handler(req, res) {
           formData: formData ? JSON.parse(formData) : {},
           sessionId: sessionId || `integrated_micro_${Date.now()}`,
           action: action || null,
-          stream: true
+          stream: true,
+          eventSourceId
         };
-        console.log('✅ EventSource用データ変換完了');
+        logger.debug('✅ EventSource用データ変換完了');
       } catch (parseError) {
-        console.error('❌ formData parse error:', parseError);
+        logger.error('❌ formData parse error:', parseError);
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
@@ -1163,7 +1196,7 @@ export default async function handler(req, res) {
         });
       });
     } catch (middlewareError) {
-      console.error('Middleware error:', middlewareError);
+      logger.error('Middleware error:', middlewareError);
       return res.status(500).json({ 
         success: false, 
         error: 'Middleware error: ' + middlewareError.message 
@@ -1174,15 +1207,15 @@ export default async function handler(req, res) {
   try {
     const { formData, sessionId, action } = req.body;
     
-    console.log('🔬 Starting integrated micro generation...');
-    console.log('📋 Raw request body:', JSON.stringify(req.body, null, 2));
-    console.log('📋 Received formData:', JSON.stringify(formData, null, 2));
-    console.log('🆔 Session ID:', sessionId);
-    console.log('⚡ Action:', action);
+    logger.debug('🔬 Starting integrated micro generation...');
+    logger.debug('📋 Raw request body:', JSON.stringify(req.body, null, 2));
+    logger.debug('📋 Received formData:', JSON.stringify(formData, null, 2));
+    logger.debug('🆔 Session ID:', sessionId);
+    logger.debug('⚡ Action:', action);
 
     // action: 'init'の場合はセッション初期化のみ実行
     if (action === 'init') {
-      console.log('🎯 Init action detected - セッション初期化のみ実行');
+      logger.debug('🎯 Init action detected - セッション初期化のみ実行');
       
       const initSessionData = {
         sessionId: sessionId || `integrated_micro_${Date.now()}`,
@@ -1214,7 +1247,7 @@ export default async function handler(req, res) {
     
     // 🎲 完全ランダムモードのチェックと処理
     if (formData.randomMode === true) {
-      console.log('🎲 完全ランダムモード検出 - RandomMysteryGeneratorを使用');
+      logger.debug('🎲 完全ランダムモード検出 - RandomMysteryGeneratorを使用');
       
       try {
         // ランダム生成の実行
@@ -1301,7 +1334,7 @@ export default async function handler(req, res) {
         
         return; // 通常のフロー実行をスキップ
       } catch (error) {
-        console.error('❌ ランダム生成エラー:', error);
+        logger.error('❌ ランダム生成エラー:', error);
         const errorResponse = {
           success: false,
           error: error.message || 'ランダム生成中にエラーが発生しました'
@@ -1356,8 +1389,14 @@ export default async function handler(req, res) {
       });
       
       // 接続確認
-      res.write(`event: connected\ndata: {"message": "段階的生成を開始します", "sessionId": "${sessionData.sessionId}"}\n\n`);
-      console.log('🌐 EventSource接続確立 - 段階的生成開始');
+      res.write(`event: connected\ndata: {"message": "段階的生成を開始します", "sessionId": "${sessionData.sessionId}", "eventSourceId": "${req.body?.eventSourceId}"}\n\n`);
+      logger.debug('🌐 EventSource接続確立 - 段階的生成開始');
+      
+      // タイムアウト設定 (30分)
+      const timeoutId = resourceManager.setTimeout(() => {
+        logger.warn(`EventSource timeout: ${req.body?.eventSourceId}`);
+        resourceManager.cleanupConnection(req.body?.eventSourceId);
+      }, 30 * 60 * 1000);
     }
     
     const sendProgressUpdate = (stepIndex, stepName, result, isComplete = false) => {
@@ -1376,9 +1415,9 @@ export default async function handler(req, res) {
       
       try {
         res.write(`event: progress\ndata: ${JSON.stringify(progressData)}\n\n`);
-        console.log(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
+        logger.debug(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
       } catch (writeError) {
-        console.error('❌ Progress write error:', writeError);
+        logger.error('❌ Progress write error:', writeError);
       }
     };
     
@@ -1386,7 +1425,7 @@ export default async function handler(req, res) {
     for (let i = 0; i < INTEGRATED_GENERATION_FLOW.length; i++) {
       const step = INTEGRATED_GENERATION_FLOW[i];
       
-      console.log(`🔄 段階${i + 1}/9実行中: ${step.name}`);
+      logger.debug(`🔄 段階${i + 1}/9実行中: ${step.name}`);
       
       try {
         // 段階開始通知
@@ -1404,7 +1443,7 @@ export default async function handler(req, res) {
         
         let result;
         if (cachedResult) {
-          console.log(`💾 Using cached result for: ${step.name}`);
+          logger.debug(`💾 Using cached result for: ${step.name}`);
           result = cachedResult;
           // キャッシュの場合でも最低2秒は処理時間を確保
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -1414,7 +1453,7 @@ export default async function handler(req, res) {
           
           // 🧠 品質評価実行
           if (step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')) {
-            console.log(`🔍 Running quality assessment for: ${step.name}`);
+            logger.debug(`🔍 Running quality assessment for: ${step.name}`);
             const qualityResult = await qualityAssessor.evaluateScenario(
               JSON.stringify(result), 
               formData
@@ -1422,7 +1461,7 @@ export default async function handler(req, res) {
             
             // 品質が基準以下の場合は再生成
             if (!qualityResult.passesQuality && qualityResult.score < 0.8) {
-              console.log(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
+              logger.debug(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
               
               // フィードバックを含めて再生成
               const enhancedContext = {
@@ -1439,9 +1478,9 @@ export default async function handler(req, res) {
                 formData
               );
               
-              console.log(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
+              logger.debug(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
             } else {
-              console.log(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
+              logger.debug(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
             }
           }
           
@@ -1459,7 +1498,7 @@ export default async function handler(req, res) {
           const remainingTime = Math.max(0, minProcessTime - elapsedTime);
           
           if (remainingTime > 0) {
-            console.log(`⏱️ 段階${i + 1}追加処理時間: ${remainingTime}ms`);
+            logger.debug(`⏱️ 段階${i + 1}追加処理時間: ${remainingTime}ms`);
             await new Promise(resolve => setTimeout(resolve, remainingTime));
           }
         }
@@ -1481,10 +1520,10 @@ export default async function handler(req, res) {
         // 段階完了を即座にフロントエンドに送信
         sendProgressUpdate(i, step.name, result, false);
         
-        console.log(`✅ 段階${i + 1}完了: ${step.name} (進捗: ${Math.round((currentWeight / totalWeight) * 100)}%)`);
+        logger.debug(`✅ 段階${i + 1}完了: ${step.name} (進捗: ${Math.round((currentWeight / totalWeight) * 100)}%)`);
         
       } catch (stepError) {
-        console.error(`❌ Step ${i + 1} failed: ${stepError.message}`);
+        logger.error(`❌ Step ${i + 1} failed: ${stepError.message}`);
         
         // エラー情報を送信
         if (isEventSource) {
@@ -1493,7 +1532,7 @@ export default async function handler(req, res) {
         
         // 致命的エラーではない場合は続行
         if (step.weight < 30) {
-          console.log(`⚠️ Non-critical step failed, continuing...`);
+          logger.debug(`⚠️ Non-critical step failed, continuing...`);
           continue;
         } else {
           throw new AppError(`Critical step failed: ${step.name} - ${stepError.message}`, ErrorTypes.GENERATION_ERROR);
@@ -1502,9 +1541,9 @@ export default async function handler(req, res) {
     }
     
     // 並列処理はスキップ（段階的処理のため）
-    console.log('📝 段階的処理のため並列処理をスキップ');
+    logger.debug('📝 段階的処理のため並列処理をスキップ');
     if (false) {
-      console.log('🚀 Using parallel generation for independent tasks');
+      logger.debug('🚀 Using parallel generation for independent tasks');
       const parallelResults = await parallelEngine.generateConcurrently(optimizedFlow.tasks, context);
       
       // 結果をセッションデータに統合
@@ -1527,7 +1566,7 @@ export default async function handler(req, res) {
       for (let i = 0; i < INTEGRATED_GENERATION_FLOW.length; i++) {
         const step = INTEGRATED_GENERATION_FLOW[i];
         
-        console.log(`🔄 Executing: ${step.name}`);
+        logger.debug(`🔄 Executing: ${step.name}`);
         
         try {
           // 🧠 インテリジェントキャッシュチェック
@@ -1536,7 +1575,7 @@ export default async function handler(req, res) {
           
           let result;
           if (cachedResult) {
-            console.log(`💾 Using cached result for: ${step.name}`);
+            logger.debug(`💾 Using cached result for: ${step.name}`);
             result = cachedResult;
           } else {
             // 新規生成
@@ -1544,7 +1583,7 @@ export default async function handler(req, res) {
             
             // 🧠 品質評価実行
             if (step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')) {
-              console.log(`🔍 Running quality assessment for: ${step.name}`);
+              logger.debug(`🔍 Running quality assessment for: ${step.name}`);
               const qualityResult = await qualityAssessor.evaluateScenario(
                 JSON.stringify(result), 
                 formData
@@ -1552,7 +1591,7 @@ export default async function handler(req, res) {
               
               // 品質が基準以下の場合は再生成
               if (!qualityResult.passesQuality && qualityResult.score < 0.8) {
-                console.log(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
+                logger.debug(`⚠️ Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
                 
                 // フィードバックを含めて再生成
                 const enhancedContext = {
@@ -1569,9 +1608,9 @@ export default async function handler(req, res) {
                   formData
                 );
                 
-                console.log(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
+                logger.debug(`🔍 Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
               } else {
-                console.log(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
+                logger.debug(`✅ Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
               }
             }
             
@@ -1599,11 +1638,11 @@ export default async function handler(req, res) {
           currentWeight += step.weight;
           const progress = Math.round((currentWeight / totalWeight) * 100);
           
-          console.log(`✅ ${step.name} completed (${progress}%)`);
+          logger.debug(`✅ ${step.name} completed (${progress}%)`);
           
         } catch (stepError) {
-          console.error(`❌ Step failed: ${step.name}`, stepError);
-          console.error(`❌ Error details:`, {
+          logger.error(`❌ Step failed: ${step.name}`, stepError);
+          logger.error(`❌ Error details:`, {
             message: stepError.message,
             stack: stepError.stack,
             name: stepError.name,
@@ -1623,7 +1662,7 @@ export default async function handler(req, res) {
           
           // 致命的エラーではない場合は続行
           if (step.weight < 30) {
-            console.log(`⚠️ Non-critical step failed, continuing...`);
+            logger.debug(`⚠️ Non-critical step failed, continuing...`);
             continue;
           } else {
             throw new AppError(`Critical step failed: ${step.name} - ${stepError.message}`, ErrorTypes.GENERATION_ERROR);
@@ -1633,7 +1672,7 @@ export default async function handler(req, res) {
     }
 
     // 画像生成フェーズ
-    console.log('🎨 Starting image generation phase...');
+    logger.debug('🎨 Starting image generation phase...');
     const imagePrompts = createImagePrompts(sessionData);
     const generatedImages = await generateImages(imagePrompts);
     
@@ -1646,8 +1685,8 @@ export default async function handler(req, res) {
     sessionData.completedAt = new Date().toISOString();
     sessionData.context = context;
 
-    console.log('🎉 Integrated micro generation completed successfully!');
-    console.log(`📸 Generated ${generatedImages.filter(img => img.status === 'success').length} images`);
+    logger.debug('🎉 Integrated micro generation completed successfully!');
+    logger.debug(`📸 Generated ${generatedImages.filter(img => img.status === 'success').length} images`);
 
     // 最終完了通知を送信
     const finalResponse = {
@@ -1663,15 +1702,20 @@ export default async function handler(req, res) {
     if (isEventSource) {
       res.write(`event: complete\ndata: ${JSON.stringify(finalResponse)}\n\n`);
       res.end();
+      
+      // EventSourceリソースクリーンアップ
+      if (req.body?.eventSourceId) {
+        resourceManager.cleanupConnection(req.body.eventSourceId);
+      }
     } else {
       return res.status(200).json(finalResponse);
     }
     
-    console.log('📡 段階的生成完了 - 全9段階実行済み');
+    logger.debug('📡 段階的生成完了 - 全9段階実行済み');
 
   } catch (error) {
-    console.error('🚨 Integrated micro generation error:', error);
-    console.error('🚨 Error stack:', error.stack);
+    logger.error('🚨 Integrated micro generation error:', error);
+    logger.error('🚨 Error stack:', error.stack);
     
     const errorResponse = {
       success: false,
@@ -1689,7 +1733,7 @@ export default async function handler(req, res) {
         res.write(`event: error\ndata: ${JSON.stringify(errorResponse)}\n\n`);
         res.end();
       } catch (writeError) {
-        console.error('Error writing to response:', writeError);
+        logger.error('Error writing to response:', writeError);
       }
     } else {
       return res.status(500).json(errorResponse);
@@ -1743,7 +1787,7 @@ function createFormDataHash(formData) {
     }
     return Math.abs(hash).toString(16).substring(0, 8);
   } catch (error) {
-    console.error('Hash generation error:', error);
+    logger.error('Hash generation error:', error);
     return Date.now().toString(16).substring(0, 8);
   }
 }

@@ -39,7 +39,7 @@
     "jszip": "^3.10.1"
   },
   "devDependencies": {
-    "@vercel/node": "^3.0.0"
+    "@vercel/node": "^2.3.0"
   },
   "engines": {
     "node": ">=18.0.0"

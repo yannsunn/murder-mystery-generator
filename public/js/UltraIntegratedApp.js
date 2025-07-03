@@ -8,7 +8,7 @@ function initializeUXEnhancers() {
   const skeletonLoader = window.skeletonLoader || null;
   const uxEnhancer = window.uxEnhancer || null;
   
-  console.log('🎯 UX Enhancers status:', {
+  logger.debug('🎯 UX Enhancers status:', {
     skeletonLoader: !!skeletonLoader,
     uxEnhancer: !!uxEnhancer
   });
@@ -28,7 +28,7 @@ class UltraIntegratedApp {
       status: 'waiting'
     };
     
-    console.log('🚀 Ultra Integrated App - シンプル版初期化開始');
+    logger.debug('🚀 Ultra Integrated App - シンプル版初期化開始');
     
     // UX enhancersを初期化
     const { skeletonLoader, uxEnhancer } = initializeUXEnhancers();
@@ -40,7 +40,7 @@ class UltraIntegratedApp {
 
   init() {
     try {
-      console.log('🔍 シンプル版初期化開始 - DOM要素チェック');
+      logger.debug('🔍 シンプル版初期化開始 - DOM要素チェック');
       
       // 必須要素の存在確認（シンプル版）
       const requiredElements = [
@@ -52,7 +52,7 @@ class UltraIntegratedApp {
       
       const missingElements = requiredElements.filter(id => !document.getElementById(id));
       if (missingElements.length > 0) {
-        console.error('❌ 必須要素が見つかりません:', missingElements);
+        logger.error('❌ 必須要素が見つかりません:', missingElements);
       }
       
       this.setupEventListeners();
@@ -62,16 +62,16 @@ class UltraIntegratedApp {
       this.generationMode = 'micro';
       this.microApp = null;
       
-      console.log('✅ Ultra Integrated App - シンプル版初期化完了');
+      logger.debug('✅ Ultra Integrated App - シンプル版初期化完了');
       
       // 初期状態のデバッグ情報
-      console.log('📊 初期状態:', {
+      logger.debug('📊 初期状態:', {
         formElements: document.querySelectorAll('#scenario-form select').length,
         requiredFields: document.querySelectorAll('#scenario-form [required]').length
       });
       
     } catch (error) {
-      console.error('❌ 初期化エラー:', error);
+      logger.error('❌ 初期化エラー:', error);
       if (this.uxEnhancer) {
         this.uxEnhancer.showToast('⚠️ アプリケーションの初期化に問題が発生しました', 'error', 5000);
       }
@@ -122,11 +122,11 @@ class UltraIntegratedApp {
 
   setupEventListeners() {
     try {
-      console.log('🔧 シンプル版イベントリスナー設定開始');
+      logger.debug('🔧 シンプル版イベントリスナー設定開始');
       
       // DOM要素の状況を詳細に診断
-      console.log('🔍 DOM診断開始');
-      console.log('📋 現在のDOM状態:', {
+      logger.debug('🔍 DOM診断開始');
+      logger.debug('📋 現在のDOM状態:', {
         formExists: !!document.getElementById('scenario-form'),
         generateBtnExists: !!document.getElementById('generate-btn'),
         randomBtnExists: !!document.getElementById('random-generate-btn'),
@@ -141,7 +141,7 @@ class UltraIntegratedApp {
       const newScenarioBtn = document.getElementById('new-scenario');
       
       if (!formElement) {
-        console.error('❌ フォームが見つかりません');
+        logger.error('❌ フォームが見つかりません');
         return;
       }
       
@@ -151,14 +151,14 @@ class UltraIntegratedApp {
         e.stopPropagation();
         e.stopImmediatePropagation();
         
-        console.log('🚨 フォーム送信をブロックしました');
+        logger.debug('🚨 フォーム送信をブロックしました');
         return false;
       });
       
       // 生成ボタンの直接クリック処理
       if (generateBtn) {
-        console.log('✅ 生成ボタンが見つかりました:', generateBtn);
-        console.log('🔧 ボタン初期状態:', {
+        logger.debug('✅ 生成ボタンが見つかりました:', generateBtn);
+        logger.debug('🔧 ボタン初期状態:', {
           id: generateBtn.id,
           disabled: generateBtn.disabled,
           className: generateBtn.className,
@@ -168,8 +168,8 @@ class UltraIntegratedApp {
         });
         
         generateBtn.addEventListener('click', (e) => {
-          console.log('🚨 CRITICAL: 生成ボタンクリックイベント発火!');
-          console.log('📊 イベント詳細:', {
+          logger.debug('🚨 CRITICAL: 生成ボタンクリックイベント発火!');
+          logger.debug('📊 イベント詳細:', {
             type: e.type,
             target: e.target.id,
             currentTarget: e.currentTarget.id,
@@ -182,8 +182,8 @@ class UltraIntegratedApp {
           e.stopPropagation();
           e.stopImmediatePropagation();
           
-          console.log('🎯 生成ボタン直接クリック受信');
-          console.log('📄 ボタンの現在状態:', {
+          logger.debug('🎯 生成ボタン直接クリック受信');
+          logger.debug('📄 ボタンの現在状態:', {
             disabled: generateBtn.disabled,
             className: generateBtn.className,
             style: generateBtn.style.cssText,
@@ -195,28 +195,28 @@ class UltraIntegratedApp {
           
           try {
             if (this.validateForm()) {
-              console.log('✅ フォームバリデーション成功 - 生成開始');
+              logger.debug('✅ フォームバリデーション成功 - 生成開始');
               this.handleGenerationStart();
             } else {
-              console.log('❌ フォームバリデーション失敗');
+              logger.debug('❌ フォームバリデーション失敗');
             }
           } catch (error) {
-            console.error('❌ CRITICAL: ボタンクリック処理でエラー:', error);
+            logger.error('❌ CRITICAL: ボタンクリック処理でエラー:', error);
           }
           
           return false;
         });
         
         // 追加診断: ボタンがクリック可能かテスト
-        console.log('🧪 ボタンクリック可能性テスト');
+        logger.debug('🧪 ボタンクリック可能性テスト');
         const testClick = () => {
-          console.log('✅ テストクリック成功 - ボタンは反応可能');
+          logger.debug('✅ テストクリック成功 - ボタンは反応可能');
         };
         generateBtn.addEventListener('mousedown', testClick, { once: true });
         
       } else {
-        console.error('❌ 生成ボタンが見つかりません');
-        console.log('🔍 利用可能なボタン要素:', 
+        logger.error('❌ 生成ボタンが見つかりません');
+        logger.debug('🔍 利用可能なボタン要素:', 
           Array.from(document.querySelectorAll('button')).map(btn => ({ id: btn.id, text: btn.textContent.trim() }))
         );
       }
@@ -229,8 +229,8 @@ class UltraIntegratedApp {
       // ランダム生成ボタン
       const randomGenerateBtn = document.getElementById('random-generate-btn');
       if (randomGenerateBtn) {
-        console.log('✅ ランダム生成ボタンが見つかりました:', randomGenerateBtn);
-        console.log('🔧 ランダムボタン初期状態:', {
+        logger.debug('✅ ランダム生成ボタンが見つかりました:', randomGenerateBtn);
+        logger.debug('🔧 ランダムボタン初期状態:', {
           id: randomGenerateBtn.id,
           disabled: randomGenerateBtn.disabled,
           className: randomGenerateBtn.className,
@@ -240,8 +240,8 @@ class UltraIntegratedApp {
         });
         
         randomGenerateBtn.addEventListener('click', (e) => {
-          console.log('🚨 CRITICAL: ランダム生成ボタンクリックイベント発火!');
-          console.log('📊 イベント詳細:', {
+          logger.debug('🚨 CRITICAL: ランダム生成ボタンクリックイベント発火!');
+          logger.debug('📊 イベント詳細:', {
             type: e.type,
             target: e.target.id,
             currentTarget: e.currentTarget.id,
@@ -254,8 +254,8 @@ class UltraIntegratedApp {
           e.stopPropagation();
           e.stopImmediatePropagation();
           
-          console.log('🎲 ランダム生成ボタンクリック受信');
-          console.log('📄 ランダムボタンの現在状態:', {
+          logger.debug('🎲 ランダム生成ボタンクリック受信');
+          logger.debug('📄 ランダムボタンの現在状態:', {
             disabled: randomGenerateBtn.disabled,
             className: randomGenerateBtn.className,
             style: randomGenerateBtn.style.cssText,
@@ -265,26 +265,26 @@ class UltraIntegratedApp {
           });
           
           try {
-            console.log('✅ ランダム生成開始');
+            logger.debug('✅ ランダム生成開始');
             // ランダムモードでマイクロ生成を開始
             this.handleRandomGeneration();
           } catch (error) {
-            console.error('❌ CRITICAL: ランダムボタンクリック処理でエラー:', error);
+            logger.error('❌ CRITICAL: ランダムボタンクリック処理でエラー:', error);
           }
           
           return false;
         });
         
         // 追加診断: ランダムボタンがクリック可能かテスト
-        console.log('🧪 ランダムボタンクリック可能性テスト');
+        logger.debug('🧪 ランダムボタンクリック可能性テスト');
         const testRandomClick = () => {
-          console.log('✅ ランダムボタンテストクリック成功 - ボタンは反応可能');
+          logger.debug('✅ ランダムボタンテストクリック成功 - ボタンは反応可能');
         };
         randomGenerateBtn.addEventListener('mousedown', testRandomClick, { once: true });
         
       } else {
-        console.warn('❌ ランダム生成ボタンが見つかりません');
-        console.log('🔍 利用可能なボタン要素:', 
+        logger.warn('❌ ランダム生成ボタンが見つかりません');
+        logger.debug('🔍 利用可能なボタン要素:', 
           Array.from(document.querySelectorAll('button')).map(btn => ({ id: btn.id, text: btn.textContent.trim() }))
         );
       }
@@ -292,10 +292,10 @@ class UltraIntegratedApp {
       // フォーム変更監視
       formElement.addEventListener('change', () => this.updateSummary());
       
-      console.log('✅ イベントリスナー設定完了');
+      logger.debug('✅ イベントリスナー設定完了');
       
     } catch (error) {
-      console.error('❌ イベントリスナー設定エラー:', error);
+      logger.error('❌ イベントリスナー設定エラー:', error);
     }
   }
 
@@ -314,26 +314,26 @@ class UltraIntegratedApp {
   }
 
   goToNextStep() {
-    console.log('🔍 goToNextStep called:', {
+    logger.debug('🔍 goToNextStep called:', {
       currentStep: this.currentStep,
       totalSteps: this.totalSteps
     });
     
     if (this.currentStep < this.totalSteps) {
       // バリデーション
-      console.log('📋 バリデーション開始');
+      logger.debug('📋 バリデーション開始');
       if (!this.validateForm()) {
-        console.log('❌ バリデーション失敗');
+        logger.debug('❌ バリデーション失敗');
         return;
       }
-      console.log('✅ バリデーション成功');
+      logger.debug('✅ バリデーション成功');
       
       this.collectFormData();
       this.currentStep++;
       this.updateStepDisplay();
       this.updateButtonStates();
       
-      console.log('📊 ステップ更新完了:', {
+      logger.debug('📊 ステップ更新完了:', {
         newStep: this.currentStep,
         formData: this.formData
       });
@@ -358,7 +358,7 @@ class UltraIntegratedApp {
     
     const formElement = document.getElementById('scenario-form');
     if (!formElement) {
-      console.error('フォームが見つかりません');
+      logger.error('フォームが見つかりません');
       return false;
     }
     
@@ -377,17 +377,17 @@ class UltraIntegratedApp {
       // サニタイズされたデータで更新
       this.formData = { ...this.formData, ...validation.sanitizedData };
       
-      console.log('✅ セキュリティ強化フォーム検証・サニタイゼーション完了');
+      logger.debug('✅ セキュリティ強化フォーム検証・サニタイゼーション完了');
       return true;
     }
     
     // フォールバック: 基本検証
     const requiredFields = formElement.querySelectorAll('[required]');
-    console.log(`🔍 必須フィールド数: ${requiredFields.length}`);
+    logger.debug(`🔍 必須フィールド数: ${requiredFields.length}`);
     
     for (const field of requiredFields) {
       if (!field.value || field.value.trim() === '') {
-        console.error(`❌ 必須フィールドが未入力: ${field.name || field.id}`);
+        logger.error(`❌ 必須フィールドが未入力: ${field.name || field.id}`);
         if (this.uxEnhancer) {
           this.uxEnhancer.showToast(`必須項目「${field.name || field.id}」を入力してください`, 'error', 3000);
         }
@@ -396,7 +396,7 @@ class UltraIntegratedApp {
       }
     }
     
-    console.log('✅ 基本フォーム検証成功');
+    logger.debug('✅ 基本フォーム検証成功');
     return true;
   }
 
@@ -501,7 +501,7 @@ class UltraIntegratedApp {
 
   // 🎲 ランダムフォームデータ収集
   collectRandomFormData() {
-    console.log('🎲 ランダムフォームデータを生成中...');
+    logger.debug('🎲 ランダムフォームデータを生成中...');
     
     // ランダム選択肢の定義
     const randomOptions = {
@@ -536,7 +536,7 @@ class UltraIntegratedApp {
     // ランダムモードフラグを追加
     this.formData.randomMode = true;
     
-    console.log('✅ ランダムフォームデータ生成完了:', this.formData);
+    logger.debug('✅ ランダムフォームデータ生成完了:', this.formData);
   }
 
   updateSummary() {
@@ -596,7 +596,7 @@ class UltraIntegratedApp {
   onModeChange(mode) {
     // 統合マイクロモード固定（他のモードはなし）
     this.generationMode = 'micro';
-    console.log(`🔄 Generation mode: integrated micro (only option)`);
+    logger.debug(`🔄 Generation mode: integrated micro (only option)`);
     
     // ボタンテキスト更新
     const generateBtn = document.getElementById('generate-btn');
@@ -607,8 +607,8 @@ class UltraIntegratedApp {
   
   // 🎯 生成開始ハンドラー（マイクロモード専用）
   async handleGenerationStart() {
-    console.log('🎯 生成開始ハンドラー呼び出し');
-    console.log('📊 現在の状態:', {
+    logger.debug('🎯 生成開始ハンドラー呼び出し');
+    logger.debug('📊 現在の状態:', {
       isGenerating: this.isGenerating,
       uxEnhancer: !!this.uxEnhancer,
       skeletonLoader: !!this.skeletonLoader
@@ -616,7 +616,7 @@ class UltraIntegratedApp {
     
     // すでに生成中の場合は停止
     if (this.isGenerating) {
-      console.warn('⚠️ すでに生成中です');
+      logger.warn('⚠️ すでに生成中です');
       if (this.uxEnhancer) {
         this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
@@ -625,11 +625,11 @@ class UltraIntegratedApp {
     
     // フォームバリデーション
     if (!this.validateForm()) {
-      console.log('❌ フォームバリデーション失敗');
+      logger.debug('❌ フォームバリデーション失敗');
       return;
     }
     
-    console.log('✅ フォームバリデーション成功');
+    logger.debug('✅ フォームバリデーション成功');
     
     // マイクロモード専用に統一
     await this.startMicroGeneration();
@@ -637,11 +637,11 @@ class UltraIntegratedApp {
   
   // 🎲 ランダム生成ハンドラー
   async handleRandomGeneration() {
-    console.log('🎲 ランダム生成開始ハンドラー呼び出し');
+    logger.debug('🎲 ランダム生成開始ハンドラー呼び出し');
     
     // すでに生成中の場合は停止
     if (this.isGenerating) {
-      console.warn('⚠️ すでに生成中です');
+      logger.warn('⚠️ すでに生成中です');
       if (this.uxEnhancer) {
         this.uxEnhancer.showToast('⚠️ すでに生成中です', 'warning', 3000);
       }
@@ -651,8 +651,8 @@ class UltraIntegratedApp {
     // ランダムフォームデータを収集
     this.collectRandomFormData();
     
-    console.log('✅ ランダムフォームデータ設定完了');
-    console.log('📊 ランダムデータ:', this.formData);
+    logger.debug('✅ ランダムフォームデータ設定完了');
+    logger.debug('📊 ランダムデータ:', this.formData);
     
     // ランダムモードでマイクロ生成を開始
     await this.startMicroGeneration();
@@ -662,7 +662,7 @@ class UltraIntegratedApp {
   async startMicroGeneration() {
     if (this.isGenerating) return;
 
-    console.log('🔬 Starting Integrated Micro Generation...');
+    logger.debug('🔬 Starting Integrated Micro Generation...');
     
     // 前のセッションデータを完全にクリア
     this.sessionData = null;
@@ -671,7 +671,7 @@ class UltraIntegratedApp {
     // フォームデータを収集
     this.collectFormData();
     
-    console.log('📋 Collected formData:', this.formData);
+    logger.debug('📋 Collected formData:', this.formData);
     
     // UX強化: 生成開始通知
     if (this.uxEnhancer) {
@@ -690,7 +690,7 @@ class UltraIntegratedApp {
       // 5分タイムアウト設定
       timeoutId = setTimeout(() => {
         if (this.isGenerating) {
-          console.error('⏰ Generation timeout reached');
+          logger.error('⏰ Generation timeout reached');
           this.showError('生成がタイムアウトしました。再度お試しください。');
           this.isGenerating = false;
           this.stopProgressTimer();
@@ -705,17 +705,17 @@ class UltraIntegratedApp {
       // より確実にユニークなセッションIDを生成
       const sessionId = `integrated_micro_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      console.log('🔬 Starting staged generation with real-time progress...');
+      logger.debug('🔬 Starting staged generation with real-time progress...');
       
       // デバッグモード: APIキーが無い場合はモックテストを実行
       if (window.location.hostname === 'localhost' || window.location.search.includes('debug=true')) {
-        console.log('🧪 デバッグモード: モックテストを実行');
+        logger.debug('🧪 デバッグモード: モックテストを実行');
         this.runMockGeneration();
         return;
       }
       
       // 🔥 BREAKTHROUGH: セッション初期化でURL長制限問題を解決
-      console.log('🎯 セッション初期化開始...');
+      logger.debug('🎯 セッション初期化開始...');
       const initResponse = await fetch('/api/integrated-micro-generator', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -730,12 +730,12 @@ class UltraIntegratedApp {
         throw new Error(`セッション初期化失敗: ${initResponse.status}`);
       }
       
-      console.log('✅ セッション初期化成功');
+      logger.debug('✅ セッション初期化成功');
       
       // 🎯 formDataを含めてEventSourceを使用
       const formDataParam = encodeURIComponent(JSON.stringify(formData));
       const eventSourceUrl = `/api/integrated-micro-generator?sessionId=${sessionId}&stream=true&formData=${formDataParam}`;
-      console.log('🌐 EventSource接続開始:', eventSourceUrl);
+      logger.debug('🌐 EventSource接続開始:', eventSourceUrl);
       eventSource = new EventSource(eventSourceUrl);
       
       let currentStep = 0;
@@ -747,8 +747,8 @@ class UltraIntegratedApp {
       eventSource.addEventListener('progress', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📊 Progress event received:', data);
-          console.log('🔄 Switching to EventSource progress data:', {
+          logger.debug('📊 Progress event received:', data);
+          logger.debug('🔄 Switching to EventSource progress data:', {
             step: data.step,
             totalSteps: data.totalSteps,
             stepName: data.stepName,
@@ -772,10 +772,10 @@ class UltraIntegratedApp {
             this.updateEstimatedTime(data.estimatedTimeRemaining * 60); // 分を秒に変換
           }
           
-          console.log('✅ EventSource progress update applied');
+          logger.debug('✅ EventSource progress update applied');
           
         } catch (error) {
-          console.error('❌ Progress event parse error:', error);
+          logger.error('❌ Progress event parse error:', error);
         }
       });
       
@@ -783,21 +783,21 @@ class UltraIntegratedApp {
       eventSource.addEventListener('start', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('🚀 Start event received:', data);
+          logger.debug('🚀 Start event received:', data);
           
           // EventSourceデータが来た場合は古いシミュレーションを完全停止
           this.eventSourceMode = true; // EventSourceモードフラグ設定
           this.stopProgressTimer();
           
           // 🔥 CRITICAL: EventSource開始時に9段階モードに切り替え
-          console.log('🔄 Switching from simulation to EventSource mode (9 stages)');
+          logger.debug('🔄 Switching from simulation to EventSource mode (9 stages)');
           this.updatePhaseInfo(0, 9, 'EventSource生成開始');
           
           if (this.uxEnhancer) {
             this.uxEnhancer.showToast(data.message || '生成開始', 'success', 3000);
           }
         } catch (error) {
-          console.error('❌ Start event parse error:', error);
+          logger.error('❌ Start event parse error:', error);
         }
       });
       
@@ -805,7 +805,7 @@ class UltraIntegratedApp {
       eventSource.addEventListener('complete', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('✅ Complete event received:', data);
+          logger.debug('✅ Complete event received:', data);
           
           finalSessionData = data.sessionData;
           this.sessionData = finalSessionData;
@@ -821,11 +821,11 @@ class UltraIntegratedApp {
           
           if (timeoutId) clearTimeout(timeoutId);
           
-          console.log('🎉 Generation completed successfully');
+          logger.debug('🎉 Generation completed successfully');
           this.showResults(finalSessionData);
           
         } catch (error) {
-          console.error('❌ Complete event parse error:', error);
+          logger.error('❌ Complete event parse error:', error);
         }
       });
       
@@ -833,7 +833,7 @@ class UltraIntegratedApp {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('📡 Received fallback message:', data);
+          logger.debug('📡 Received fallback message:', data);
           
           if (data.step && data.content) {
             currentStep = data.step;
@@ -842,7 +842,7 @@ class UltraIntegratedApp {
             this.updateProgressBar(data.progress || 0);
             
             // フェーズ情報更新（デバッグ情報付き） - EventSourceデータを強制使用
-            console.log(`🔄 フェーズ更新: ${data.step}/${data.totalSteps} - ${data.name}`);
+            logger.debug(`🔄 フェーズ更新: ${data.step}/${data.totalSteps} - ${data.name}`);
             
             // EventSourceデータが来た場合は古いシミュレーションを停止
             this.stopProgressTimer();
@@ -871,12 +871,12 @@ class UltraIntegratedApp {
               const activeTab = document.querySelector('.tab-content[style*="block"]');
               if (activeTab) {
                 const tabName = activeTab.id.replace('tab-', '');
-                console.log(`🔄 Updating active tab: ${tabName}`);
+                logger.debug(`🔄 Updating active tab: ${tabName}`);
                 this.updateTabContent(tabName, window.currentSessionData);
               }
             }
             
-            console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
+            logger.debug(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
             
             // UX強化: 段階完了通知
             if (this.uxEnhancer) {
@@ -889,7 +889,7 @@ class UltraIntegratedApp {
           }
           
         } catch (parseError) {
-          console.error('❌ Progress data parse error:', parseError);
+          logger.error('❌ Progress data parse error:', parseError);
         }
       };
       
@@ -898,21 +898,21 @@ class UltraIntegratedApp {
       eventSource.addEventListener('connected', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('🌐 EventSource connected:', data);
+          logger.debug('🌐 EventSource connected:', data);
         } catch (error) {
-          console.error('❌ Connected event parse error:', error);
+          logger.error('❌ Connected event parse error:', error);
         }
       });
       
       // エラーイベント
       eventSource.addEventListener('error', (event) => {
-        console.error('❌ EventSource error:', event);
-        console.error('📊 EventSource状態:', {
+        logger.error('❌ EventSource error:', event);
+        logger.error('📊 EventSource状態:', {
           readyState: eventSource.readyState,
           url: eventSource.url,
           withCredentials: eventSource.withCredentials
         });
-        console.error('📊 詳細エラー情報:', {
+        logger.error('📊 詳細エラー情報:', {
           type: event.type,
           target: event.target,
           currentTarget: event.currentTarget,
@@ -925,11 +925,11 @@ class UltraIntegratedApp {
           1: 'OPEN - 接続成功・待機中', 
           2: 'CLOSED - 接続終了'
         };
-        console.error('📊 接続状態詳細:', readyStateMap[eventSource.readyState] || 'UNKNOWN');
+        logger.error('📊 接続状態詳細:', readyStateMap[eventSource.readyState] || 'UNKNOWN');
         
         // EventSourceが失敗した場合はPOSTフォールバックを試行
         if (!finalSessionData) {
-          console.log('🔄 EventSource failed, trying POST fallback...');
+          logger.debug('🔄 EventSource failed, trying POST fallback...');
           eventSource.close();
           
           // UX通知
@@ -946,7 +946,7 @@ class UltraIntegratedApp {
       
       // 代替: POSTリクエストによる段階的処理
       if (!window.EventSource) {
-        console.log('⚠️ EventSource not supported, using POST fallback');
+        logger.debug('⚠️ EventSource not supported, using POST fallback');
         
         const response = await fetch('/api/integrated-micro-generator', {
           method: 'POST',
@@ -982,7 +982,7 @@ class UltraIntegratedApp {
                   this.updateTabsRealtime(data);
                 }
               } catch (parseError) {
-                console.error('❌ Chunk parse error:', parseError);
+                logger.error('❌ Chunk parse error:', parseError);
               }
             }
           }
@@ -992,7 +992,7 @@ class UltraIntegratedApp {
       clearTimeout(timeoutId);
       
     } catch (error) {
-      console.error('❌ Integrated Micro Generation failed:', error);
+      logger.error('❌ Integrated Micro Generation failed:', error);
       
       // 🔥 BREAKTHROUGH: 強化されたエラーハンドリング
       this.cleanup(eventSource, timeoutId);
@@ -1011,18 +1011,18 @@ class UltraIntegratedApp {
 
   // 🔥 BREAKTHROUGH: 強化されたクリーンアップ機能
   cleanup(eventSource, timeoutId) {
-    console.log('🧹 リソースクリーンアップ開始');
+    logger.debug('🧹 リソースクリーンアップ開始');
     
     // EventSourceを安全に閉じる
     if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
       eventSource.close();
-      console.log('✅ EventSource closed');
+      logger.debug('✅ EventSource closed');
     }
     
     // タイムアウトをクリア
     if (timeoutId) {
       clearTimeout(timeoutId);
-      console.log('✅ Timeout cleared');
+      logger.debug('✅ Timeout cleared');
     }
     
     // プログレスタイマーを停止
@@ -1031,12 +1031,12 @@ class UltraIntegratedApp {
     // 生成フラグをリセット
     this.isGenerating = false;
     
-    console.log('✅ クリーンアップ完了');
+    logger.debug('✅ クリーンアップ完了');
   }
 
   // 🧪 モックテスト機能（デバッグ用）
   runMockGeneration() {
-    console.log('🧪 モックテスト開始: 9段階の進捗をシミュレート');
+    logger.debug('🧪 モックテスト開始: 9段階の進捗をシミュレート');
     
     const mockSteps = [
       { name: '段階0: ランダム全体構造・アウトライン', weight: 15 },
@@ -1057,7 +1057,7 @@ class UltraIntegratedApp {
     const runNextStep = () => {
       if (stepIndex >= mockSteps.length) {
         // 完了処理
-        console.log('🎉 モックテスト完了');
+        logger.debug('🎉 モックテスト完了');
         this.updateProgressBar(100);
         this.updatePhaseInfo(9, 9, '生成完了');
         
@@ -1083,7 +1083,7 @@ class UltraIntegratedApp {
       currentWeight += step.weight;
       const progress = Math.round((currentWeight / totalWeight) * 100);
       
-      console.log(`🔄 モック段階${stepIndex + 1}: ${step.name} (${progress}%)`);
+      logger.debug(`🔄 モック段階${stepIndex + 1}: ${step.name} (${progress}%)`);
       
       // 進捗更新
       this.updateProgressBar(progress);
@@ -1102,7 +1102,7 @@ class UltraIntegratedApp {
   // 🔄 EventSource失敗時のPOSTフォールバック
   async fallbackToPostGeneration(sessionId, timeoutId) {
     try {
-      console.log('🔄 Using POST fallback for staged generation...');
+      logger.debug('🔄 Using POST fallback for staged generation...');
       
       const response = await fetch('/api/integrated-micro-generator', {
         method: 'POST',
@@ -1117,7 +1117,7 @@ class UltraIntegratedApp {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ POST Fallback Error:', response.status, errorText);
+        logger.error('❌ POST Fallback Error:', response.status, errorText);
         throw new Error(`API Error ${response.status}: ${errorText}`);
       }
 
@@ -1146,23 +1146,23 @@ class UltraIntegratedApp {
                 // リアルタイムタブ更新
                 this.updateTabsRealtime(data);
                 
-                console.log(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
+                logger.debug(`✅ 段階${data.step}完了: ${data.name} (${data.progress}%)`);
                 
                 if (this.uxEnhancer) {
                   this.uxEnhancer.showToast(`段階${data.step}完了: ${data.name}`, 'info', 2000);
                 }
               }
             } catch (parseError) {
-              console.error('❌ Fallback parse error:', parseError);
+              logger.error('❌ Fallback parse error:', parseError);
             }
           } else if (line.startsWith('event: complete')) {
             // 次の行でデータを読み取り
           } else if (line.includes('"isComplete":true')) {
             try {
-              console.log('🎉 POST Fallback: Complete data received:', line);
+              logger.debug('🎉 POST Fallback: Complete data received:', line);
               const finalData = JSON.parse(line.substring(line.indexOf('{')));
-              console.log('🎉 POST Fallback: Parsed final data:', finalData);
-              console.log('📋 POST Fallback: sessionData:', finalData.sessionData);
+              logger.debug('🎉 POST Fallback: Parsed final data:', finalData);
+              logger.debug('📋 POST Fallback: sessionData:', finalData.sessionData);
               
               if (finalData.sessionData) {
                 this.updateProgressBar(100);
@@ -1172,26 +1172,26 @@ class UltraIntegratedApp {
                   this.uxEnhancer.showToast('🎉 全段階完了！マーダーミステリー生成成功', 'success', 5000);
                 }
                 
-                console.log('📋 POST Fallback: Calling showResults with:', finalData.sessionData);
+                logger.debug('📋 POST Fallback: Calling showResults with:', finalData.sessionData);
                 
                 setTimeout(() => {
-                  console.log('🎯 POST Fallback: Executing showResults...');
+                  logger.debug('🎯 POST Fallback: Executing showResults...');
                   this.showResults(finalData.sessionData);
                 }, 1000);
                 
                 break;
               } else {
-                console.error('❌ POST Fallback: No sessionData found in finalData:', finalData);
+                logger.error('❌ POST Fallback: No sessionData found in finalData:', finalData);
                 // 強制的に結果表示を試行
                 setTimeout(() => {
-                  console.log('🔄 POST Fallback: Forcing showResults with available data...');
+                  logger.debug('🔄 POST Fallback: Forcing showResults with available data...');
                   this.showResults(finalData);
                 }, 1000);
                 break;
               }
             } catch (parseError) {
-              console.error('❌ POST Fallback: Final parse error:', parseError);
-              console.error('❌ POST Fallback: Raw line:', line);
+              logger.error('❌ POST Fallback: Final parse error:', parseError);
+              logger.error('❌ POST Fallback: Raw line:', line);
             }
           }
         }
@@ -1200,7 +1200,7 @@ class UltraIntegratedApp {
       clearTimeout(timeoutId);
       
     } catch (fallbackError) {
-      console.error('❌ POST Fallback failed:', fallbackError);
+      logger.error('❌ POST Fallback failed:', fallbackError);
       
       this.stopProgressTimer();
       clearTimeout(timeoutId);
@@ -1216,7 +1216,7 @@ class UltraIntegratedApp {
   // 🚀 旧ウルトラ生成メソッド - 統合マイクロ生成に統合されました
   async startUltraGeneration() {
     // 統合マイクロ生成にリダイレクト
-    console.log('🔄 Redirecting to integrated micro generation...');
+    logger.debug('🔄 Redirecting to integrated micro generation...');
     await this.startMicroGeneration();
   }
 
@@ -1269,7 +1269,7 @@ class UltraIntegratedApp {
   updateProgressSimulation() {
     // EventSourceモードに切り替わった場合はシミュレーション停止
     if (this.eventSourceMode) {
-      console.log('🔄 EventSource mode active, stopping simulation');
+      logger.debug('🔄 EventSource mode active, stopping simulation');
       this.stopProgressTimer();
       return;
     }
@@ -1316,7 +1316,7 @@ class UltraIntegratedApp {
     // 統合生成では進捗は簡単なパーセンテージ表示のみ
     if (progressData && progressData.percentage !== undefined) {
       this.updateProgressBar(progressData.percentage);
-      console.log(`📈 Integrated micro generation: ${progressData.percentage}%`);
+      logger.debug(`📈 Integrated micro generation: ${progressData.percentage}%`);
     }
   }
   
@@ -1337,7 +1337,7 @@ class UltraIntegratedApp {
       progressContainer.setAttribute('aria-valuetext', `${percentage}パーセント完了`);
     }
     
-    console.log(`📊 進捗バー更新: ${percentage}%`);
+    logger.debug(`📊 進捗バー更新: ${percentage}%`);
   }
   
   // フェーズ情報更新
@@ -1372,18 +1372,18 @@ class UltraIntegratedApp {
   // 現在フェーズ更新
   updateCurrentPhase(phaseNum, phaseName, status) {
     const statusEmoji = status === 'completed' ? '✅' : '🔄';
-    console.log(`${statusEmoji} Phase ${phaseNum}: ${phaseName}`);
+    logger.debug(`${statusEmoji} Phase ${phaseNum}: ${phaseName}`);
   }
 
   // 生成UI表示
   showGenerationUI() {
-    console.log('🎬 showGenerationUI開始');
+    logger.debug('🎬 showGenerationUI開始');
     this.hideElement('main-card');
     this.showElement('loading-container');
     
     // ローディング画面が表示されたことを確認
     const loadingEl = document.getElementById('loading-container');
-    console.log('📺 loading-container状態:', {
+    logger.debug('📺 loading-container状態:', {
       element: !!loadingEl,
       hasHiddenClass: loadingEl?.classList.contains('hidden'),
       visible: loadingEl && !loadingEl.classList.contains('hidden')
@@ -1391,7 +1391,7 @@ class UltraIntegratedApp {
     
     // 🚨 重要修正: SkeletonLoaderを無効化し、直接進捗UIを表示
     // SkeletonLoaderが要素を隠してしまう問題を回避
-    console.log('📋 進捗UI直接表示 - SkeletonLoader無効化');
+    logger.debug('📋 進捗UI直接表示 - SkeletonLoader無効化');
     this.showActualGenerationUI();
   }
 
@@ -1411,7 +1411,7 @@ class UltraIntegratedApp {
     const phaseNumber = document.getElementById('current-phase-number');
     const estimatedTime = document.getElementById('estimated-time');
     
-    console.log('🎯 進捗UI要素状態:', {
+    logger.debug('🎯 進捗UI要素状態:', {
       currentPhase: !!currentPhase,
       phaseDetails: !!phaseDetails,
       phaseNumber: !!phaseNumber,
@@ -1428,37 +1428,37 @@ class UltraIntegratedApp {
       estimatedTime.textContent = '推定時間: 約 5分';
     }
     
-    console.log('✅ 生成UI表示完了 - 進捗表示準備OK');
+    logger.debug('✅ 生成UI表示完了 - 進捗表示準備OK');
   }
 
 
   // 結果表示
   showResults(sessionData) {
-    console.log('🎆 showResults 呼び出し:', sessionData);
-    console.log('📄 sessionData type:', typeof sessionData);
-    console.log('📄 sessionData.phases:', sessionData?.phases);
+    logger.debug('🎆 showResults 呼び出し:', sessionData);
+    logger.debug('📄 sessionData type:', typeof sessionData);
+    logger.debug('📄 sessionData.phases:', sessionData?.phases);
     
     // UI要素の存在確認
     const loadingContainer = document.getElementById('loading-container');
     const resultContainer = document.getElementById('result-container');
-    console.log('📄 loadingContainer:', !!loadingContainer);
-    console.log('📄 resultContainer:', !!resultContainer);
+    logger.debug('📄 loadingContainer:', !!loadingContainer);
+    logger.debug('📄 resultContainer:', !!resultContainer);
     
     this.hideElement('loading-container');
     this.showElement('result-container');
     
     const contentEl = document.getElementById('scenario-content');
-    console.log('📄 contentEl:', !!contentEl, contentEl);
+    logger.debug('📄 contentEl:', !!contentEl, contentEl);
     
     // 条件チェックの詳細ログ
-    console.log('📄 Condition check:');
-    console.log('  - contentEl exists:', !!contentEl);
-    console.log('  - sessionData exists:', !!sessionData);
-    console.log('  - sessionData.phases exists:', !!(sessionData && sessionData.phases));
-    console.log('  - sessionData structure:', Object.keys(sessionData || {}));
+    logger.debug('📄 Condition check:');
+    logger.debug('  - contentEl exists:', !!contentEl);
+    logger.debug('  - sessionData exists:', !!sessionData);
+    logger.debug('  - sessionData.phases exists:', !!(sessionData && sessionData.phases));
+    logger.debug('  - sessionData structure:', Object.keys(sessionData || {}));
     
     if (contentEl && sessionData && sessionData.phases) {
-      console.log('✅ All conditions met, proceeding with result display');
+      logger.debug('✅ All conditions met, proceeding with result display');
       // グローバルセッションデータを保存
       window.currentSessionData = sessionData;
       window.app = this; // アプリインスタンスも保存
@@ -1485,7 +1485,7 @@ class UltraIntegratedApp {
         this.setupTabSystem();
       }
     } else {
-      console.error('❌ contentElか sessionData.phases が無い:', {
+      logger.error('❌ contentElか sessionData.phases が無い:', {
         contentEl: !!contentEl,
         sessionData: !!sessionData,
         phases: !!sessionData?.phases
@@ -1512,7 +1512,7 @@ class UltraIntegratedApp {
     this.isGenerating = false;
     this.stopProgressTimer();
     
-    console.log('✅ showResults 完了 - 状態リセット');
+    logger.debug('✅ showResults 完了 - 状態リセット');
   }
   
   // タブシステムのセットアップ
@@ -1617,7 +1617,7 @@ class UltraIntegratedApp {
         name: stepData.name || `段階${stepData.step}`
       };
       
-      console.log(`🔄 タブ更新: 段階${stepData.step}のデータを統合`);
+      logger.debug(`🔄 タブ更新: 段階${stepData.step}のデータを統合`);
       
       // 全てのタブコンテンツを更新（現在表示中でなくても準備）
       ['overview', 'scenario', 'characters', 'timeline', 'gm-guide'].forEach(tabName => {
@@ -1945,7 +1945,7 @@ class UltraIntegratedApp {
   }
   
   generateScenarioContent(phases, isUpdate = false) {
-    console.log('🔍 Generating scenario content from phases:', phases);
+    logger.debug('🔍 Generating scenario content from phases:', phases);
     
     // 段階的生成の新しい構造に対応
     let scenarioContent = '';
@@ -2026,7 +2026,7 @@ class UltraIntegratedApp {
   }
 
   generateCharactersContent(phases, isUpdate = false) {
-    console.log('🔍 Generating characters content from phases:', phases);
+    logger.debug('🔍 Generating characters content from phases:', phases);
     
     // 段階4のキャラクター情報を探す
     const step4 = phases.step4;
@@ -2062,9 +2062,9 @@ class UltraIntegratedApp {
       return '<p class="no-content">⚠️ キャラクター詳細が空です。段階4の生成を確認してください。</p>';
     }
     
-    console.log('✅ Characters found:', characters.substring(0, 200));
-    console.log('✅ Character relationships found:', characterRelationships ? 'Yes' : 'No');
-    console.log('✅ Character list:', characterList);
+    logger.debug('✅ Characters found:', characters.substring(0, 200));
+    logger.debug('✅ Character relationships found:', characterRelationships ? 'Yes' : 'No');
+    logger.debug('✅ Character list:', characterList);
     
     // キャラクターリストがある場合は、個別のハンドアウトとして表示
     let formattedContent = '';
@@ -2119,7 +2119,7 @@ class UltraIntegratedApp {
   }
 
   generateTimelineContent(phases, isUpdate = false) {
-    console.log('🔍 Generating timeline content from phases:', phases);
+    logger.debug('🔍 Generating timeline content from phases:', phases);
     
     // タイムライン情報を複数の段階から統合的に取得
     const step3 = phases.step3; // 事件詳細・基本タイムライン
@@ -2223,7 +2223,7 @@ class UltraIntegratedApp {
       combinedContent = this.formatContent(timelineContent);
     }
     
-    console.log('✅ Timeline content assembled from multiple sources');
+    logger.debug('✅ Timeline content assembled from multiple sources');
     
     return `
       <div class="timeline-section">
@@ -2239,7 +2239,7 @@ class UltraIntegratedApp {
   }
   
   generateGMGuideContent(phases, isUpdate = false) {
-    console.log('🔍 Generating GM guide content from phases:', phases);
+    logger.debug('🔍 Generating GM guide content from phases:', phases);
     
     // GMガイドを複数の段階から統合的に構築
     const step2 = phases.step2; // 事件核心・犯人・動機
@@ -2291,7 +2291,7 @@ class UltraIntegratedApp {
       return '<p class="no-content">⚠️ GMガイド詳細が空です。段階6の生成を確認してください。</p>';
     }
     
-    console.log('✅ GM Guide assembled from multiple sources');
+    logger.debug('✅ GM Guide assembled from multiple sources');
     
     // 統合的なGMガイドを構築
     let combinedContent = `
@@ -2464,7 +2464,7 @@ class UltraIntegratedApp {
     if (typeof copyScenarioText === 'function') {
       copyScenarioText();
     } else {
-      console.log('📖 All content is displayed on this web page. Use tabs to navigate.');
+      logger.debug('📖 All content is displayed on this web page. Use tabs to navigate.');
       alert('すべてのコンテンツはこのWebページ上で表示されています。タブを使って各資料をご確認ください。');
     }
   }
@@ -2524,7 +2524,7 @@ class UltraIntegratedApp {
         this.formData = JSON.parse(saved);
         this.populateForm();
       } catch (error) {
-        console.error('Failed to restore form data:', error);
+        logger.error('Failed to restore form data:', error);
       }
     }
   }
@@ -2563,7 +2563,7 @@ window.showTab = function(tabName) {
   if (window.app && typeof window.app.showTab === 'function') {
     window.app.showTab(tabName);
   } else {
-    console.warn('App instance not found or showTab method not available');
+    logger.warn('App instance not found or showTab method not available');
   }
 };
 
@@ -2602,11 +2602,11 @@ window.copyScenarioText = function() {
         alert('シナリオ全体をクリップボードにコピーしました！');
       }
     }).catch(err => {
-      console.error('コピーに失敗:', err);
+      logger.error('コピーに失敗:', err);
       alert('コピーに失敗しました。手動でテキストを選択してください。');
     });
   } catch (error) {
-    console.error('copyScenarioText error:', error);
+    logger.error('copyScenarioText error:', error);
     alert('コピー中にエラーが発生しました。');
   }
 };
@@ -2627,11 +2627,11 @@ window.copyTabContent = function() {
         alert('表示中タブの内容をクリップボードにコピーしました！');
       }
     }).catch(err => {
-      console.error('タブコピーに失敗:', err);
+      logger.error('タブコピーに失敗:', err);
       alert('コピーに失敗しました。');
     });
   } catch (error) {
-    console.error('copyTabContent error:', error);
+    logger.error('copyTabContent error:', error);
     alert('タブのコピー中にエラーが発生しました。');
   }
 };
@@ -2693,7 +2693,7 @@ window.saveAsText = function() {
       alert('テキストファイルとして保存しました！');
     }
   } catch (error) {
-    console.error('saveAsText error:', error);
+    logger.error('saveAsText error:', error);
     alert('ファイル保存中にエラーが発生しました。');
   }
 };
