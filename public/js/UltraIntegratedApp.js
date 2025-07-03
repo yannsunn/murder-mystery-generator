@@ -732,9 +732,11 @@ class UltraIntegratedApp {
       
       console.log('✅ セッション初期化成功');
       
-      // 🎯 セッションIDのみでEventSourceを使用（URL長制限回避）
-      console.log('🌐 EventSource接続開始:', `/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
-      eventSource = new EventSource(`/api/integrated-micro-generator?sessionId=${sessionId}&stream=true`);
+      // 🎯 formDataを含めてEventSourceを使用
+      const formDataParam = encodeURIComponent(JSON.stringify(formData));
+      const eventSourceUrl = `/api/integrated-micro-generator?sessionId=${sessionId}&stream=true&formData=${formDataParam}`;
+      console.log('🌐 EventSource接続開始:', eventSourceUrl);
+      eventSource = new EventSource(eventSourceUrl);
       
       let currentStep = 0;
       let finalSessionData = null;
@@ -891,6 +893,16 @@ class UltraIntegratedApp {
         }
       };
       
+      
+      // 接続確認イベント
+      eventSource.addEventListener('connected', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('🌐 EventSource connected:', data);
+        } catch (error) {
+          console.error('❌ Connected event parse error:', error);
+        }
+      });
       
       // エラーイベント
       eventSource.addEventListener('error', (event) => {
