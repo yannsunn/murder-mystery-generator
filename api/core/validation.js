@@ -1,20 +1,13 @@
 /**
- * 🛡️ Input Validation System - LEGACY (統合版に移行済み)
- * @deprecated 統合検証システム (/api/core/validation.js) を使用してください
+ * 🔒 UNIFIED INPUT VALIDATION - 統合検証システム
+ * クライアント・サーバー共通の検証ロジック
+ * XSS防止・入力検証・サニタイゼーション
  */
 
-const { unifiedValidator, createValidationMiddleware } = require('../core/validation');
+import { logger } from '../utils/logger.js';
 
-// レガシー互換性のため、新しい統合システムを再エクスポート
-module.exports = {
-  inputValidator: unifiedValidator,
-  createValidationMiddleware,
-  ValidationError: require('../core/validation').ValidationError,
-  getValidationRules: require('../core/validation').getValidationRules
-};
-
-// 従来のルール定義（参考用・削除予定）
-const LEGACY_VALIDATION_RULES = {
+// 📋 統合検証ルール定義
+const VALIDATION_RULES = {
   // フォームデータ検証
   formData: {
     participants: {
@@ -60,6 +53,12 @@ const LEGACY_VALIDATION_RULES = {
       required: true,
       description: '複雑さ'
     },
+    'custom-request': {
+      type: 'string',
+      maxLength: 500,
+      required: false,
+      description: 'カスタム要求'
+    },
     red_herring: {
       type: 'boolean',
       required: false,
@@ -74,6 +73,21 @@ const LEGACY_VALIDATION_RULES = {
       type: 'boolean',
       required: false,
       description: '秘密の役割'
+    },
+    'generate-images': {
+      type: 'boolean',
+      required: false,
+      description: '画像生成'
+    },
+    'detailed-handouts': {
+      type: 'boolean',
+      required: false,
+      description: '詳細ハンドアウト'
+    },
+    'gm-support': {
+      type: 'boolean',
+      required: false,
+      description: 'GM支援'
     },
     generation_mode: {
       type: 'string',
@@ -96,7 +110,7 @@ const LEGACY_VALIDATION_RULES = {
     action: {
       type: 'string',
       enum: ['generate_complete', 'get_progress', 'execute_task', 'get_next_tasks', 'create', 'save', 'get', 'delete'],
-      required: false, // actionは必須ではない場合もある
+      required: false,
       description: 'アクション'
     },
     taskId: {
@@ -113,32 +127,40 @@ const LEGACY_VALIDATION_RULES = {
       required: false,
       description: '継続フェーズ'
     }
-  },
-
-  // セッションデータ検証
-  sessionData: {
-    sessionId: {
-      type: 'string',
-      required: true,
-      description: 'セッションID'
-    },
-    phases: {
-      type: 'object',
-      required: false,
-      description: 'フェーズデータ'
-    },
-    formData: {
-      type: 'object',
-      required: false,
-      description: 'フォームデータ'
-    }
   }
 };
 
 /**
- * 検証エラークラス
+ * 🛡️ セキュリティパターン定義
  */
-export class ValidationError extends Error {
+const SECURITY_PATTERNS = {
+  xss: [
+    /<script[^>]*>.*?<\/script>/gi,
+    /<iframe[^>]*>.*?<\/iframe>/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /data:text\/html/gi
+  ],
+  sql: [
+    /union\s+select/gi,
+    /drop\s+table/gi,
+    /delete\s+from/gi,
+    /insert\s+into/gi,
+    /update\s+.*set/gi
+  ],
+  cmd: [
+    /;\s*cat\s+/gi,
+    /;\s*rm\s+/gi,
+    /;\s*ls\s+/gi,
+    /&&\s*cat\s+/gi,
+    /\|\s*curl\s+/gi
+  ]
+};
+
+/**
+ * 🔍 検証エラークラス
+ */
+class ValidationError extends Error {
   constructor(message, field = null, code = 'VALIDATION_ERROR') {
     super(message);
     this.name = 'ValidationError';
@@ -148,15 +170,98 @@ export class ValidationError extends Error {
 }
 
 /**
- * 入力値検証クラス
+ * 🛡️ 統合バリデーターメインクラス
  */
-export class InputValidator {
+class UnifiedInputValidator {
   constructor() {
     this.rules = VALIDATION_RULES;
+    this.maxTextLength = 1000;
+    this.allowedTags = ['br', 'p', 'strong', 'em'];
+    this.isServer = typeof window === 'undefined';
   }
 
   /**
-   * 値の型検証
+   * 🧹 HTMLエスケープ処理
+   */
+  escapeHtml(text) {
+    if (typeof text !== 'string') return '';
+    
+    if (this.isServer) {
+      // サーバー側: 手動エスケープ
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    } else {
+      // クライアント側: DOM使用
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  }
+
+  /**
+   * 🔍 セキュリティチェック
+   */
+  performSecurityChecks(data) {
+    const checkString = typeof data === 'string' ? data : JSON.stringify(data);
+    const violations = [];
+
+    // XSSチェック
+    SECURITY_PATTERNS.xss.forEach(pattern => {
+      if (pattern.test(checkString)) {
+        violations.push('Potential XSS detected');
+      }
+    });
+
+    // SQLインジェクションチェック
+    SECURITY_PATTERNS.sql.forEach(pattern => {
+      if (pattern.test(checkString)) {
+        violations.push('Potential SQL injection detected');
+      }
+    });
+
+    // コマンドインジェクションチェック
+    SECURITY_PATTERNS.cmd.forEach(pattern => {
+      if (pattern.test(checkString)) {
+        violations.push('Potential command injection detected');
+      }
+    });
+
+    if (violations.length > 0) {
+      throw new ValidationError(
+        `Security violations detected: ${violations.join(', ')}`,
+        null,
+        'SECURITY_VIOLATION'
+      );
+    }
+
+    return true;
+  }
+
+  /**
+   * 🧹 テキストサニタイゼーション
+   */
+  sanitizeText(input) {
+    if (!input) return '';
+    
+    let sanitized = input.toString().trim();
+    
+    // 最大長制限
+    if (sanitized.length > this.maxTextLength) {
+      sanitized = sanitized.substring(0, this.maxTextLength);
+    }
+    
+    // セキュリティチェック
+    this.performSecurityChecks(sanitized);
+    
+    return this.escapeHtml(sanitized);
+  }
+
+  /**
+   * 📏 型検証
    */
   validateType(value, rule, fieldName) {
     if (value === null || value === undefined) {
@@ -185,9 +290,9 @@ export class InputValidator {
         if (typeof value === 'string') {
           const lower = value.toLowerCase();
           if (lower === 'true' || lower === '1') return true;
-          if (lower === 'false' || lower === '0') return false;
+          if (lower === 'false' || lower === '0' || lower === '') return false;
         }
-        throw new ValidationError(`${fieldName} must be a boolean`, fieldName);
+        return Boolean(value);
 
       case 'object':
         if (typeof value !== 'object' || Array.isArray(value)) {
@@ -207,7 +312,7 @@ export class InputValidator {
   }
 
   /**
-   * 文字列検証
+   * 📝 文字列検証
    */
   validateString(value, rule, fieldName) {
     // 長さ検証
@@ -241,29 +346,14 @@ export class InputValidator {
       );
     }
 
-    // XSS対策 - 危険なタグをチェック
-    const dangerousPatterns = [
-      /<script[^>]*>.*?<\/script>/gi,
-      /<iframe[^>]*>.*?<\/iframe>/gi,
-      /javascript:/gi,
-      /on\w+\s*=/gi
-    ];
-
-    for (const pattern of dangerousPatterns) {
-      if (pattern.test(value)) {
-        throw new ValidationError(
-          `${fieldName} contains potentially dangerous content`,
-          fieldName,
-          'SECURITY_VIOLATION'
-        );
-      }
-    }
+    // セキュリティチェック
+    this.performSecurityChecks(value);
 
     return value.trim();
   }
 
   /**
-   * 数値検証
+   * 🔢 数値検証
    */
   validateNumber(value, rule, fieldName) {
     if (rule.min && value < rule.min) {
@@ -291,7 +381,7 @@ export class InputValidator {
   }
 
   /**
-   * オブジェクト検証
+   * 📋 オブジェクト検証
    */
   validateObject(data, ruleset, prefix = '') {
     if (!data || typeof data !== 'object') {
@@ -312,11 +402,10 @@ export class InputValidator {
           validated[fieldName] = validatedValue;
         }
       } catch (error) {
-        // 必須フィールドのエラーのみ致命的とする
         if (rule.required) {
           errors.push(error.message);
-        } else {
-          console.warn(`⚠️ Validation warning for ${fullFieldName}: ${error.message}`);
+        } else if (this.isServer) {
+          logger.warn(`⚠️ Validation warning for ${fullFieldName}: ${error.message}`);
         }
       }
     }
@@ -325,13 +414,14 @@ export class InputValidator {
     const allowedFields = Object.keys(ruleset);
     const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key));
     
-    if (extraFields.length > 0) {
-      console.warn(`⚠️ Unknown fields passed through: ${extraFields.join(', ')}`);
-      // 未定義フィールドもそのまま通す
-      extraFields.forEach(field => {
-        validated[field] = data[field];
-      });
+    if (extraFields.length > 0 && this.isServer) {
+      logger.warn(`⚠️ Unknown fields passed through: ${extraFields.join(', ')}`);
     }
+    
+    // 未定義フィールドもそのまま通す
+    extraFields.forEach(field => {
+      validated[field] = data[field];
+    });
 
     if (errors.length > 0) {
       throw new ValidationError(`Validation failed: ${errors.join(', ')}`);
@@ -341,49 +431,32 @@ export class InputValidator {
   }
 
   /**
-   * フォームデータ検証
+   * 📝 フォームデータ検証
    */
   validateFormData(data) {
     return this.validateObject(data, this.rules.formData, 'formData');
   }
 
   /**
-   * 共通パラメータ検証
+   * 🔧 共通パラメータ検証
    */
   validateCommon(data) {
     return this.validateObject(data, this.rules.common, 'common');
   }
 
   /**
-   * セッションデータ検証
-   */
-  validateSessionData(data) {
-    const validated = this.validateObject(data, this.rules.sessionData, 'sessionData');
-    
-    // フォームデータが含まれている場合は追加検証
-    if (validated.formData) {
-      validated.formData = this.validateFormData(validated.formData);
-    }
-    
-    return validated;
-  }
-
-  /**
-   * 総合検証（API別）
+   * 🎯 API別総合検証
    */
   validateApiRequest(apiType, data) {
-    const errors = [];
     const validated = {};
 
     try {
       switch (apiType) {
         case 'generation':
-          // フォームデータ検証（必須）
           if (data.formData) {
             validated.formData = this.validateFormData(data.formData);
           }
           
-          // 共通パラメータ検証（action, sessionId, continueFromなど）
           const commonData = { 
             sessionId: data.sessionId, 
             action: data.action,
@@ -404,12 +477,6 @@ export class InputValidator {
           }
           break;
 
-        case 'export':
-          if (data.sessionData) {
-            validated.sessionData = this.validateSessionData(data.sessionData);
-          }
-          break;
-
         case 'storage':
           const storageData = { action: data.action, sessionId: data.sessionId };
           Object.assign(validated, this.validateCommon(storageData));
@@ -426,56 +493,131 @@ export class InputValidator {
   }
 
   /**
-   * セキュリティチェック
+   * 🌐 クライアント用フォーム検証
    */
-  performSecurityChecks(data) {
-    const checks = [];
+  validateClientForm(formData) {
+    const errors = [];
+    const sanitizedData = {};
 
-    // SQLインジェクション検出
-    const sqlPatterns = [
-      /union\s+select/gi,
-      /drop\s+table/gi,
-      /delete\s+from/gi,
-      /insert\s+into/gi,
-      /update\s+.*set/gi
-    ];
-
-    // コマンドインジェクション検出
-    const cmdPatterns = [
-      /;\s*cat\s+/gi,
-      /;\s*rm\s+/gi,
-      /;\s*ls\s+/gi,
-      /&&\s*cat\s+/gi,
-      /\|\s*curl\s+/gi
-    ];
-
-    const checkString = JSON.stringify(data);
-
-    sqlPatterns.forEach(pattern => {
-      if (pattern.test(checkString)) {
-        checks.push('Potential SQL injection detected');
-      }
-    });
-
-    cmdPatterns.forEach(pattern => {
-      if (pattern.test(checkString)) {
-        checks.push('Potential command injection detected');
-      }
-    });
-
-    if (checks.length > 0) {
-      throw new ValidationError(
-        `Security violations detected: ${checks.join(', ')}`,
-        null,
-        'SECURITY_VIOLATION'
-      );
+    try {
+      const validation = this.validateFormData(formData);
+      return {
+        isValid: true,
+        errors: [],
+        sanitizedData: validation
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        errors: [error.message],
+        sanitizedData: {}
+      };
     }
-
-    return true;
   }
 
   /**
-   * Express/Vercel ミドルウェア
+   * 🎨 エラー表示（クライアント専用）
+   */
+  displayErrors(errors) {
+    if (this.isServer || !errors.length) return;
+
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'validation-errors';
+    errorContainer.innerHTML = `
+      <div class="alert alert-danger">
+        <h4>⚠️ 入力エラー</h4>
+        <ul>
+          ${errors.map(error => `<li>${this.escapeHtml(error)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+
+    // 既存のエラーを削除
+    const existingErrors = document.querySelector('.validation-errors');
+    if (existingErrors) {
+      existingErrors.remove();
+    }
+
+    // フォームの前にエラーを表示
+    const form = document.getElementById('scenario-form');
+    if (form) {
+      form.parentNode.insertBefore(errorContainer, form);
+      errorContainer.scrollIntoView({ behavior: 'smooth' });
+      
+      // 5秒後に自動削除
+      setTimeout(() => {
+        if (errorContainer.parentNode) {
+          errorContainer.remove();
+        }
+      }, 5000);
+    }
+  }
+
+  /**
+   * 🧽 エラーメッセージクリア（クライアント専用）
+   */
+  clearErrors() {
+    if (this.isServer) return;
+    
+    const errorContainer = document.querySelector('.validation-errors');
+    if (errorContainer) {
+      errorContainer.remove();
+    }
+  }
+
+  /**
+   * ⚡ リアルタイム検証設定（クライアント専用）
+   */
+  setupRealtimeValidation() {
+    if (this.isServer) return;
+
+    const form = document.getElementById('scenario-form');
+    if (!form) return;
+
+    // カスタム要求フィールドの文字数制限
+    const customRequest = form.querySelector('#custom-request');
+    if (customRequest) {
+      customRequest.addEventListener('input', (e) => {
+        const length = e.target.value.length;
+        const maxLength = 500;
+        
+        let counter = form.querySelector('.char-counter');
+        if (!counter) {
+          counter = document.createElement('div');
+          counter.className = 'char-counter';
+          customRequest.parentNode.appendChild(counter);
+        }
+        
+        counter.textContent = `${length}/${maxLength}文字`;
+        counter.className = `char-counter ${length > maxLength ? 'over-limit' : ''}`;
+        
+        if (length > maxLength) {
+          e.target.value = e.target.value.substring(0, maxLength);
+        }
+      });
+    }
+
+    // フォーム送信時の検証
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const formObject = Object.fromEntries(formData.entries());
+      
+      const validation = this.validateClientForm(formObject);
+      
+      if (!validation.isValid) {
+        this.displayErrors(validation.errors);
+        return false;
+      }
+      
+      this.clearErrors();
+      return validation.sanitizedData;
+    });
+  }
+
+  /**
+   * 🔧 Express/Vercel ミドルウェア作成
    */
   middleware(apiType) {
     return (req, res, next) => {
@@ -483,23 +625,21 @@ export class InputValidator {
         // セキュリティチェック
         this.performSecurityChecks(req.body);
 
-        // API別検証（エラーを詳細にログ出力）
-        console.log(`🔍 Validating ${apiType} API request:`, JSON.stringify(req.body, null, 2));
-        
+        // API別検証
+        console.log(`🔍 Validating ${apiType} API request`);
         const validatedData = this.validateApiRequest(apiType, req.body);
         
-        // 検証済みデータを req.validated に設定
+        // 検証済みデータを設定
         req.validated = validatedData;
         
         console.log(`✅ Input validation passed for ${apiType} API`);
         next?.();
         
       } catch (error) {
-        console.error(`❌ Input validation failed for ${apiType} API:`, {
+        logger.error(`❌ Input validation failed for ${apiType} API:`, {
           error: error.message,
           field: error.field,
-          code: error.code,
-          requestBody: req.body
+          code: error.code
         });
         
         const statusCode = error.code === 'SECURITY_VIOLATION' ? 403 : 400;
@@ -509,8 +649,7 @@ export class InputValidator {
           error: 'Input validation failed',
           message: error.message,
           field: error.field,
-          code: error.code,
-          details: process.env.NODE_ENV === 'development' ? req.body : undefined
+          code: error.code
         });
       }
     };
@@ -518,18 +657,21 @@ export class InputValidator {
 }
 
 // シングルトンインスタンス
-export const inputValidator = new InputValidator();
+const unifiedValidator = new UnifiedInputValidator();
 
-/**
- * API別検証ミドルウェア作成
- */
-export function createValidationMiddleware(apiType) {
-  return inputValidator.middleware(apiType);
-}
-
-/**
- * 検証ルール取得
- */
-export function getValidationRules() {
-  return VALIDATION_RULES;
+// Node.js環境とブラウザ環境の両方に対応
+if (typeof module !== 'undefined' && module.exports) {
+  // Node.js環境
+  module.exports = {
+    UnifiedInputValidator,
+    ValidationError,
+    unifiedValidator,
+    createValidationMiddleware: (apiType) => unifiedValidator.middleware(apiType),
+    getValidationRules: () => VALIDATION_RULES
+  };
+} else {
+  // ブラウザ環境
+  window.UnifiedInputValidator = UnifiedInputValidator;
+  window.ValidationError = ValidationError;
+  window.unifiedValidator = unifiedValidator;
 }

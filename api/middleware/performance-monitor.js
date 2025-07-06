@@ -1,9 +1,20 @@
 /**
- * 🔍 Performance Monitoring System
- * パフォーマンス監視とメトリクス収集システム
+ * 🔍 Performance Monitoring System - LEGACY (統合版に移行済み)
+ * @deprecated 統合監視システム (/api/core/monitoring.js) を使用してください
  */
 
-import { envManager } from '../config/env-manager.js';
+const { unifiedMonitor, createPerformanceMiddleware } = require('../core/monitoring');
+
+// レガシー互換性のため、新しい統合システムを再エクスポート
+module.exports = {
+  performanceMonitor: unifiedMonitor,
+  createPerformanceMiddleware,
+  getPerformanceMetrics: require('../core/monitoring').getPerformanceMetrics,
+  PerformanceMonitor: require('../core/monitoring').UnifiedPerformanceMonitor
+};
+
+// 従来のimport文をコメントアウト
+// import { envManager } from '../config/env-manager.js';
 
 // パフォーマンスメトリクス保存（プロダクションではRedis/CloudWatch等使用）
 const performanceMetrics = new Map();

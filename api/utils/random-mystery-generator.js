@@ -4,6 +4,7 @@
  */
 
 import { aiClient } from './ai-client.js';
+import { logger } from './logger.js';
 
 // ランダム要素のテンプレート
 const RANDOM_ELEMENTS = {
@@ -561,7 +562,7 @@ AIが自動生成したオリジナル作品です。
       };
       
     } catch (error) {
-      console.error('❌ ランダムミステリー生成エラー:', error);
+      logger.error('❌ ランダムミステリー生成エラー:', error);
       return {
         success: false,
         error: error.message

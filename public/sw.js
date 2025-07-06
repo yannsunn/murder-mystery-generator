@@ -39,12 +39,12 @@ const NEVER_CACHE = [
  * 🚀 Service Worker インストール
  */
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker installing...');
+  // Service Worker installing - debug log removed for production
   
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then(cache => {
-        console.log('📦 Caching static assets...');
+        // Caching static assets - debug log removed for production
         // 静的アセットを個別にキャッシュしてエラー耐性を向上
         return Promise.allSettled(
           STATIC_ASSETS.map(url => 
@@ -70,7 +70,7 @@ self.addEventListener('install', (event) => {
         );
       })
       .then(() => {
-        console.log('✅ Static assets caching completed (with possible warnings)');
+        // Static assets caching completed - debug log removed for production
         return self.skipWaiting(); // 即座にアクティブ化
       })
       .catch(error => {
@@ -85,7 +85,7 @@ self.addEventListener('install', (event) => {
  * 🔄 Service Worker アクティベーション
  */
 self.addEventListener('activate', (event) => {
-  console.log('🎯 Service Worker activating...');
+  // Service Worker activating - debug log removed for production
   
   event.waitUntil(
     Promise.all([
@@ -94,7 +94,7 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map(cacheName => {
             if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('🗑️ Deleting old cache:', cacheName);
+              // Deleting old cache - debug log removed for production
               return caches.delete(cacheName);
             }
           })
@@ -130,7 +130,7 @@ self.addEventListener('fetch', (event) => {
       url.hostname === 'localhost' && url.port === '9222' ||
       url.hostname.includes('extension') ||
       request.url.includes('extension://')) {
-    console.log('🔇 Skipping extension request:', request.url);
+    // Skipping extension request - debug log removed for production
     return;
   }
   
@@ -149,7 +149,7 @@ self.addEventListener('fetch', (event) => {
     // 外部フォントはネットワークファーストで、失敗時は無視
     event.respondWith(
       fetch(request).catch(() => {
-        console.log('📝 External font request failed, continuing without cache');
+        // External font request failed - debug log removed for production
         return new Response('', { status: 404 });
       })
     );
@@ -179,7 +179,7 @@ self.addEventListener('fetch', (event) => {
             })
             .catch(() => {
               // ネットワークエラー時はキャッシュを返す
-              console.log('📡 Network failed, serving from cache:', url.pathname);
+              // Network failed, serving from cache - debug log removed for production
               return cachedResponse;
             });
         }
@@ -287,7 +287,7 @@ self.addEventListener('message', (event) => {
       break;
       
     default:
-      console.log('🔔 Unknown message type:', data.type);
+      // Unknown message type - debug log removed for production
   }
 });
 
@@ -296,7 +296,7 @@ self.addEventListener('message', (event) => {
  */
 self.addEventListener('sync', (event) => {
   if (event.tag === 'background-sync') {
-    console.log('🔄 Background sync triggered');
+    // Background sync triggered - debug log removed for production
     // 将来的にオフライン時の生成データの同期などに使用
   }
 });
@@ -335,4 +335,4 @@ self.addEventListener('push', (event) => {
   }
 });
 
-console.log('🚀 Service Worker loaded successfully');
+// Service Worker loaded successfully - debug log removed for production

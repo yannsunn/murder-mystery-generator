@@ -3,6 +3,8 @@
  * 全APIで統一されたレスポンス形式とエラーハンドリング
  */
 
+import { logger } from './logger.js';
+
 /**
  * 統一レスポンス形式
  */
@@ -89,7 +91,7 @@ export function withStandardHandler(handler, endpointName = 'unknown') {
       return result;
 
     } catch (error) {
-      console.error(`[${endpointName}] Error:`, error);
+      logger.error(`[${endpointName}] Error:`, error);
       
       const errorResponse = createErrorResponse(error);
       errorResponse.metadata = {

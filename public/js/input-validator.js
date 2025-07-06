@@ -1,9 +1,15 @@
 /**
- * 🔒 Input Validator - セキュリティ強化版
- * XSS防止・入力検証・サニタイゼーション
+ * 🔒 Input Validator - LEGACY (統合版に移行済み)
+ * @deprecated 統合検証システム (/api/core/validation.js) を使用してください
+ * 
+ * このファイルは後方互換性のため残されていますが、
+ * 新しい統合バリデーターを使用することを推奨します。
  */
 
-class InputValidator {
+// 統合バリデーターのクライアント版を読み込み
+// 実際の実装は /api/core/validation.js にあります
+
+class LegacyInputValidator {
   constructor() {
     this.maxTextLength = 1000;
     this.allowedTags = ['br', 'p', 'strong', 'em'];

@@ -1,49 +1,80 @@
-/* 🚀 Ultra Modern Professional Design - Murder Mystery Generator */
+/**
+ * 🚀 ULTRA MODERN UNIFIED STYLES - 完全統合・最適化版
+ * Murder Mystery Generator - 全デバイス対応・視認性保証・パフォーマンス最適化
+ */
 
-/* ========== 基本設定とリセット ========== */
+/* ========== 🎯 UNIFIED VARIABLES ========== */
 :root {
-  /* モダンカラーパレット */
+  /* 🎨 Primary Color System */
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   
-  /* ダークテーマ */
+  /* 🌙 Dark Theme System */
   --bg-primary: #0f0f23;
   --bg-secondary: #1a1a2e;
   --bg-tertiary: #16213e;
+  --bg-card: #1a1a2e;
+  --bg-input: #2a2a3e;
   --bg-glass: rgba(255, 255, 255, 0.05);
   --bg-form: rgba(255, 255, 255, 0.15);
   --bg-form-focus: rgba(255, 255, 255, 0.25);
   
-  /* テキストカラー */
+  /* 📝 Text Color System */
   --text-primary: #ffffff;
   --text-secondary: #e2e8f0;
   --text-muted: #94a3b8;
   --text-form: #ffffff;
+  --text-accent: #4facfe;
   
-  /* アクセントカラー */
+  /* 🌈 Accent Color System */
   --accent-blue: #4facfe;
   --accent-purple: #667eea;
   --accent-pink: #f093fb;
   --accent-green: #43e97b;
   
-  /* シャドウ */
+  /* 🌟 Shadow System */
   --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.15);
   --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.25);
   --shadow-strong: 0 16px 64px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+  --shadow-text: 0 0 8px #000000, 0 0 16px #000000;
+  --shadow-box: 0 0 20px rgba(102, 126, 234, 0.3);
+  --shadow-button: 0 0 30px rgba(102, 126, 234, 0.5);
+  --shadow-card: 0 0 40px rgba(102, 126, 234, 0.2);
   
-  /* トランジション */
+  /* ⚡ Transition System */
   --transition-fast: 0.2s ease-out;
   --transition-medium: 0.3s ease-out;
   --transition-slow: 0.5s ease-out;
+  --animation-fast: 0.2s ease;
+  --animation-normal: 0.3s ease;
   
-  /* ボーダー */
+  /* 🔄 Border System */
   --border-radius: 16px;
   --border-radius-large: 24px;
   --border-color: rgba(255, 255, 255, 0.1);
+  --border-primary: rgba(255, 255, 255, 0.3);
+  --border-secondary: rgba(255, 255, 255, 0.2);
+  --border-accent: #4facfe;
+  
+  /* 📐 Spacing System */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-xxl: 4rem;
+  
+  /* 📱 Responsive Breakpoints */
+  --mobile-max: 767px;
+  --tablet-min: 768px;
+  --tablet-max: 1199px;
+  --desktop-min: 1200px;
+  --desktop-large: 1600px;
+  --desktop-ultra: 2560px;
 }
 
 * {

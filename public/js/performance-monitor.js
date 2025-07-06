@@ -1,9 +1,15 @@
 /**
- * 📊 Real-time Performance Monitor - リアルタイム性能監視
- * Core Web Vitals, リソース監視、ユーザー体験指標を追跡
+ * 📊 Real-time Performance Monitor - LEGACY (統合版に移行済み)
+ * @deprecated 統合監視システム (/api/core/monitoring.js) を使用してください
+ * 
+ * このファイルは後方互換性のため残されていますが、
+ * 新しい統合監視システムを使用することを推奨します。
  */
 
-class PerformanceMonitor {
+// 統合監視システムのクライアント版を読み込み
+// 実際の実装は /api/core/monitoring.js にあります
+
+class LegacyPerformanceMonitor {
   constructor() {
     this.metrics = {
       coreWebVitals: {},

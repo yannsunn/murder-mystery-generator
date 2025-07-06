@@ -37,7 +37,7 @@ const API_ENDPOINTS = [
  * Service Worker インストール
  */
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker installing');
+  // Service Worker installing - debug log removed for production
   
   event.waitUntil(
     Promise.all([
@@ -56,7 +56,7 @@ self.addEventListener('install', (event) => {
  * Service Worker アクティベート
  */
 self.addEventListener('activate', (event) => {
-  console.log('🔧 Service Worker activating');
+  // Service Worker activating - debug log removed for production
   
   event.waitUntil(
     Promise.all([
@@ -120,7 +120,7 @@ self.addEventListener('message', (event) => {
       break;
       
     default:
-      console.log('🔧 Unknown message type:', type);
+      // Unknown message type - debug log removed for production
   }
 });
 
@@ -128,7 +128,7 @@ self.addEventListener('message', (event) => {
  * バックグラウンド同期
  */
 self.addEventListener('sync', (event) => {
-  console.log('🔄 Background sync triggered:', event.tag);
+  // Background sync triggered - debug log removed for production
   
   if (event.tag === 'sync-offline-data') {
     event.waitUntil(syncOfflineData());
@@ -158,7 +158,7 @@ async function handleApiRequest(request) {
     throw new Error('Network response not ok');
     
   } catch (error) {
-    console.log('🌐 Network failed, trying cache for:', url.pathname);
+    // Network failed, trying cache - debug log removed for production
     
     // ネットワーク失敗時はキャッシュから取得
     const cachedResponse = await caches.match(request);
@@ -195,7 +195,7 @@ async function handleStaticResource(request) {
     return networkResponse;
     
   } catch (error) {
-    console.log('🌐 Failed to fetch static resource:', request.url);
+    // Failed to fetch static resource - debug log removed for production
     
     // 代替リソースまたはエラーレスポンス
     return new Response('Resource unavailable offline', {
@@ -223,7 +223,7 @@ async function handleNavigation(request) {
     throw new Error('Network response not ok');
     
   } catch (error) {
-    console.log('🌐 Navigation network failed, using cache');
+    // Navigation network failed, using cache - debug log removed for production
     
     // キャッシュからページを取得
     const cachedResponse = await caches.match(request);
@@ -306,7 +306,7 @@ async function cleanupOldCaches() {
   const deletionPromises = cacheNames
     .filter(cacheName => !currentCaches.includes(cacheName))
     .map(cacheName => {
-      console.log('🗑️ Deleting old cache:', cacheName);
+      // Deleting old cache - debug log removed for production
       return caches.delete(cacheName);
     });
   
@@ -320,7 +320,7 @@ async function cacheResource(url, cacheName = CACHE_NAME) {
   try {
     const cache = await caches.open(cacheName);
     await cache.add(url);
-    console.log('📦 Cached resource:', url);
+    // Cached resource - debug log removed for production
   } catch (error) {
     console.error('❌ Failed to cache resource:', url, error);
   }
