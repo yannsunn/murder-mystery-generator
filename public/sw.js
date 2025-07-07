@@ -3,9 +3,9 @@
  * キャッシュ戦略・オフライン対応
  */
 
-const CACHE_NAME = 'murder-mystery-generator-v1.2.0';
-const STATIC_CACHE = 'static-v1.2.0';
-const DYNAMIC_CACHE = 'dynamic-v1.2.0';
+const CACHE_NAME = 'murder-mystery-generator-v1.3.0';
+const STATIC_CACHE = 'static-v1.3.0';
+const DYNAMIC_CACHE = 'dynamic-v1.3.0';
 
 // キャッシュするリソース
 const STATIC_ASSETS = [
