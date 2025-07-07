@@ -707,7 +707,8 @@ class UnifiedPerformanceMonitor {
    * 🚨 アラート送信
    */
   async sendAlerts(alerts) {
-                 JSON.stringify(alerts, null, 2));
+    console.log('🚨 Performance Alerts:', 
+                JSON.stringify(alerts, null, 2));
     
     // 本番環境では外部アラートサービスに送信
     if (this.isServer && process.env.ALERT_WEBHOOK_URL) {
@@ -813,6 +814,7 @@ class UnifiedPerformanceMonitor {
       recommendations: this.generateRecommendations()
     };
 
+    console.log('📊 Performance Report:', 
                 JSON.stringify(report, null, 2));
     
     return report;
@@ -949,12 +951,13 @@ class UnifiedPerformanceMonitor {
     const errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
     const avgResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
     
+    return {
       requests: totalRequests,
       errors: totalErrors,
       errorRate: `${(errorRate * 100).toFixed(2)}%`,
       avgResponseTime: `${avgResponseTime.toFixed(2)}ms`,
       concurrent: this.metrics.currentConcurrentRequests
-    });
+    };
     
     if (errorRate > ALERT_THRESHOLDS.server.errorRate) {
       this.sendAlerts([{
@@ -1055,18 +1058,15 @@ class UnifiedPerformanceMonitor {
 // シングルトンインスタンス
 const unifiedMonitor = new UnifiedPerformanceMonitor();
 
-// Node.js環境とブラウザ環境の両方に対応
-if (typeof module !== 'undefined' && module.exports) {
-  // Node.js環境
-  module.exports = {
-    UnifiedPerformanceMonitor,
-    unifiedMonitor,
-    createPerformanceMiddleware: () => unifiedMonitor.middleware(),
-    getPerformanceMetrics: () => unifiedMonitor.getMetrics(),
-    ALERT_THRESHOLDS
-  };
-} else {
-  // ブラウザ環境
+// ES6モジュールエクスポート
+export { UnifiedPerformanceMonitor };
+export { unifiedMonitor };
+export const createPerformanceMiddleware = () => unifiedMonitor.middleware();
+export const getPerformanceMetrics = () => unifiedMonitor.getMetrics();
+export { ALERT_THRESHOLDS };
+
+// ブラウザ環境での自動開始
+if (typeof window !== 'undefined') {
   window.UnifiedPerformanceMonitor = UnifiedPerformanceMonitor;
   window.unifiedMonitor = unifiedMonitor;
   

@@ -657,18 +657,15 @@ class UnifiedInputValidator {
 // シングルトンインスタンス
 const unifiedValidator = new UnifiedInputValidator();
 
-// Node.js環境とブラウザ環境の両方に対応
-if (typeof module !== 'undefined' && module.exports) {
-  // Node.js環境
-  module.exports = {
-    UnifiedInputValidator,
-    ValidationError,
-    unifiedValidator,
-    createValidationMiddleware: (apiType) => unifiedValidator.middleware(apiType),
-    getValidationRules: () => VALIDATION_RULES
-  };
-} else {
-  // ブラウザ環境
+// ES6モジュールエクスポート
+export { UnifiedInputValidator };
+export { ValidationError };
+export { unifiedValidator };
+export const createValidationMiddleware = (apiType) => unifiedValidator.middleware(apiType);
+export const getValidationRules = () => VALIDATION_RULES;
+
+// ブラウザ環境での対応
+if (typeof window !== 'undefined') {
   window.UnifiedInputValidator = UnifiedInputValidator;
   window.ValidationError = ValidationError;
   window.unifiedValidator = unifiedValidator;
