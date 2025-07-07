@@ -230,15 +230,21 @@
       </form>
     </div>
 
-    <!-- ローディング画面 -->
+    <!-- 🎬 CINEMATIC LOADING - 映画的演出ローディング -->
     <div id="loading-container" class="hidden loading-ultra-visible" role="status" aria-live="polite" aria-label="シナリオ生成進行状況">
-      <div class="loading-content">
+      <!-- 雰囲気オーバーレイ -->
+      <div class="fog-overlay"></div>
+      <div class="spotlight"></div>
+      
+      <div class="loading-content transform-3d">
         <div class="loading-header">
-          <h2>🎭 マーダーミステリー生成中...</h2>
-          <div class="loading-spinner" aria-hidden="true"></div>
+          <h2 class="typewriter-text">🎭 マーダーミステリー生成中...</h2>
+          <div class="cinematic-loader">
+            <div class="loading-spinner" aria-hidden="true"></div>
+          </div>
         </div>
         
-        <div class="loading-info">
+        <div class="loading-info card-3d">
           <div class="current-phase" id="current-phase" aria-live="polite">AI生成エンジン起動中...</div>
           <div class="phase-details" id="phase-details" aria-live="polite">最高品質のシナリオを作成しています</div>
           
@@ -257,9 +263,23 @@
       </div>
     </div>
 
-    <!-- 結果表示エリア -->
+    <!-- 🎪 RESULT PRESENTATION - 限界突破結果演出 -->
     <div id="result-container" class="hidden">
-      <div id="scenario-content"></div>
+      <div class="evidence-board transform-3d">
+        <div class="mystery-solved result-reveal">
+          <div id="scenario-content" class="card-3d"></div>
+          
+          <!-- 証拠カードコンテナ -->
+          <div id="evidence-cards" class="evidence-cards-container">
+            <!-- 動的に生成される証拠カード -->
+          </div>
+          
+          <!-- 接続線 -->
+          <div id="connection-lines" class="connection-lines-container">
+            <!-- 動的に生成される接続線 -->
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 

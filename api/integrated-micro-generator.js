@@ -1050,13 +1050,13 @@ async function generateImages(imagePrompts) {
           'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: JSON.stringify(sanitizeObject({
           model: "dall-e-3",
           prompt: promptData.prompt,
           n: 1,
           size: "1024x1024",
           quality: "standard"
-        })
+        }))
       });
       
       if (response.ok) {
@@ -1989,4 +1989,25 @@ ${plot.chapters ? plot.chapters.join('\n\n') : plot.fullStory}
     images: [],
     hasImages: false
   };
+}
+
+// サロゲートペア不正除去ユーティリティ
+function removeInvalidSurrogates(str) {
+  return typeof str === 'string'
+    ? str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
+    : str;
+}
+function sanitizeObject(obj) {
+  if (typeof obj === 'string') {
+    return removeInvalidSurrogates(obj);
+  } else if (Array.isArray(obj)) {
+    return obj.map(sanitizeObject);
+  } else if (typeof obj === 'object' && obj !== null) {
+    const newObj = {};
+    for (const key in obj) {
+      newObj[key] = sanitizeObject(obj[key]);
+    }
+    return newObj;
+  }
+  return obj;
 }

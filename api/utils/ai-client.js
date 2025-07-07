@@ -12,6 +12,28 @@ export const AI_CONFIG = {
   retries: 2
 };
 
+// サロゲートペア不正除去ユーティリティ
+function removeInvalidSurrogates(str) {
+  return typeof str === 'string'
+    ? str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
+    : str;
+}
+
+function sanitizeObject(obj) {
+  if (typeof obj === 'string') {
+    return removeInvalidSurrogates(obj);
+  } else if (Array.isArray(obj)) {
+    return obj.map(sanitizeObject);
+  } else if (typeof obj === 'object' && obj !== null) {
+    const newObj = {};
+    for (const key in obj) {
+      newObj[key] = sanitizeObject(obj[key]);
+    }
+    return newObj;
+  }
+  return obj;
+}
+
 /**
  * 統一AIクライアント
  */
@@ -67,7 +89,7 @@ export class UnifiedAIClient {
       const response = await fetch(config.url, {
         method: 'POST',
         headers: config.headers,
-        body: JSON.stringify(config.payload(systemPrompt, userPrompt)),
+        body: JSON.stringify(sanitizeObject(config.payload(systemPrompt, userPrompt))),
         signal: controller.signal
       });
 
