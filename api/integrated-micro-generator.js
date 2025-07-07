@@ -38,13 +38,24 @@ export const config = {
 
 // メインハンドラー
 export default async function handler(req, res) {
-  logger.debug('INIT: Integrated Micro Generator called');
-  
-  setSecurityHeaders(res);
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  try {
+    logger.debug('INIT: Integrated Micro Generator called');
+    
+    setSecurityHeaders(res);
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    // 環境変数チェック（Vercel対応）
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(503).json({
+        success: false,
+        error: 'Service configuration error',
+        message: 'AI service is temporarily unavailable. Please check environment configuration.',
+        timestamp: new Date().toISOString()
+      });
+    }
 
   // GET リクエスト対応（EventSource用）
   if (req.method === 'GET') {
@@ -399,6 +410,18 @@ export default async function handler(req, res) {
       }
     } else {
       return res.status(500).json(errorResponse);
+    }
+  } catch (handlerError) {
+    // 最上位エラーハンドリング
+    logger.error('CRITICAL: Handler error:', handlerError);
+    
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        error: 'Internal server error',
+        message: 'Service temporarily unavailable',
+        timestamp: new Date().toISOString()
+      });
     }
   }
 }
