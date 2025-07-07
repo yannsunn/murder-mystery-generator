@@ -210,9 +210,7 @@ function logError(error, req = null, operation = 'unknown') {
 
   // 開発環境ではコンソールに出力
   if (process.env.NODE_ENV !== 'production') {
-    console.error('🚨 Error Log:', JSON.stringify(logEntry, null, 2));
     if (error.stack) {
-      console.error('Stack Trace:', error.stack);
     }
   }
 

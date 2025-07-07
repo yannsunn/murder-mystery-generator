@@ -29,7 +29,6 @@ export class QualityAssessor {
    */
   async evaluateScenario(scenario, formData) {
     try {
-      console.log('🔍 Quality Assessment: Starting scenario evaluation...');
       
       const metrics = {
         narrative: await this.checkNarrativeQuality(scenario),
@@ -51,11 +50,9 @@ export class QualityAssessor {
         timestamp: Date.now()
       };
 
-      console.log(`📊 Quality Assessment Complete: ${(overallScore * 100).toFixed(1)}%`);
       return assessment;
       
     } catch (error) {
-      console.error('❌ Quality Assessment Error:', error);
       return {
         score: 0.5,
         metrics: {},
@@ -464,4 +461,3 @@ export class QualityAssessor {
 
 export const qualityAssessor = new QualityAssessor();
 
-console.log('🧠 Quality Assessor System loaded');

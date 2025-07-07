@@ -53,8 +53,6 @@ class RealtimeAnalyticsDashboard {
    * 📊 包括的分析ダッシュボード生成
    */
   async generateComprehensiveDashboard() {
-    console.log('📊 包括的分析ダッシュボード生成開始');
-    
     const dashboardStart = performance.now();
     const dashboard = {
       timestamp: new Date().toISOString(),
@@ -67,31 +65,24 @@ class RealtimeAnalyticsDashboard {
     
     try {
       // リアルタイム統計
-      console.log('   ⚡ リアルタイム統計収集中...');
       dashboard.sections.realtime = await this.generateRealtimeStats();
       
       // パフォーマンス分析
-      console.log('   📈 パフォーマンス分析中...');
       dashboard.sections.performance = await this.generatePerformanceAnalysis();
       
       // 使用状況分析
-      console.log('   👥 使用状況分析中...');
       dashboard.sections.usage = await this.generateUsageAnalysis();
       
       // システム状態
-      console.log('   🖥️ システム状態確認中...');
       dashboard.sections.system = await this.generateSystemStatus();
       
       // トレンド分析
-      console.log('   📊 トレンド分析中...');
       dashboard.sections.trends = await this.generateTrendAnalysis();
       
       // 予測分析
-      console.log('   🔮 予測分析中...');
       dashboard.sections.predictions = await this.generatePredictiveAnalysis();
       
       // インサイト生成
-      console.log('   💡 インサイト生成中...');
       dashboard.insights = await this.generateInsights(dashboard.sections);
       
       // 推奨事項生成
@@ -102,11 +93,9 @@ class RealtimeAnalyticsDashboard {
       
       dashboard.generationTime = performance.now() - dashboardStart;
       
-      console.log(`✅ ダッシュボード生成完了 (${dashboard.generationTime.toFixed(2)}ms)`);
       return dashboard;
       
     } catch (error) {
-      console.error('❌ ダッシュボード生成エラー:', error);
       dashboard.error = error.message;
       dashboard.generationTime = performance.now() - dashboardStart;
       return dashboard;
@@ -171,7 +160,6 @@ class RealtimeAnalyticsDashboard {
       return realtime;
       
     } catch (error) {
-      console.error('リアルタイム統計エラー:', error);
       return { ...realtime, error: error.message };
     }
   }
@@ -239,7 +227,6 @@ class RealtimeAnalyticsDashboard {
       return performance;
       
     } catch (error) {
-      console.error('パフォーマンス分析エラー:', error);
       return { ...performance, error: error.message };
     }
   }
@@ -319,7 +306,6 @@ class RealtimeAnalyticsDashboard {
       return usage;
       
     } catch (error) {
-      console.error('使用状況分析エラー:', error);
       return { ...usage, error: error.message };
     }
   }
@@ -393,7 +379,6 @@ class RealtimeAnalyticsDashboard {
       return system;
       
     } catch (error) {
-      console.error('システム状態エラー:', error);
       system.health.status = 'error';
       return { ...system, error: error.message };
     }
@@ -456,7 +441,6 @@ class RealtimeAnalyticsDashboard {
       return trends;
       
     } catch (error) {
-      console.error('トレンド分析エラー:', error);
       return { ...trends, error: error.message };
     }
   }
@@ -515,7 +499,6 @@ class RealtimeAnalyticsDashboard {
       return predictions;
       
     } catch (error) {
-      console.error('予測分析エラー:', error);
       return { ...predictions, error: error.message };
     }
   }
@@ -574,7 +557,6 @@ class RealtimeAnalyticsDashboard {
       return insights;
       
     } catch (error) {
-      console.error('インサイト生成エラー:', error);
       return [{ type: 'error', severity: 'error', title: 'Insight generation failed', description: error.message }];
     }
   }
@@ -632,7 +614,6 @@ class RealtimeAnalyticsDashboard {
       return recommendations;
       
     } catch (error) {
-      console.error('推奨事項生成エラー:', error);
       return [{ category: 'error', priority: 'high', title: 'Recommendation generation failed', actions: [error.message] }];
     }
   }
@@ -680,7 +661,6 @@ class RealtimeAnalyticsDashboard {
       return alerts;
       
     } catch (error) {
-      console.error('アラート確認エラー:', error);
       return [{
         level: 'error',
         type: 'system',
@@ -810,7 +790,6 @@ export default async function handler(req, res) {
         });
     }
   } catch (error) {
-    console.error('Dashboard API error:', error);
     return res.status(500).json({
       success: false,
       error: error.message

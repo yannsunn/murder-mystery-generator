@@ -13,28 +13,23 @@ class Logger {
 
   debug(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.log('🐛 [DEBUG]', ...args);
     }
   }
 
   info(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.info('ℹ️ [INFO]', ...args);
     }
   }
 
   success(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.log('✅ [SUCCESS]', ...args);
     }
   }
 
   warn(...args) {
-    console.warn('⚠️ [WARN]', ...args);
   }
 
   error(...args) {
-    console.error('❌ [ERROR]', ...args);
   }
 }
 

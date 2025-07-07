@@ -43,19 +43,15 @@ class SupabaseAdvancedMonitor {
 
     try {
       // 1. データベース構造分析
-      console.log('🔍 データベース構造分析中...');
       results.database = await this.analyzeDatabaseStructure();
 
       // 2. パフォーマンス分析
-      console.log('⚡ パフォーマンス分析中...');
       results.performance = await this.analyzePerformance();
 
       // 3. データ品質分析
-      console.log('📊 データ品質分析中...');
       results.health = await this.analyzeDataHealth();
 
       // 4. 自動最適化提案
-      console.log('🚀 最適化提案生成中...');
       results.recommendations = await this.generateOptimizationRecommendations(results);
 
       // 5. アラート生成
@@ -63,11 +59,9 @@ class SupabaseAdvancedMonitor {
 
       results.analysisTime = performance.now() - analysisStart;
       
-      console.log(`✅ 包括的分析完了 (${results.analysisTime.toFixed(2)}ms)`);
       return results;
 
     } catch (error) {
-      console.error('❌ 分析エラー:', error);
       results.error = error.message;
       return results;
     }
@@ -98,7 +92,6 @@ class SupabaseAdvancedMonitor {
 
       return structure;
     } catch (error) {
-      console.error('Database structure analysis error:', error);
       return { error: error.message };
     }
   }
@@ -143,7 +136,6 @@ class SupabaseAdvancedMonitor {
 
       return analysis;
     } catch (error) {
-      console.error(`Table analysis error for ${tableName}:`, error);
       return { ...analysis, error: error.message };
     }
   }
@@ -350,7 +342,6 @@ class SupabaseAdvancedMonitor {
     }
 
     this.isMonitoring = true;
-    console.log('🔄 リアルタイム監視開始');
 
     // リアルタイム変更監視
     const channel = this.supabase
@@ -386,7 +377,6 @@ class SupabaseAdvancedMonitor {
     };
 
     this.metrics.realtime.push(change);
-    console.log(`📊 リアルタイム変更検知 [${table}]: ${payload.eventType}`);
 
     // 異常検知
     this.detectAnomalies(change);
@@ -402,7 +392,6 @@ class SupabaseAdvancedMonitor {
     );
 
     if (recentChanges.length > 50) {
-      console.warn('🚨 異常検知: 急激な変更頻度の増加');
     }
   }
 
@@ -558,7 +547,6 @@ export default async function handler(req, res) {
         });
     }
   } catch (error) {
-    console.error('Advanced monitor error:', error);
     return res.status(500).json({
       success: false,
       error: error.message

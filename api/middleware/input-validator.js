@@ -316,7 +316,6 @@ export class InputValidator {
         if (rule.required) {
           errors.push(error.message);
         } else {
-          console.warn(`⚠️ Validation warning for ${fullFieldName}: ${error.message}`);
         }
       }
     }
@@ -326,7 +325,6 @@ export class InputValidator {
     const extraFields = Object.keys(data).filter(key => !allowedFields.includes(key));
     
     if (extraFields.length > 0) {
-      console.warn(`⚠️ Unknown fields passed through: ${extraFields.join(', ')}`);
       // 未定義フィールドもそのまま通す
       extraFields.forEach(field => {
         validated[field] = data[field];
@@ -484,18 +482,15 @@ export class InputValidator {
         this.performSecurityChecks(req.body);
 
         // API別検証（エラーを詳細にログ出力）
-        console.log(`🔍 Validating ${apiType} API request:`, JSON.stringify(req.body, null, 2));
         
         const validatedData = this.validateApiRequest(apiType, req.body);
         
         // 検証済みデータを req.validated に設定
         req.validated = validatedData;
         
-        console.log(`✅ Input validation passed for ${apiType} API`);
         next?.();
         
       } catch (error) {
-        console.error(`❌ Input validation failed for ${apiType} API:`, {
           error: error.message,
           field: error.field,
           code: error.code,

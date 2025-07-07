@@ -241,7 +241,6 @@ export class SecurityMonitor {
       // 5回以上の制限違反で自動ブロック
       if (violations >= 5) {
         this.blockedIPs.add(ip);
-        console.warn(`🚨 IP ${ip} has been automatically blocked for repeated violations`);
         
         // 管理者通知（実装予定）
         this.notifyAdmin(ip, violations + 1);
@@ -255,7 +254,6 @@ export class SecurityMonitor {
 
   async notifyAdmin(ip, violations) {
     // Slack/Discord/Email通知の実装予定
-    console.log(`🚨 Security Alert: IP ${ip} blocked after ${violations} violations`);
   }
 
   middleware() {

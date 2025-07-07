@@ -390,7 +390,6 @@ function extractBasicInfo(concept) {
 
 // メインハンドラー
 export default withErrorHandler(async function handler(req, res) {
-  console.log('🚀 Unified Export System called:', req.method);
   
   setSecurityHeaders(res);
   
@@ -422,7 +421,6 @@ export default withErrorHandler(async function handler(req, res) {
     throw new AppError('Session data is required', ErrorTypes.VALIDATION_ERROR);
   }
   
-  console.log('🔄 Generating optimized text files export...');
   
   // テキストファイル生成
   const textFiles = await generateTextFiles(sessionData);

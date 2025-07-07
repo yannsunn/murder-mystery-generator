@@ -60,7 +60,6 @@ export default async function handler(req, res) {
         });
     }
   } catch (error) {
-    console.error('❌ セットアップエラー:', error);
     return res.status(500).json({
       success: false,
       error: error.message
@@ -78,7 +77,6 @@ async function createTables(req, res) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     
     // scenarios テーブル作成をREST APIで試行
-    console.log('📋 scenarios テーブル作成中...');
     
     // 最初にテーブル存在確認
     const { data: existingData, error: checkError } = await supabase
@@ -116,7 +114,6 @@ async function createTables(req, res) {
     }
     
     // user_sessions テーブル作成
-    console.log('📋 user_sessions テーブル作成中...');
     
     const { data: sessionCheck, error: sessionCheckError } = await supabase
       .from('user_sessions')

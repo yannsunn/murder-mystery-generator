@@ -111,7 +111,6 @@ class UnifiedPerformanceMonitor {
     if (this.isMonitoring) return;
     
     this.isMonitoring = true;
-    console.log(`📊 ${this.isServer ? 'Server' : 'Client'} performance monitoring started`);
 
     if (this.isServer) {
       this.startServerMonitoring();
@@ -185,7 +184,6 @@ class UnifiedPerformanceMonitor {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       this.observers.push(lcpObserver);
     } catch (e) {
-      console.warn('LCP observer not supported');
     }
 
     // FCP (First Contentful Paint)
@@ -207,7 +205,6 @@ class UnifiedPerformanceMonitor {
       fcpObserver.observe({ entryTypes: ['paint'] });
       this.observers.push(fcpObserver);
     } catch (e) {
-      console.warn('FCP observer not supported');
     }
 
     // FID (First Input Delay)
@@ -277,7 +274,6 @@ class UnifiedPerformanceMonitor {
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       this.observers.push(clsObserver);
     } catch (e) {
-      console.warn('Layout Shift observer not supported');
     }
   }
 
@@ -317,7 +313,6 @@ class UnifiedPerformanceMonitor {
       resourceObserver.observe({ entryTypes: ['resource'] });
       this.observers.push(resourceObserver);
     } catch (e) {
-      console.warn('Resource timing observer not supported');
     }
   }
 
@@ -346,7 +341,6 @@ class UnifiedPerformanceMonitor {
       longTaskObserver.observe({ entryTypes: ['longtask'] });
       this.observers.push(longTaskObserver);
     } catch (e) {
-      console.warn('Long task observer not supported');
     }
   }
 
@@ -713,7 +707,6 @@ class UnifiedPerformanceMonitor {
    * 🚨 アラート送信
    */
   async sendAlerts(alerts) {
-    console.warn(`🚨 Performance Alert [${this.isServer ? 'server' : 'client'}]:`, 
                  JSON.stringify(alerts, null, 2));
     
     // 本番環境では外部アラートサービスに送信
@@ -732,7 +725,6 @@ class UnifiedPerformanceMonitor {
           })
         });
       } catch (error) {
-        console.error('Failed to send alert:', error);
       }
     }
   }
@@ -821,7 +813,6 @@ class UnifiedPerformanceMonitor {
       recommendations: this.generateRecommendations()
     };
 
-    console.log(`📊 Performance Report [${report.source}]:`, 
                 JSON.stringify(report, null, 2));
     
     return report;
@@ -929,7 +920,6 @@ class UnifiedPerformanceMonitor {
       }
     }
     
-    console.log(`🧹 Performance metrics cleanup: ${performanceMetrics.size} entries remaining`);
   }
 
   /**
@@ -959,7 +949,6 @@ class UnifiedPerformanceMonitor {
     const errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
     const avgResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
     
-    console.log(`📊 Performance Summary (5min):`, {
       requests: totalRequests,
       errors: totalErrors,
       errorRate: `${(errorRate * 100).toFixed(2)}%`,
@@ -999,7 +988,6 @@ class UnifiedPerformanceMonitor {
       this.reportingInterval = null;
     }
     
-    console.log(`📊 ${this.isServer ? 'Server' : 'Client'} performance monitoring stopped`);
   }
 
   /**

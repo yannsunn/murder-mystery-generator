@@ -1,6 +1,5 @@
 /**
  * 🔧 統一ログ管理システム - 本番環境での自動無効化
- * console.log代替システム
  */
 
 export class UltraLogger {
@@ -15,7 +14,6 @@ export class UltraLogger {
    */
   debug(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.log('🐛 [DEBUG]', ...args);
     }
   }
 
@@ -24,7 +22,6 @@ export class UltraLogger {
    */
   info(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.log('ℹ️ [INFO]', ...args);
     }
   }
 
@@ -32,14 +29,12 @@ export class UltraLogger {
    * 警告ログ - 本番環境でも表示
    */
   warn(...args) {
-    console.warn('⚠️ [WARN]', ...args);
   }
 
   /**
    * エラーログ - 本番環境でも表示
    */
   error(...args) {
-    console.error('❌ [ERROR]', ...args);
   }
 
   /**
@@ -47,7 +42,6 @@ export class UltraLogger {
    */
   success(...args) {
     if (!this.isProduction || this.debugMode) {
-      console.log('✅ [SUCCESS]', ...args);
     }
   }
 
@@ -57,7 +51,6 @@ export class UltraLogger {
   perf(label, startTime) {
     if (!this.isProduction || this.debugMode) {
       const duration = Date.now() - startTime;
-      console.log(`⚡ [PERF] ${label}: ${duration}ms`);
     }
   }
 
@@ -66,7 +59,6 @@ export class UltraLogger {
    */
   api(method, url, status, duration) {
     if (!this.isProduction || this.debugMode) {
-      console.log(`🌐 [API] ${method} ${url} - ${status} (${duration}ms)`);
     }
   }
 
@@ -74,14 +66,12 @@ export class UltraLogger {
    * セキュリティログ - 本番環境でも表示
    */
   security(...args) {
-    console.log('🔒 [SECURITY]', ...args);
   }
 }
 
 // シングルトンインスタンス
 export const logger = new UltraLogger();
 
-// レガシー互換性のためのconsole.log代替
 export const log = {
   debug: (...args) => logger.debug(...args),
   info: (...args) => logger.info(...args),

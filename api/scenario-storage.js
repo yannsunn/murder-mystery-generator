@@ -70,12 +70,9 @@ export async function saveScenario(req, res) {
 
     // 🗄️ Supabaseに自動保存
     if (isComplete) {
-      console.log('📋 シナリオ完成 - Supabaseに保存中...');
       const supabaseResult = await saveScenarioToSupabase(sessionId, storedData);
       if (supabaseResult.success) {
-        console.log('✅ Supabaseに保存完了:', sessionId);
       } else {
-        console.warn('⚠️  Supabase保存失敗:', supabaseResult.error);
       }
     }
 
@@ -105,7 +102,6 @@ export async function saveScenario(req, res) {
     });
 
   } catch (error) {
-    console.error('Save scenario error:', error);
     return res.status(500).json({
       success: false,
       error: `保存エラー: ${error.message}`
@@ -131,12 +127,10 @@ export async function getScenario(req, res) {
     
     // メモリにない場合はSupabaseから取得を試行
     if (!storedData) {
-      console.log('📋 メモリにデータなし - Supabaseから取得を試行:', sessionId);
       const supabaseResult = await getScenarioFromSupabase(sessionId);
       
       if (supabaseResult.success) {
         storedData = supabaseResult.data.scenario_data;
-        console.log('✅ Supabaseからデータを取得しました:', sessionId);
         
         // メモリにもキャッシュ
         scenarioStorage.set(sessionId, storedData);
@@ -155,7 +149,6 @@ export async function getScenario(req, res) {
     });
 
   } catch (error) {
-    console.error('Get scenario error:', error);
     return res.status(500).json({
       success: false,
       error: `取得エラー: ${error.message}`
@@ -194,7 +187,6 @@ export async function createSession(req, res) {
     });
 
   } catch (error) {
-    console.error('Create session error:', error);
     return res.status(500).json({
       success: false,
       error: `セッション作成エラー: ${error.message}`

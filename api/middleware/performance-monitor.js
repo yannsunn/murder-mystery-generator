@@ -212,7 +212,6 @@ export class PerformanceMonitor {
    * アラート送信
    */
   async sendAlerts(alerts) {
-    console.warn('🚨 Performance Alert:', JSON.stringify(alerts, null, 2));
     
     // 本番環境では Slack/Discord/メール通知などを実装
     if (envManager.get('ALERT_WEBHOOK_URL')) {
@@ -234,7 +233,6 @@ export class PerformanceMonitor {
           })
         });
       } catch (error) {
-        console.error('Failed to send alert:', error);
       }
     }
   }
@@ -267,7 +265,6 @@ export class PerformanceMonitor {
     // 平均レスポンス時間計算
     const avgResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
     
-    console.log(`📊 Performance Summary (5min):`, {
       requests: totalRequests,
       errors: totalErrors,
       errorRate: `${(errorRate * 100).toFixed(2)}%`,
@@ -309,7 +306,6 @@ export class PerformanceMonitor {
       }
     }
     
-    console.log(`🧹 Performance metrics cleanup: ${performanceMetrics.size} entries remaining`);
   }
 
   /**

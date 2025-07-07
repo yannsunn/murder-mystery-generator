@@ -267,7 +267,6 @@ export async function handleSecureError(error, req, res, operation = 'unknown') 
   };
   
   if (process.env.NODE_ENV !== 'production') {
-    console.error('🚨 Security Error:', errorLog);
   }
 
   const errorResponse = createErrorResponse(error);

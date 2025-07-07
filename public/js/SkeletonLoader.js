@@ -300,7 +300,6 @@ class SkeletonLoader {
   show(containerId, type = 'card', options = {}) {
     const container = document.getElementById(containerId);
     if (!container) {
-      console.warn(`Container ${containerId} not found`);
       return null;
     }
 

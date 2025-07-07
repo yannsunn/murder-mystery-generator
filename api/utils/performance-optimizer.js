@@ -21,7 +21,6 @@ export class ParallelGenerationEngine {
    * 🔄 並列生成実行
    */
   async generateConcurrently(tasks, context = {}) {
-    console.log(`🚀 Starting parallel generation for ${tasks.length} tasks`);
     
     try {
       // タスクを優先度と依存関係でソート
@@ -39,11 +38,9 @@ export class ParallelGenerationEngine {
         ...independentResults
       });
       
-      console.log('✅ Parallel generation completed successfully');
       return { ...independentResults, ...dependentResults };
       
     } catch (error) {
-      console.error('❌ Parallel generation failed:', error);
       throw error;
     }
   }
@@ -67,7 +64,6 @@ export class ParallelGenerationEngine {
         if (result.status === 'fulfilled') {
           results[task.name] = result.value;
         } else {
-          console.error(`❌ Task ${task.name} failed:`, result.reason);
           results[task.name] = { error: result.reason.message };
         }
       });
@@ -91,7 +87,6 @@ export class ParallelGenerationEngine {
         context = { ...context, [task.name]: result };
         
       } catch (error) {
-        console.error(`❌ Dependent task ${task.name} failed:`, error);
         results[task.name] = { error: error.message };
       }
     }
@@ -118,7 +113,6 @@ export class ParallelGenerationEngine {
       ]);
       
       this.activeJobs.delete(jobId);
-      console.log(`✅ Task ${task.name} completed (attempt ${attempt})`);
       
       return result;
       
@@ -126,7 +120,6 @@ export class ParallelGenerationEngine {
       this.activeJobs.delete(jobId);
       
       if (attempt < this.retryAttempts) {
-        console.log(`🔄 Retrying task ${task.name} (attempt ${attempt + 1})`);
         await this.delay(1000 * attempt); // 指数バックオフ
         return this.executeTaskWithRetry(task, context, attempt + 1);
       }
@@ -225,7 +218,6 @@ export class IntelligentCache {
     const exactMatch = this.getExactMatch(key);
     if (exactMatch) {
       this.updateAccessCount(key);
-      console.log(`🎯 Cache hit (exact): ${key}`);
       return exactMatch;
     }
 
@@ -233,12 +225,10 @@ export class IntelligentCache {
     if (semanticKey) {
       const similarMatch = await this.findSimilarContent(semanticKey);
       if (similarMatch) {
-        console.log(`🎯 Cache hit (semantic): ${key}`);
         return similarMatch;
       }
     }
 
-    console.log(`❌ Cache miss: ${key}`);
     return null;
   }
 
@@ -274,10 +264,8 @@ export class IntelligentCache {
         await this.addToSemanticCache(semanticKey, value, key);
       }
 
-      console.log(`💾 Cached: ${key} (${cacheEntry.metadata.size} bytes)`);
       
     } catch (error) {
-      console.error('❌ Cache set error:', error);
     }
   }
 
@@ -324,7 +312,6 @@ export class IntelligentCache {
       return null;
       
     } catch (error) {
-      console.error('❌ Semantic search error:', error);
       return null;
     }
   }
@@ -391,7 +378,6 @@ export class IntelligentCache {
     if (leastUsedKey) {
       this.cache.delete(leastUsedKey);
       this.accessCounts.delete(leastUsedKey);
-      console.log(`🗑️ Evicted least used: ${leastUsedKey}`);
     }
   }
 
@@ -403,7 +389,6 @@ export class IntelligentCache {
     
     if (size > this.compressionThreshold) {
       // 実際の圧縮実装は省略（zlib等を使用）
-      console.log(`🗜️ Compressing data: ${size} bytes`);
       return value; // 現在は非圧縮で返す
     }
     
@@ -478,7 +463,6 @@ export class IntelligentCache {
       this.accessCounts.delete(key);
     });
     
-    console.log(`🧹 Cleaned up ${expiredKeys.length} expired entries`);
   }
 }
 
@@ -540,4 +524,3 @@ export const parallelEngine = new ParallelGenerationEngine();
 export const intelligentCache = new IntelligentCache();
 export const loadBalancer = new LoadBalancer();
 
-console.log('⚡ Performance Optimizer loaded');

@@ -81,7 +81,6 @@ export class RandomMysteryGenerator {
 
   // ステップ1: 基本要素のランダム生成
   async generateBasicElements() {
-    console.log('🎲 ステップ1: 基本要素のランダム生成開始');
     
     this.mysteryData.genre = randomSelect(RANDOM_ELEMENTS.genres);
     this.mysteryData.setting = randomSelect(RANDOM_ELEMENTS.settings);
@@ -107,7 +106,6 @@ export class RandomMysteryGenerator {
 
   // ステップ2: キャラクター生成
   async generateCharacters() {
-    console.log('👥 ステップ2: キャラクター生成開始');
     
     const characterCount = randomNumber(6, 8);
     const characterPrompt = `
@@ -151,7 +149,6 @@ export class RandomMysteryGenerator {
 
   // ステップ3: プロット生成
   async generatePlot() {
-    console.log('📖 ステップ3: プロット生成開始');
     
     const plotPrompt = `
 以下の設定で完全なミステリープロットを生成してください：
@@ -214,7 +211,6 @@ ${this.mysteryData.characters.map(c => `- ${c.name}（${c.age}歳、${c.role}）
 
   // ステップ4: 手がかりと証拠生成
   async generateClues() {
-    console.log('🔍 ステップ4: 手がかりと証拠生成開始');
     
     const clueCount = randomNumber(5, 8);
     const cluesPrompt = `
@@ -248,7 +244,6 @@ ${this.mysteryData.title}
 
   // ステップ5: Google Drive構造に沿ったファイル生成
   async generateGoogleDriveStructure() {
-    console.log('📁 ステップ5: Google Drive構造生成開始');
     
     const files = {};
     
@@ -532,28 +527,22 @@ AIが自動生成したオリジナル作品です。
 
   // メイン実行メソッド
   async generateCompleteRandomMystery() {
-    console.log('🎭 完全ランダムミステリー生成開始');
     
     try {
       // 1. 基本要素生成
       await this.generateBasicElements();
-      console.log('✅ 基本要素生成完了:', this.mysteryData.title);
       
       // 2. キャラクター生成
       await this.generateCharacters();
-      console.log('✅ キャラクター生成完了:', this.mysteryData.characters.length, '人');
       
       // 3. プロット生成
       await this.generatePlot();
-      console.log('✅ プロット生成完了');
       
       // 4. 手がかり生成
       await this.generateClues();
-      console.log('✅ 手がかり生成完了:', this.mysteryData.clues.length, '個');
       
       // 5. Google Drive構造生成
       await this.generateGoogleDriveStructure();
-      console.log('✅ Google Drive構造生成完了');
       
       return {
         success: true,

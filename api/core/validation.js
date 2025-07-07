@@ -626,13 +626,11 @@ class UnifiedInputValidator {
         this.performSecurityChecks(req.body);
 
         // API別検証
-        console.log(`🔍 Validating ${apiType} API request`);
         const validatedData = this.validateApiRequest(apiType, req.body);
         
         // 検証済みデータを設定
         req.validated = validatedData;
         
-        console.log(`✅ Input validation passed for ${apiType} API`);
         next?.();
         
       } catch (error) {

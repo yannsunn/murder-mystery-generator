@@ -36,7 +36,6 @@ class AIOptimizationEngine {
    * 🧠 AI駆動型包括最適化
    */
   async performAIOptimization() {
-    console.log('🤖 AI最適化エンジン開始');
     const optimizationResult = {
       timestamp: new Date().toISOString(),
       phases: {},
@@ -48,34 +47,27 @@ class AIOptimizationEngine {
 
     try {
       // Phase 1: データ収集・分析
-      console.log('📊 Phase 1: 高度データ分析');
       optimizationResult.phases.dataAnalysis = await this.advancedDataAnalysis();
 
       // Phase 2: パターン学習
-      console.log('🧠 Phase 2: AIパターン学習');
       optimizationResult.phases.patternLearning = await this.performPatternLearning();
 
       // Phase 3: 予測分析
-      console.log('🔮 Phase 3: 予測分析');
       optimizationResult.phases.predictiveAnalysis = await this.predictiveAnalysis();
 
       // Phase 4: 自動最適化実行
-      console.log('⚡ Phase 4: 自動最適化実行');
       optimizationResult.phases.autoOptimization = await this.executeAutoOptimizations();
 
       // Phase 5: 継続学習
-      console.log('🔄 Phase 5: 継続学習システム');
       optimizationResult.phases.continuousLearning = await this.setupContinuousLearning();
 
       // 最終結果生成
       optimizationResult.recommendations = this.generateAIRecommendations();
       optimizationResult.learningInsights = this.extractLearningInsights();
 
-      console.log('✅ AI最適化完了');
       return optimizationResult;
 
     } catch (error) {
-      console.error('❌ AI最適化エラー:', error);
       optimizationResult.error = error.message;
       return optimizationResult;
     }
@@ -570,7 +562,6 @@ export default async function handler(req, res) {
         });
     }
   } catch (error) {
-    console.error('AI optimization error:', error);
     return res.status(500).json({
       success: false,
       error: error.message

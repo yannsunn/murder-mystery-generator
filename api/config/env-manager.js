@@ -158,7 +158,6 @@ class EnvManager {
    * 初期化と検証
    */
   initialize() {
-    console.log('🔧 Environment Manager - 初期化開始');
     
     this.errors = [];
     this.warnings = [];
@@ -201,29 +200,19 @@ class EnvManager {
    * 初期化結果のレポート
    */
   reportInitialization() {
-    console.log(`🔧 Environment Manager - 検証完了`);
-    console.log(`   ✅ 設定済み: ${Object.keys(this.config).length}個`);
-    console.log(`   ⚠️  警告: ${this.warnings.length}個`);
-    console.log(`   ❌ エラー: ${this.errors.length}個`);
 
     if (this.warnings.length > 0) {
-      console.log('\n⚠️  警告:');
-      this.warnings.forEach(warning => console.log(`   - ${warning}`));
     }
 
     if (this.errors.length > 0) {
-      console.log('\n❌ エラー:');
-      this.errors.forEach(error => console.log(`   - ${error}`));
     }
 
     if (this.config.DEBUG_MODE) {
-      console.log('\n🔍 設定値:');
       for (const [key, value] of Object.entries(this.config)) {
         // APIキーなどの機密情報をマスク
         const maskedValue = key.includes('KEY') || key.includes('SECRET') 
           ? `${String(value).substring(0, 3)}***` 
           : value;
-        console.log(`   ${key}: ${maskedValue}`);
       }
     }
   }

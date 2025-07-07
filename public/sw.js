@@ -12,13 +12,12 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/ultra-modern-styles.css',
-  '/css/accessibility.css',
-  '/css/mobile-responsive.css',
   '/js/input-validator.js',
   '/js/SkeletonLoader.js',
   '/js/UXEnhancer.js',
   '/js/UltraIntegratedApp.js',
   '/js/app-initializer.js',
+  '/js/performance-monitor.js',
   '/manifest.json'
 ];
 
@@ -53,7 +52,6 @@ self.addEventListener('install', (event) => {
                 if (response.ok) {
                   return cache.put(url, response);
                 } else {
-                  console.warn(`⚠️ Bad response for ${url}:`, response.status);
                   return null;
                 }
               })
@@ -63,7 +61,6 @@ self.addEventListener('install', (event) => {
                     error.message.includes('Content Security Policy')) {
                   return null;
                 }
-                console.warn(`⚠️ Failed to cache ${url}:`, error);
                 return null;
               })
           )
@@ -74,7 +71,6 @@ self.addEventListener('install', (event) => {
         return self.skipWaiting(); // 即座にアクティブ化
       })
       .catch(error => {
-        console.error('❌ Failed to cache static assets:', error);
         // エラーが発生してもService Workerの登録は続行
         return self.skipWaiting();
       })
@@ -117,7 +113,6 @@ self.addEventListener('fetch', (event) => {
   try {
     url = new URL(request.url);
   } catch (error) {
-    console.warn('⚠️ Invalid URL, skipping:', request.url);
     return;
   }
   
@@ -196,7 +191,6 @@ self.addEventListener('fetch', (event) => {
             return networkResponse;
           })
           .catch(error => {
-            console.error('❌ Fetch failed:', error);
             
             // HTMLページの場合はオフラインページを返す
             if (request.headers.get('accept')?.includes('text/html')) {

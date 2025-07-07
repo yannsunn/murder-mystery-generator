@@ -322,7 +322,6 @@ async function cacheResource(url, cacheName = CACHE_NAME) {
     await cache.add(url);
     // Cached resource - debug log removed for production
   } catch (error) {
-    console.error('❌ Failed to cache resource:', url, error);
   }
 }
 
@@ -332,9 +331,7 @@ async function cacheResource(url, cacheName = CACHE_NAME) {
 async function clearCache(cacheName) {
   try {
     await caches.delete(cacheName);
-    console.log('🗑️ Cleared cache:', cacheName);
   } catch (error) {
-    console.error('❌ Failed to clear cache:', cacheName, error);
   }
 }
 
@@ -361,7 +358,6 @@ async function getCacheStatus() {
  * オフラインデータ同期
  */
 async function syncOfflineData() {
-  console.log('🔄 Starting offline data sync');
   
   try {
     // IndexedDBからsync待ちデータを取得
@@ -371,9 +367,7 @@ async function syncOfflineData() {
       try {
         await syncSingleItem(item);
         await markItemAsSynced(item.id);
-        console.log('✅ Synced item:', item.id);
       } catch (error) {
-        console.warn('❌ Failed to sync item:', item.id, error);
       }
     }
     
@@ -387,7 +381,6 @@ async function syncOfflineData() {
     });
     
   } catch (error) {
-    console.error('❌ Background sync failed:', error);
   }
 }
 
@@ -421,7 +414,6 @@ async function syncSingleItem(item) {
  */
 async function markItemAsSynced(itemId) {
   // 実際のプロダクションではIndexedDBを更新
-  console.log('📝 Marked as synced:', itemId);
 }
 
 /**
@@ -439,9 +431,7 @@ async function precacheResources() {
   for (const url of precacheUrls) {
     try {
       await cache.add(url);
-      console.log('📦 Precached:', url);
     } catch (error) {
-      console.warn('⚠️ Failed to precache:', url);
     }
   }
 }
@@ -451,4 +441,3 @@ self.addEventListener('install', (event) => {
   event.waitUntil(precacheResources());
 });
 
-console.log('🔧 Offline Service Worker loaded');

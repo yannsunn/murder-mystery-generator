@@ -435,13 +435,11 @@ async function generateImages(imagePrompts) {
   
   // APIキーが設定されていない場合はスキップ
   if (!process.env.OPENAI_API_KEY) {
-    console.log('⚠️ OPENAI_API_KEY not set, skipping image generation');
     return images;
   }
   
   for (const promptData of imagePrompts) {
     try {
-      console.log(`🎨 Generating image: ${promptData.type}`);
       
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
@@ -466,10 +464,8 @@ async function generateImages(imagePrompts) {
           revised_prompt: data.data[0].revised_prompt,
           status: 'success'
         });
-        console.log(`✅ Image generated: ${promptData.type}`);
       } else {
         const error = await response.text();
-        console.error(`❌ Image generation failed: ${error}`);
         images.push({
           ...promptData,
           error: 'Generation failed',
@@ -477,7 +473,6 @@ async function generateImages(imagePrompts) {
         });
       }
     } catch (error) {
-      console.error(`❌ Image generation error: ${error.message}`);
       images.push({
         ...promptData,
         error: error.message,
@@ -524,7 +519,6 @@ const handler = withErrorHandler(async (req, res) => {
     throw new AppError('フォームデータが必要です', ErrorTypes.VALIDATION_ERROR);
   }
 
-  console.log('🏆 Starting Professional Murder Mystery Generation...');
   
   const context = { results: [], formData, sessionId };
   const finalResult = {
@@ -543,7 +537,6 @@ const handler = withErrorHandler(async (req, res) => {
   for (let i = 0; i < PROFESSIONAL_GENERATION_FLOW.length; i++) {
     const phase = PROFESSIONAL_GENERATION_FLOW[i];
     
-    console.log(`🎯 Generating: ${phase.name}`);
     
     try {
       const result = await phase.handler(formData, context);
@@ -553,28 +546,22 @@ const handler = withErrorHandler(async (req, res) => {
       const stepKey = `step${i + 1}`;
       finalResult.sessionData.phases[stepKey] = result;
       
-      console.log(`✅ Completed: ${phase.name}`);
       
     } catch (error) {
-      console.error(`❌ Error in ${phase.name}:`, error);
       throw new AppError(`${phase.name}の生成に失敗しました: ${error.message}`, ErrorTypes.AI_ERROR);
     }
   }
 
   // プロ品質画像生成
   try {
-    console.log('🎨 Generating professional images...');
     const imagePrompts = createProfessionalImagePrompts(finalResult.sessionData);
     const images = await generateImages(imagePrompts);
     finalResult.sessionData.images = images;
-    console.log(`🖼️ Generated ${images.length} professional images`);
   } catch (error) {
-    console.error('❌ Image generation failed:', error);
     // 画像生成失敗は致命的ではない
     finalResult.sessionData.images = [];
   }
 
-  console.log('🏆 Professional Murder Mystery Generation completed successfully!');
   
   return res.status(200).json(finalResult);
 }, 'Professional Murder Mystery Generation');

@@ -296,7 +296,6 @@ function handleKeyboardShortcut(event) {
     try {
       shortcutFunction();
     } catch (error) {
-      console.error('Shortcut execution error:', error);
     }
   }
 }
@@ -412,7 +411,6 @@ function initializeKeyboardShortcuts() {
   // スクリーンリーダー対応
   enhanceScreenReaderSupport();
   
-  console.log('⌨️ Keyboard shortcuts and accessibility features initialized');
   
   // キーボードショートカット通知（重複防止）
   if (typeof showToast === 'function' && !window.keyboardShortcutsNotified) {

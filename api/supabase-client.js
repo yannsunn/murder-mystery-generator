@@ -51,7 +51,6 @@ export async function initializeSupabase() {
  */
 export async function ensureTablesExist() {
   if (!supabaseAdmin) {
-    console.warn('⚠️  管理者権限がないため、テーブル作成をスキップします');
     return false;
   }
 
@@ -63,16 +62,13 @@ export async function ensureTablesExist() {
       .limit(1);
 
     if (scenariosError && scenariosError.code === '42P01') {
-      console.log('📋 scenariosテーブルを作成中...');
       
       const { error: createError } = await supabaseAdmin.rpc('create_scenarios_table');
       
       if (createError) {
-        console.error('❌ テーブル作成エラー:', createError);
         return false;
       }
       
-      console.log('✅ scenariosテーブルを作成しました');
     }
 
     // user_sessionsテーブルの存在確認
@@ -82,21 +78,17 @@ export async function ensureTablesExist() {
       .limit(1);
 
     if (sessionsError && sessionsError.code === '42P01') {
-      console.log('📋 user_sessionsテーブルを作成中...');
       
       const { error: createError } = await supabaseAdmin.rpc('create_user_sessions_table');
       
       if (createError) {
-        console.error('❌ テーブル作成エラー:', createError);
         return false;
       }
       
-      console.log('✅ user_sessionsテーブルを作成しました');
     }
 
     return true;
   } catch (error) {
-    console.error('❌ テーブル確認エラー:', error);
     return false;
   }
 }
@@ -166,7 +158,6 @@ export async function getScenarioFromSupabase(sessionId) {
  */
 export async function saveUserSessionToSupabase(sessionId, userData) {
   if (!supabase) {
-    console.warn('⚠️  Supabaseが初期化されていません');
     return { success: false, error: 'Supabase未初期化' };
   }
 
@@ -184,15 +175,12 @@ export async function saveUserSessionToSupabase(sessionId, userData) {
       .upsert(data, { onConflict: 'session_id' });
 
     if (error) {
-      console.error('❌ Supabaseセッション保存エラー:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ セッションをSupabaseに保存しました:', sessionId);
     return { success: true, data: result };
 
   } catch (error) {
-    console.error('❌ セッション保存例外:', error);
     return { success: false, error: error.message };
   }
 }
