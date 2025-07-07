@@ -164,6 +164,10 @@ class CoreApp {
     
     this.elements = {};
     
+    // デバウンス/スロットル用
+    this._debounceTimers = new Map();
+    this._throttleLastCall = new Map();
+    
     this.init();
   }
 
@@ -455,17 +459,7 @@ class CoreApp {
   showError(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'alert alert-danger';
-    errorDiv.style.cssText = `
-      background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(153, 27, 27, 0.9) 100%);
-      color: #ffffff;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin: 1rem 0;
-      font-weight: 600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-      box-shadow: 0 4px 20px rgba(220, 38, 38, 0.4);
-    `;
+    // インラインスタイルを削除してCSSクラスを使用
     errorDiv.textContent = message;
     
     const container = document.querySelector('.main-container');
@@ -495,17 +489,22 @@ class CoreApp {
     };
   }
 
+  // DOM要素をキャッシュして再検索を避ける
   updateProgressBar(progress) {
-    const progressBar = document.querySelector('.progress-fill');
-    if (progressBar) {
-      progressBar.style.width = `${progress}%`;
+    if (!this._progressBar) {
+      this._progressBar = document.querySelector('.progress-fill');
+    }
+    if (this._progressBar) {
+      this._progressBar.style.width = `${progress}%`;
     }
   }
 
   updateStatusText(text) {
-    const statusElement = document.querySelector('.current-phase');
-    if (statusElement) {
-      statusElement.textContent = text;
+    if (!this._statusElement) {
+      this._statusElement = document.querySelector('.current-phase');
+    }
+    if (this._statusElement) {
+      this._statusElement.textContent = text;
     }
   }
 
@@ -571,6 +570,9 @@ class CoreApp {
       { title: '決定的証拠', content: '犯人特定に至った決定打', icon: '🔑', rotate: '-2deg' }
     ];
     
+    // DocumentFragmentを使用してリフローを最小化
+    const fragment = document.createDocumentFragment();
+    
     evidenceData.forEach((evidence, index) => {
       const card = document.createElement('div');
       card.className = 'evidence-card';
@@ -588,8 +590,11 @@ class CoreApp {
         </div>
       `;
       
-      container.appendChild(card);
+      fragment.appendChild(card);
     });
+    
+    // 一度にすべての要素を追加
+    container.appendChild(fragment);
   }
   
   createConnectionLines(container) {
@@ -621,16 +626,18 @@ class CoreApp {
     if (resultContainer) {
       resultContainer.classList.add('result-reveal');
       
-      // 段階的なアニメーション
-      setTimeout(() => {
+      // requestAnimationFrameを使用してアニメーションを最適化
+      requestAnimationFrame(() => {
         const evidenceCards = resultContainer.querySelectorAll('.evidence-card');
         evidenceCards.forEach((card, index) => {
           setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = `rotate(${card.style.getPropertyValue('--rotate')}) translateY(0)`;
+            requestAnimationFrame(() => {
+              card.style.opacity = '1';
+              card.style.transform = `rotate(${card.style.getPropertyValue('--rotate')}) translateY(0)`;
+            });
           }, index * 200);
         });
-      }, 500);
+      });
       
       // サウンドエフェクトのシミュレーション（視覚的フィードバック）
       setTimeout(() => {
@@ -644,41 +651,64 @@ class CoreApp {
     const container = document.querySelector('.evidence-board');
     if (!container) return;
     
+    // DocumentFragmentとCSSクラスを使用
+    const fragment = document.createDocumentFragment();
+    const particles = [];
+    
     for (let i = 0; i < 20; i++) {
       const particle = document.createElement('div');
-      particle.innerHTML = '✨';
-      particle.style.cssText = `
-        position: absolute;
-        top: ${Math.random() * 100}%;
-        left: ${Math.random() * 100}%;
-        font-size: ${Math.random() * 20 + 10}px;
-        animation: sparkle 2s ease-out forwards;
-        pointer-events: none;
-        z-index: 1000;
-      `;
+      particle.className = 'success-particle';
+      particle.textContent = '✨';
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.fontSize = `${Math.random() * 20 + 10}px`;
       
-      container.appendChild(particle);
-      
-      // パーティクルを自動削除
-      setTimeout(() => {
-        if (particle.parentNode) {
-          particle.parentNode.removeChild(particle);
-        }
-      }, 2000);
+      fragment.appendChild(particle);
+      particles.push(particle);
     }
+    
+    container.appendChild(fragment);
+    
+    // 一括削除
+    setTimeout(() => {
+      particles.forEach(p => p.remove());
+    }, 2000);
   }
 
   handleKeyboardShortcut(e) {
-    // Ctrl/Cmd + Enter で生成
+    // Ctrl/Cmd + Enter で生成（スロットル付き）
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault();
-      this.handleGenerate();
+      this.throttle(() => this.handleGenerate(), 1000, 'generate');
     }
     
     // Escape でキャンセル
     if (e.key === 'Escape' && this.isGenerating) {
       this.handleError('ユーザーによってキャンセルされました');
     }
+  }
+  
+  // スロットル関数
+  throttle(func, wait, key) {
+    const now = Date.now();
+    const lastCall = this._throttleLastCall.get(key) || 0;
+    
+    if (now - lastCall >= wait) {
+      this._throttleLastCall.set(key, now);
+      func();
+    }
+  }
+  
+  // デバウンス関数
+  debounce(func, wait, key) {
+    clearTimeout(this._debounceTimers.get(key));
+    
+    const timeoutId = setTimeout(() => {
+      func();
+      this._debounceTimers.delete(key);
+    }, wait);
+    
+    this._debounceTimers.set(key, timeoutId);
   }
 }
 

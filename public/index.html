@@ -2,26 +2,34 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Murder Mystery Generator - Professional Edition</title>
-  <meta name="description" content="プロフェッショナル品質のマーダーミステリー生成システム - Console Error Free">
+  <meta name="description" content="プロフェッショナル品質のマーダーミステリー生成システム">
   <meta name="theme-color" content="#6d28d9">
   <meta name="color-scheme" content="dark light">
   
-  <!-- PWA対応 -->
+  <!-- Preconnect for faster font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Critical CSS inline for faster initial render -->
+  <style>
+    body{margin:0;background:#0f0f23;color:#fff;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+    .hidden{display:none!important}
+    .main-container{max-width:1200px;margin:0 auto;padding:0 1rem 4rem}
+  </style>
+  
+  <!-- Async load non-critical CSS -->
+  <link rel="preload" href="ultra-modern-styles.css" as="style">
+  <link rel="stylesheet" href="ultra-modern-styles.css">
+  
+  <!-- Font with display=swap for better performance -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- PWA & SEO -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Murder Mystery Generator">
-  
-  <!-- アクセシビリティ -->
-  <meta name="robots" content="index, follow">
-  <meta name="author" content="Murder Mystery Generator Team">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- 🚀 ULTRA MODERN STYLES - 完全統合CSS -->
-  <link rel="stylesheet" href="ultra-modern-styles.css">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%236d28d9'/><text y='65' x='50' text-anchor='middle' font-size='60' fill='white'>M</text></svg>">
 </head>
@@ -49,15 +57,14 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="participants" class="form-label">👥 参加人数</label>
-              <select id="participants" name="participants" class="form-control" required 
-                      aria-describedby="participants-hint" aria-label="マーダーミステリーの参加人数を選択">
+              <select id="participants" name="participants" class="form-control" required aria-describedby="participants-hint">
                 <option value="4">4人 (コンパクト)</option>
                 <option value="5" selected>5人 (推奨)</option>
                 <option value="6">6人 (標準)</option>
                 <option value="7">7人 (大規模)</option>
                 <option value="8">8人 (エピック)</option>
               </select>
-              <div id="participants-hint" class="form-hint">推奨は5-6人です</div>
+              <small id="participants-hint" class="form-hint">推奨は5-6人です</small>
             </div>
             
             <div class="form-group">
@@ -196,8 +203,7 @@
           <h3 class="text-gradient">✏️ カスタム要求 (オプション)</h3>
           <div class="form-group">
             <label for="custom-request" class="form-label">特別な要望があれば記入してください</label>
-            <textarea id="custom-request" name="custom-request" class="form-control" rows="3" 
-              placeholder="例: 特定の職業のキャラクターを含めたい、特殊なトリックを使いたい、など..."></textarea>
+            <textarea id="custom-request" name="custom-request" class="form-control" rows="3" placeholder="例: 特定の職業のキャラクターを含めたい、特殊なトリックを使いたい、など..."></textarea>
           </div>
         </div>
 
@@ -205,22 +211,14 @@
         <div class="form-actions" role="group" aria-labelledby="generation-buttons-label">
           <h4 id="generation-buttons-label" class="visually-hidden">シナリオ生成オプション</h4>
           
-          <button type="button" id="generate-btn" class="btn btn-primary btn-ultra-visible touch-target"
-                  aria-describedby="generate-btn-desc">
+          <button type="button" id="generate-btn" class="btn btn-primary btn-ultra-visible touch-target">
             🚀 シナリオ生成開始
           </button>
-          <div id="generate-btn-desc" class="visually-hidden">
-            フォームで設定した条件に基づいてマーダーミステリーシナリオを生成します
-          </div>
           
           <!-- 🎲 完全ランダム生成ボタン -->
-          <button type="button" id="random-generate-btn" class="btn btn-secondary btn-ultra-visible touch-target" style="margin-left: 15px;"
-                  aria-describedby="random-btn-desc">
+          <button type="button" id="random-generate-btn" class="btn btn-secondary btn-ultra-visible touch-target" style="margin-left: 15px;">
             🎲 完全ランダム生成
           </button>
-          <div id="random-btn-desc" class="visually-hidden">
-            AIが完全に自律的にランダムなオリジナルミステリーを創作します
-          </div>
           
           <div class="random-mode-info" style="margin-top: 10px; font-size: 0.9em; color: #666;" 
                aria-live="polite">
@@ -268,23 +266,15 @@
       <div class="evidence-board transform-3d">
         <div class="mystery-solved result-reveal">
           <div id="scenario-content" class="card-3d"></div>
-          
-          <!-- 証拠カードコンテナ -->
-          <div id="evidence-cards" class="evidence-cards-container">
-            <!-- 動的に生成される証拠カード -->
-          </div>
-          
-          <!-- 接続線 -->
-          <div id="connection-lines" class="connection-lines-container">
-            <!-- 動的に生成される接続線 -->
-          </div>
+          <div id="evidence-cards" class="evidence-cards-container"></div>
+          <div id="connection-lines" class="connection-lines-container"></div>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- 🚀 CORE APP - 統合JavaScriptシステム (UltraIntegratedApp統合済み) -->
-  <script src="js/core-app.js"></script>
+  <!-- 🚀 CORE APP - 統合JavaScriptシステム -->
+  <script src="js/core-app.js" defer></script>
   
 </body>
 </html>
