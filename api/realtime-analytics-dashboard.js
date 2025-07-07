@@ -144,7 +144,7 @@ class RealtimeAnalyticsDashboard {
       
       // 人気エンドポイント（シミュレーション）
       realtime.topEndpoints = [
-        { endpoint: '/api/professional-mystery-generator', requests: Math.floor(Math.random() * 100) + 50 },
+        { endpoint: '/api/integrated-micro-generator', requests: Math.floor(Math.random() * 100) + 50 },
         { endpoint: '/api/scenario-storage', requests: Math.floor(Math.random() * 80) + 30 },
         { endpoint: '/api/health', requests: Math.floor(Math.random() * 200) + 100 }
       ].sort((a, b) => b.requests - a.requests);

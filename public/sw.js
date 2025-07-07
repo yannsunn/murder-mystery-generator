@@ -12,12 +12,10 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/ultra-modern-styles.css',
-  '/js/input-validator.js',
   '/js/SkeletonLoader.js',
   '/js/UXEnhancer.js',
   '/js/UltraIntegratedApp.js',
   '/js/app-initializer.js',
-  '/js/performance-monitor.js',
   '/manifest.json'
 ];
 
