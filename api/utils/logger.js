@@ -1,77 +1,43 @@
 /**
- * 🔧 統一ログ管理システム - 本番環境での自動無効化
+ * シンプルなロガー
  */
 
-export class UltraLogger {
+class SimpleLogger {
   constructor() {
     this.isProduction = process.env.NODE_ENV === 'production';
-    this.debugMode = process.env.DEBUG_MODE === 'true';
-    this.logLevel = process.env.LOG_LEVEL || (this.isProduction ? 'error' : 'debug');
   }
 
-  /**
-   * デバッグログ - 本番環境では無効
-   */
   debug(...args) {
-    if (!this.isProduction || this.debugMode) {
+    if (!this.isProduction) {
+      console.log('[DEBUG]', ...args);
     }
   }
 
-  /**
-   * 情報ログ - 本番環境では無効
-   */
   info(...args) {
-    if (!this.isProduction || this.debugMode) {
+    if (!this.isProduction) {
+      console.log('[INFO]', ...args);
     }
   }
 
-  /**
-   * 警告ログ - 本番環境でも表示
-   */
   warn(...args) {
+    console.warn('[WARN]', ...args);
   }
 
-  /**
-   * エラーログ - 本番環境でも表示
-   */
   error(...args) {
+    console.error('[ERROR]', ...args);
   }
 
-  /**
-   * 成功ログ - 本番環境では無効
-   */
   success(...args) {
-    if (!this.isProduction || this.debugMode) {
+    if (!this.isProduction) {
+      console.log('[SUCCESS]', ...args);
     }
-  }
-
-  /**
-   * パフォーマンスログ - 本番環境では無効
-   */
-  perf(label, startTime) {
-    if (!this.isProduction || this.debugMode) {
-      const duration = Date.now() - startTime;
-    }
-  }
-
-  /**
-   * API呼び出しログ - 本番環境では無効
-   */
-  api(method, url, status, duration) {
-    if (!this.isProduction || this.debugMode) {
-    }
-  }
-
-  /**
-   * セキュリティログ - 本番環境でも表示
-   */
-  security(...args) {
   }
 }
 
 // シングルトンインスタンス
-export const logger = new UltraLogger();
+export const logger = new SimpleLogger();
 
+// 便利なエクスポート
 export const log = {
   debug: (...args) => logger.debug(...args),
   info: (...args) => logger.info(...args),

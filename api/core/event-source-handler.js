@@ -4,7 +4,6 @@
  */
 
 import { logger } from '../utils/logger.js';
-import { resourceManager } from '../utils/resource-manager.js';
 
 /**
  * EventSource接続の初期化と管理
@@ -12,34 +11,21 @@ import { resourceManager } from '../utils/resource-manager.js';
 export function setupEventSourceConnection(req, res, sessionId) {
   logger.debug('🌐 EventSource接続検出');
   
-  // リソースマネージャーにEventSourceを登録
   const eventSourceId = sessionId || `eventsource_${Date.now()}`;
   
-  // 接続クリーンアップの設定
-  const connectionManager = {
-    close: () => {
-      try {
-        if (!res.headersSent) {
-          res.end();
-        }
-        logger.debug(`EventSource connection closed: ${eventSourceId}`);
-      } catch (error) {
-        logger.warn(`EventSource close error: ${error.message}`);
-      }
-    }
-  };
-  
-  resourceManager.registerConnection(eventSourceId, connectionManager);
-  
-  // クライアント切断時の自動クリーンアップ
+  // クライアント切断時のクリーンアップ
   req.on('close', () => {
     logger.debug(`Client disconnected: ${eventSourceId}`);
-    resourceManager.cleanupConnection(eventSourceId);
+    if (!res.headersSent) {
+      res.end();
+    }
   });
   
   req.on('error', (error) => {
     logger.warn(`EventSource error: ${error.message}`);
-    resourceManager.cleanupConnection(eventSourceId);
+    if (!res.headersSent) {
+      res.end();
+    }
   });
   
   return eventSourceId;

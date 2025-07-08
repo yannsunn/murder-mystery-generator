@@ -10,7 +10,7 @@ import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 import { createPerformanceMiddleware } from './core/monitoring.js';
 import { createValidationMiddleware } from './core/validation.js';
 import { qualityAssessor } from './utils/quality-assessor.js';
-import { parallelEngine, intelligentCache } from './utils/performance-optimizer.js';
+import { executeParallel, cache } from './utils/performance-optimizer.js';
 import { randomMysteryGenerator } from './utils/random-mystery-generator.js';
 import { logger } from './utils/logger.js';
 import { resourceManager } from './utils/resource-manager.js';
@@ -49,10 +49,11 @@ export default async function handler(req, res) {
 
     // 環境変数チェック（Vercel対応）
     if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY is not set');
       return res.status(503).json({
         success: false,
         error: 'Service configuration error',
-        message: 'AI service is temporarily unavailable. Please check environment configuration.',
+        message: 'AI service is temporarily unavailable',
         timestamp: new Date().toISOString()
       });
     }
@@ -93,11 +94,9 @@ export default async function handler(req, res) {
     });
   }
 
-  // セキュリティ・パフォーマンス・バリデーション統合チェック
+  // シンプルなミドルウェアチェーン
   const middlewares = [
-    createPerformanceMiddleware(),
     createSecurityMiddleware('generation')
-    // createValidationMiddleware('generation') // 一時無効化
   ];
 
   for (const middleware of middlewares) {
