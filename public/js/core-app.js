@@ -290,7 +290,7 @@ class CoreApp {
       setting: settings[Math.floor(Math.random() * settings.length)],
       tone: tones[Math.floor(Math.random() * tones.length)],
       complexity: complexities[Math.floor(Math.random() * complexities.length)],
-      'generate-images': Math.random() > 0.5,
+      generate_artwork: Math.random() > 0.3,  // 70%の確率で画像生成
       'detailed-handouts': Math.random() > 0.3,
       'gm-support': Math.random() > 0.2
     };
@@ -395,6 +395,7 @@ class CoreApp {
     const formData = new FormData(this.elements.form);
     const data = {};
     
+    // 通常のフォームデータ収集
     for (const [key, value] of formData.entries()) {
       if (data[key]) {
         if (!Array.isArray(data[key])) {
@@ -405,6 +406,15 @@ class CoreApp {
         data[key] = value;
       }
     }
+    
+    // チェックボックスの特別処理（チェックされていない場合はfalse）
+    const checkboxes = ['generate_artwork', 'detailed-handouts', 'gm-support'];
+    checkboxes.forEach(name => {
+      const checkbox = this.elements.form.querySelector(`[name="${name}"]`);
+      if (checkbox && checkbox.type === 'checkbox') {
+        data[name] = checkbox.checked;
+      }
+    });
     
     logger.debug('収集されたフォームデータ:', data);
     return data;
