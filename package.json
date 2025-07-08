@@ -32,7 +32,9 @@
     "ultra-deploy": "node scripts/ultra-deployment-system.js",
     "deploy:safe": "NODE_ENV=staging npm run ultra-deploy",
     "deploy:production": "NODE_ENV=production npm run ultra-deploy",
-    "monitor:health": "node scripts/health-monitor.js"
+    "monitor:health": "node scripts/health-monitor.js",
+    "check-env": "node scripts/check-env-vars.js",
+    "pre-deploy": "node scripts/check-env-vars.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.3",
