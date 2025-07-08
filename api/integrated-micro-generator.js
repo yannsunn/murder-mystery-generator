@@ -7,14 +7,14 @@ import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
 import { createSecurityMiddleware } from './middleware/rate-limiter.js';
-import { createPerformanceMiddleware } from './core/monitoring.js';
+// import { createPerformanceMiddleware } from './core/monitoring.js'; // Removed for simplicity
 import { createValidationMiddleware } from './core/validation.js';
-import { qualityAssessor } from './utils/quality-assessor.js';
-import { executeParallel, cache } from './utils/performance-optimizer.js';
+// import { qualityAssessor } from './utils/quality-assessor.js'; // Removed for simplicity
+import { executeParallel, SimpleCache } from './utils/performance-optimizer.js';
 import { randomMysteryGenerator } from './utils/random-mystery-generator.js';
 import { logger } from './utils/logger.js';
-import { resourceManager } from './utils/resource-manager.js';
-import { executeOptimizedQueryWithMonitoring } from './utils/database-optimizer.js';
+// import { resourceManager } from './utils/resource-manager.js'; // Removed for simplicity
+// import { executeOptimizedQueryWithMonitoring } from './utils/database-optimizer.js'; // Removed for simplicity
 import { saveScenarioToSupabase } from './supabase-client.js';
 import { INTEGRATED_GENERATION_FLOW } from './core/generation-stages.js';
 import { createImagePrompts, generateImages } from './core/image-generator.js';
@@ -257,11 +257,7 @@ export default async function handler(req, res) {
           }
           
           // キャッシュに保存
-          await intelligentCache.set(cacheKey, result, step.name, {
-            stepName: step.name,
-            formDataHash: createFormDataHash(formData),
-            timestamp: Date.now()
-          });
+          cache.set(cacheKey, result);
           
           // 各段階に適切な処理時間を確保（5-20秒）
           const minProcessTime = step.weight > 20 ? 8000 : 5000; // 重要な段階は長め
