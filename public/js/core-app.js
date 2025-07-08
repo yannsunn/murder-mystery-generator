@@ -469,7 +469,6 @@ class CoreApp {
   showError(message) {
     const errorDiv = document.createElement('div');
     errorDiv.className = 'alert alert-danger';
-    // インラインスタイルを削除してCSSクラスを使用
     errorDiv.textContent = message;
     
     const container = document.querySelector('.main-container');
@@ -499,37 +498,31 @@ class CoreApp {
     };
   }
 
-  // DOM要素をキャッシュして再検索を避ける
+  // シンプルな進捗バー更新
   updateProgressBar(progress) {
-    if (!this._progressBar) {
-      this._progressBar = document.querySelector('.progress-fill');
-    }
-    if (this._progressBar) {
-      this._progressBar.style.width = `${progress}%`;
+    const progressBar = document.querySelector('.progress-fill');
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
     }
   }
 
   updateStatusText(text) {
-    if (!this._statusElement) {
-      this._statusElement = document.querySelector('.current-phase');
-    }
-    if (this._statusElement) {
-      this._statusElement.textContent = text;
+    const statusElement = document.querySelector('.current-phase');
+    if (statusElement) {
+      statusElement.textContent = text;
     }
   }
 
   renderResults() {
     if (!this.sessionData || !this.elements.resultContainer) return;
     
-    // 🎪 ULTRA CINEMATIC RESULT PRESENTATION - 限界突破結果演出
-    this.createCinematicResultPresentation();
+    // シンプルな結果表示
+    this.createResultPresentation();
   }
   
-  createCinematicResultPresentation() {
+  createResultPresentation() {
     const container = this.elements.resultContainer;
     const scenarioContent = container.querySelector('#scenario-content');
-    const evidenceCards = container.querySelector('#evidence-cards');
-    const connectionLines = container.querySelector('#connection-lines');
     
     if (!scenarioContent) return;
     
@@ -549,140 +542,13 @@ class CoreApp {
         </div>
         
         <div class="detail-card">
-          <h3>🕵️ 捕査結果</h3>
+          <h3>🕵️ 捜査結果</h3>
           <p>全ての証拠が揃いました</p>
-          <p>真犯の特定に成功</p>
+          <p>真犯人の特定に成功</p>
           <p>動機・手口・アリバイを解明</p>
         </div>
       </div>
     `;
-    
-    // 証拠カードの動的生成
-    if (evidenceCards) {
-      this.createEvidenceCards(evidenceCards);
-    }
-    
-    // 接続線の描画
-    if (connectionLines) {
-      this.createConnectionLines(connectionLines);
-    }
-    
-    // アニメーショントリガー
-    this.triggerResultAnimations();
-  }
-  
-  createEvidenceCards(container) {
-    const evidenceData = [
-      { title: '被害者情報', content: '身元・経歴・人間関係', icon: '👤', rotate: '-3deg' },
-      { title: '犯行現場', content: '犯行現場の状況・物的証拠', icon: '🏠', rotate: '2deg' },
-      { title: '時系列', content: '事件発生の経緯・タイムライン', icon: '⏰', rotate: '-1deg' },
-      { title: '容疑者', content: '容疑者リスト・動機・アリバイ', icon: '🕵️', rotate: '3deg' },
-      { title: '決定的証拠', content: '犯人特定に至った決定打', icon: '🔑', rotate: '-2deg' }
-    ];
-    
-    // DocumentFragmentを使用してリフローを最小化
-    const fragment = document.createDocumentFragment();
-    
-    evidenceData.forEach((evidence, index) => {
-      const card = document.createElement('div');
-      card.className = 'evidence-card';
-      card.style.setProperty('--rotate', evidence.rotate);
-      card.style.animationDelay = `${index * 0.3}s`;
-      
-      card.innerHTML = `
-        <div class="evidence-header">
-          <span class="evidence-icon">${evidence.icon}</span>
-          <h4 class="evidence-title">${evidence.title}</h4>
-        </div>
-        <div class="evidence-content">
-          <p>${evidence.content}</p>
-          <div class="evidence-status">【確認済み】</div>
-        </div>
-      `;
-      
-      fragment.appendChild(card);
-    });
-    
-    // 一度にすべての要素を追加
-    container.appendChild(fragment);
-  }
-  
-  createConnectionLines(container) {
-    // 証拠カード間の糸でつなぐ線を描画
-    const connections = [
-      { from: 0, to: 1, delay: '1s' },
-      { from: 1, to: 2, delay: '1.5s' },
-      { from: 2, to: 3, delay: '2s' },
-      { from: 3, to: 4, delay: '2.5s' }
-    ];
-    
-    connections.forEach((conn, index) => {
-      const line = document.createElement('div');
-      line.className = 'connection-string';
-      line.style.cssText = `
-        width: 100px;
-        top: ${150 + conn.from * 120}px;
-        left: ${200 + index * 50}px;
-        transform: rotate(${15 + index * 10}deg);
-        animation-delay: ${conn.delay};
-      `;
-      container.appendChild(line);
-    });
-  }
-  
-  triggerResultAnimations() {
-    // 結果コンテナにアニメーションクラスを追加
-    const resultContainer = this.elements.resultContainer;
-    if (resultContainer) {
-      resultContainer.classList.add('result-reveal');
-      
-      // requestAnimationFrameを使用してアニメーションを最適化
-      requestAnimationFrame(() => {
-        const evidenceCards = resultContainer.querySelectorAll('.evidence-card');
-        evidenceCards.forEach((card, index) => {
-          setTimeout(() => {
-            requestAnimationFrame(() => {
-              card.style.opacity = '1';
-              card.style.transform = `rotate(${card.style.getPropertyValue('--rotate')}) translateY(0)`;
-            });
-          }, index * 200);
-        });
-      });
-      
-      // サウンドエフェクトのシミュレーション（視覚的フィードバック）
-      setTimeout(() => {
-        this.createSuccessParticles();
-      }, 1500);
-    }
-  }
-  
-  createSuccessParticles() {
-    // 成功演出のパーティクルエフェクト
-    const container = document.querySelector('.evidence-board');
-    if (!container) return;
-    
-    // DocumentFragmentとCSSクラスを使用
-    const fragment = document.createDocumentFragment();
-    const particles = [];
-    
-    for (let i = 0; i < 20; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'success-particle';
-      particle.textContent = '✨';
-      particle.style.top = `${Math.random() * 100}%`;
-      particle.style.left = `${Math.random() * 100}%`;
-      particle.style.fontSize = `${Math.random() * 20 + 10}px`;
-      
-      fragment.appendChild(particle);
-      particles.push(particle);
-    }
-    
-    container.appendChild(fragment);
-    
-    // 一括削除
-    setTimeout(() => {
-      particles.forEach(p => p.remove());
-    }, 2000);
   }
 
   handleKeyboardShortcut(e) {
