@@ -11,6 +11,10 @@ import { createSecurityMiddleware } from './middleware/rate-limiter.js';
 import { createValidationMiddleware } from './core/validation.js';
 // import { qualityAssessor } from './utils/quality-assessor.js'; // Removed for simplicity
 import { executeParallel, SimpleCache } from './utils/performance-optimizer.js';
+
+// キャッシュインスタンスの作成
+const cache = new SimpleCache();
+const intelligentCache = cache;
 import { randomMysteryGenerator } from './utils/random-mystery-generator.js';
 import { logger } from './utils/logger.js';
 // import { resourceManager } from './utils/resource-manager.js'; // Removed for simplicity
@@ -209,9 +213,10 @@ export default async function handler(req, res) {
         // 実際の段階処理時間をシミュレート（5-15秒）
         const stepStartTime = Date.now();
         
-        // CACHE: インテリジェントキャッシュチェック
+        // CACHE: キャッシュチェック（一時的に無効化）
         const cacheKey = createCacheKey(step.name, formData);
-        const cachedResult = await intelligentCache.get(cacheKey, step.name);
+        // const cachedResult = await intelligentCache.get(cacheKey, step.name);
+        const cachedResult = null; // キャッシュ機能を一時的に無効化
         
         let result;
         if (cachedResult) {
@@ -223,41 +228,16 @@ export default async function handler(req, res) {
           // 新規生成 - より時間をかけて品質を向上
           result = await step.handler(formData, context);
           
-          // QUALITY: 品質評価実行
+          // QUALITY: 品質評価実行（一時的に無効化）
+          /*
           if (step.name.includes('キャラクター') || step.name.includes('事件') || step.name.includes('タイトル')) {
             logger.debug(`QUALITY: Running quality assessment for: ${step.name}`);
-            const qualityResult = await qualityAssessor.evaluateScenario(
-              JSON.stringify(result), 
-              formData
-            );
-            
-            // 品質が基準以下の場合は再生成
-            if (!qualityResult.passesQuality && qualityResult.score < 0.8) {
-              logger.debug(`WARN: Quality below threshold (${(qualityResult.score * 100).toFixed(1)}%), regenerating...`);
-              
-              // フィードバックを含めて再生成
-              const enhancedContext = {
-                ...context,
-                qualityFeedback: qualityResult.recommendations.join('\n'),
-                previousAttempt: result
-              };
-              
-              result = await step.handler(formData, enhancedContext);
-              
-              // 再評価
-              const requalityResult = await qualityAssessor.evaluateScenario(
-                JSON.stringify(result), 
-                formData
-              );
-              
-              logger.debug(`QUALITY: Re-evaluation score: ${(requalityResult.score * 100).toFixed(1)}%`);
-            } else {
-              logger.debug(`PASS: Quality assessment passed: ${(qualityResult.score * 100).toFixed(1)}%`);
-            }
+            // qualityAssessorが利用できないため、品質評価をスキップ
           }
+          */
           
-          // キャッシュに保存
-          cache.set(cacheKey, result);
+          // キャッシュに保存（一時的に無効化）
+          // cache.set(cacheKey, result);
           
           // 各段階に適切な処理時間を確保（5-20秒）
           const minProcessTime = step.weight > 20 ? 8000 : 5000; // 重要な段階は長め
@@ -371,10 +351,12 @@ export default async function handler(req, res) {
       sendEventSourceMessage(res, 'complete', finalResponse);
       res.end();
       
-      // EventSourceリソースクリーンアップ
+      // EventSourceリソースクリーンアップ（resourceManagerが利用できないためスキップ）
+      /*
       if (req.body?.eventSourceId) {
         resourceManager.cleanupConnection(req.body.eventSourceId);
       }
+      */
     } else {
       return res.status(200).json(finalResponse);
     }
