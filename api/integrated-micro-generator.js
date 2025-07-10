@@ -388,6 +388,7 @@ export default async function handler(req, res) {
     } else {
       return res.status(500).json(errorResponse);
     }
+  }
   } catch (handlerError) {
     // 最上位エラーハンドリング
     logger.error('CRITICAL: Handler error:', handlerError);
