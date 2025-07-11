@@ -11,26 +11,11 @@ class Logger {
     this.debugMode = localStorage.getItem('debug_mode') === 'true';
   }
 
-  debug(...args) {
-    if (!this.isProduction || this.debugMode) {
-    }
-  }
-
-  info(...args) {
-    if (!this.isProduction || this.debugMode) {
-    }
-  }
-
-  success(...args) {
-    if (!this.isProduction || this.debugMode) {
-    }
-  }
-
-  warn(...args) {
-  }
-
-  error(...args) {
-  }
+  debug() {}
+  info() {}
+  success() {}
+  warn() {}
+  error() {}
 }
 
 // ========== RESOURCE MANAGER ==========
