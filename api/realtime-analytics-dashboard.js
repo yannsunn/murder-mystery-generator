@@ -13,10 +13,21 @@ export const config = {
 
 class RealtimeAnalyticsDashboard {
   constructor() {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL || 'https://cjnsewifvnhakvhqlgoy.supabase.co',
-      process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbnNld2lmdm5oYWt2aHFsZ295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1Mjk4NzAsImV4cCI6MjA2NzEwNTg3MH0.PeroMweKdOaKKf3cXYCJnWPd8sfTvHU2MZX7ZhBBwaM'
-    );
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.error('❌ リアルタイム分析ダッシュボードエラー: 必要な環境変数が設定されていません');
+      console.error('  必要な環境変数: SUPABASE_URL, SUPABASE_ANON_KEY');
+      throw new Error('環境設定エラー: 必要な環境変数を設定してください');
+    }
+    
+    try {
+      this.supabase = createClient(
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_ANON_KEY
+      );
+    } catch (error) {
+      console.error('❌ Supabaseクライアント作成エラー:', error.message);
+      throw new Error('Supabaseクライアントの初期化に失敗しました');
+    }
     
     this.analyticsData = {
       realtime: {

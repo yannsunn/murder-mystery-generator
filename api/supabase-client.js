@@ -9,10 +9,16 @@ import { envManager } from './config/env-manager.js';
 import { databasePool, executeOptimizedQuery, initializeDatabasePool } from './utils/database-pool.js';
 import { logger } from './utils/logger.js';
 
-// Supabase接続情報
+// Supabase接続情報（環境変数の検証）
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+// 環境変数の事前検証
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  logger.error('❌ 必須環境変数が設定されていません: SUPABASE_URL, SUPABASE_ANON_KEY');
+  logger.error('💡 .envファイルに環境変数を設定してください');
+}
 
 // Supabaseクライアント初期化
 let supabase = null;
@@ -23,7 +29,10 @@ let supabaseAdmin = null;
  */
 export async function initializeSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    logger.warn('⚠️  Supabase環境変数が設定されていません');
+    logger.error('❌ Supabase初期化エラー: 環境変数が未設定');
+    logger.error('  必要な環境変数:');
+    logger.error('  - SUPABASE_URL: ' + (SUPABASE_URL ? '✓設定済み' : '✗未設定'));
+    logger.error('  - SUPABASE_ANON_KEY: ' + (SUPABASE_ANON_KEY ? '✓設定済み' : '✗未設定'));
     return false;
   }
 
@@ -238,9 +247,13 @@ export async function testSupabaseConnection() {
 
 // 起動時にSupabaseを初期化（非同期対応）
 setTimeout(() => {
-  initializeSupabase().catch(error => {
-    logger.error('Supabase初期化失敗:', error);
-  });
+  if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+    initializeSupabase().catch(error => {
+      logger.error('Supabase初期化失敗:', error);
+    });
+  } else {
+    logger.warn('⚠️  Supabase初期化をスキップ: 環境変数が未設定');
+  }
 }, 0);
 
 export { supabase, supabaseAdmin };

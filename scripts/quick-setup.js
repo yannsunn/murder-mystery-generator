@@ -5,9 +5,38 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// 環境変数
-const SUPABASE_URL = 'https://cjnsewifvnhakvhqlgoy.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqbnNld2lmdm5oYWt2aHFsZ295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE1Mjk4NzAsImV4cCI6MjA2NzEwNTg3MH0.PeroMweKdOaKKf3cXYCJnWPd8sfTvHU2MZX7ZhBBwaM';
+// 環境変数チェック（セキュリティ強化）
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
+
+function validateEnvironmentVariables() {
+  const errors = [];
+  
+  if (!SUPABASE_URL) {
+    errors.push('SUPABASE_URLが設定されていません');
+  } else if (!SUPABASE_URL.startsWith('https://')) {
+    errors.push('SUPABASE_URLはhttps://で始まる必要があります');
+  }
+  
+  if (!SUPABASE_ANON_KEY) {
+    errors.push('SUPABASE_ANON_KEYが設定されていません');
+  }
+  
+  if (errors.length > 0) {
+    console.error('\n❌ 環境変数エラー:');
+    errors.forEach(error => console.error(`  • ${error}`));
+    console.error('\n💡 使用方法:');
+    console.error('  SUPABASE_URL=https://your-project.supabase.co SUPABASE_ANON_KEY=your-anon-key node scripts/quick-setup.js');
+    console.error('\n📖 詳細はプロジェクトのREADMEを参照してください\n');
+    return false;
+  }
+  
+  return true;
+}
+
+if (!validateEnvironmentVariables()) {
+  process.exit(1);
+}
 
 async function setupDatabase() {
   console.log('🚀 Supabaseデータベースセットアップ開始');

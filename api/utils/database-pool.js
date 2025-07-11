@@ -34,7 +34,14 @@ export class DatabasePool {
       const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
       if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-        throw new Error('Supabase環境変数が設定されていません');
+        const missingVars = [];
+        if (!SUPABASE_URL) missingVars.push('SUPABASE_URL');
+        if (!SUPABASE_ANON_KEY) missingVars.push('SUPABASE_ANON_KEY');
+        
+        throw new Error(
+          `Supabase環境変数が設定されていません: ${missingVars.join(', ')}\n` +
+          '💡 .envファイルに必要な環境変数を設定してください'
+        );
       }
 
       // 基本接続を事前作成
@@ -123,6 +130,10 @@ export class DatabasePool {
       // 新しい接続を作成（上限チェック）
       if (this.activeConnections < this.maxConnections) {
         const newId = `dynamic_${Date.now()}`;
+        if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+          throw new Error('環境変数が未設定のため、新しい接続を作成できません');
+        }
+        
         const newClient = createClient(
           process.env.SUPABASE_URL,
           process.env.SUPABASE_ANON_KEY,

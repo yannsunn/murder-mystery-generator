@@ -10,9 +10,31 @@ export const config = {
   maxDuration: 60,
 };
 
-// Supabase設定
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://cjnsewifvnhakvhqlgoy.supabase.co';
+// Supabase設定（セキュリティ強化）
+const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+
+// 環境変数の詳細な検証
+function validateEnvironment() {
+  const errors = [];
+  
+  if (!SUPABASE_URL) {
+    errors.push('SUPABASE_URLが設定されていません');
+  }
+  
+  if (!SUPABASE_SERVICE_KEY) {
+    errors.push('SUPABASE_SERVICE_KEYまたはSUPABASE_ANON_KEYが設定されていません');
+  }
+  
+  if (errors.length > 0) {
+    console.error('❌ 環境変数エラー:');
+    errors.forEach(error => console.error(`  - ${error}`));
+    console.error('💡 .envファイルを確認してください');
+    return false;
+  }
+  
+  return true;
+}
 
 /**
  * データベースセットアップエンドポイント
@@ -22,6 +44,15 @@ export default async function handler(req, res) {
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+  
+  // 環境変数の検証
+  if (!validateEnvironment()) {
+    return res.status(500).json({ 
+      success: false, 
+      error: '環境設定エラー', 
+      message: '必要な環境変数が設定されていません' 
+    });
   }
 
   if (req.method !== 'POST' && req.method !== 'GET') {
