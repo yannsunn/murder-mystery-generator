@@ -1,25 +1,13 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
+// Vercel Edge Runtime対応版
 
-import { setSecurityHeaders } from './security-utils.js';
-import { createSecurityMiddleware } from './middleware/rate-limiter.js';
+export const config = {
+  runtime: 'edge',
+};
 
-export default async function handler(req, res) {
-  setSecurityHeaders(res);
-  res.setHeader('Content-Type', 'application/json');
-
-  // レート制限チェック（ヘルスチェック用 - 高頻度OK）
-  const securityMiddleware = createSecurityMiddleware('health');
-  try {
-    await new Promise((resolve, reject) => {
-      securityMiddleware(req, res, (error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
-  } catch (securityError) {
-    // Rate limiter already sent response
-    return;
-  }
+export default async function handler(request) {
+  // Edge RuntimeではRequestオブジェクトを使用
+  const url = new URL(request.url);
   
   // 環境変数チェック
   const envChecks = {
@@ -32,16 +20,17 @@ export default async function handler(req, res) {
   // 環境変数の部分表示（セキュリティ考慮）
   const envStatus = {
     groqKeyPresent: envChecks.groqKey,
-    groqKeyPrefix: envChecks.groqKey ? process.env.GROQ_API_KEY.substring(0, 7) + '***' : 'NOT_SET',
+    groqKeyPrefix: envChecks.groqKey && process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.substring(0, 7) + '***' : 'NOT_SET',
     openaiKeyPresent: envChecks.openaiKey,
-    openaiKeyPrefix: envChecks.openaiKey ? process.env.OPENAI_API_KEY.substring(0, 7) + '***' : 'NOT_SET',
+    openaiKeyPrefix: envChecks.openaiKey && process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 7) + '***' : 'NOT_SET',
     nodeEnv: envChecks.nodeEnv,
-    deployment: envChecks.vercelUrl ? 'Vercel' : 'Local'
+    deployment: envChecks.vercelUrl ? 'Vercel' : 'Local',
+    runtime: 'edge'
   };
   
   const allCriticalEnvReady = envChecks.groqKey;
   
-  res.status(200).json({
+  const responseData = {
     status: allCriticalEnvReady ? "OK" : "WARNING",
     timestamp: new Date().toISOString(),
     message: allCriticalEnvReady ? "All systems operational" : "Missing critical environment variables",
@@ -49,6 +38,21 @@ export default async function handler(req, res) {
     readyForProduction: allCriticalEnvReady,
     issues: allCriticalEnvReady ? [] : [
       !envChecks.groqKey ? "GROQ_API_KEY is required" : null
-    ].filter(Boolean)
+    ].filter(Boolean),
+    performance: {
+      runtime: 'edge',
+      region: process.env.VERCEL_REGION || 'unknown'
+    }
+  };
+  
+  return new Response(JSON.stringify(responseData), {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
+    },
   });
 }
