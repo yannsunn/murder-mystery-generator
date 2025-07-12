@@ -43,7 +43,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "https://murdermysterynetlify-605314aqy-yasuus-projects.vercel.app"
+          "value": "*"
         },
         {
           "key": "Access-Control-Allow-Methods",
