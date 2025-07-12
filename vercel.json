@@ -1,5 +1,4 @@
 {
-  "public": true,
   "functions": {
     "api/integrated-micro-generator.js": {
       "maxDuration": 120
@@ -106,12 +105,8 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "npm run build",
+  "buildCommand": "",
   "outputDirectory": ".",
-  "installCommand": "npm install",
-  "framework": null,
-  "github": {
-    "enabled": true,
-    "silent": false
-  }
+  "installCommand": "",
+  "cleanUrls": true
 }
