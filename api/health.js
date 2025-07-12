@@ -1,9 +1,10 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
 // Vercel Edge Runtime対応版
 
-export const config = {
-  runtime: 'edge',
-};
+// Edge runtime無効化（デプロイエラー回避）
+// export const config = {
+//   runtime: 'edge',
+// };
 
 export default async function handler(request) {
   // Edge RuntimeではRequestオブジェクトを使用
