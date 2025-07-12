@@ -5,12 +5,12 @@
 
 import { envManager } from '../config/env-manager.js';
 
-// レート制限設定
+// レート制限設定（個人利用・コスト重視）
 const RATE_LIMITS = {
   generation: {
-    windowMs: 15 * 60 * 1000, // 15分
-    maxRequests: 3, // 3回まで（生成は重い処理のため）
-    message: 'Too many generation requests. Please wait 15 minutes.',
+    windowMs: 24 * 60 * 60 * 1000, // 24時間
+    maxRequests: 10, // 1日10回まで（約500円制限）
+    message: '1日の生成制限に達しました。明日再度お試しください。',
     skipSuccessfulRequests: false
   },
   api: {

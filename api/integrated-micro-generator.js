@@ -7,6 +7,7 @@ import { aiClient } from './utils/ai-client.js';
 import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
 import { setSecurityHeaders } from './security-utils.js';
 import { createSecurityMiddleware } from './middleware/rate-limiter.js';
+import { checkPersonalAccess, checkDailyUsage } from './utils/simple-auth.js';
 // import { createPerformanceMiddleware } from './core/monitoring.js'; // Removed for simplicity
 import { createValidationMiddleware } from './core/validation.js';
 // import { qualityAssessor } from './utils/quality-assessor.js'; // Removed for simplicity
@@ -56,6 +57,26 @@ export default async function handler(req, res) {
       return res.status(200).end();
     }
 
+    // 個人利用のアクセスチェック
+    const accessCheck = checkPersonalAccess(req);
+    if (!accessCheck.allowed) {
+      return res.status(accessCheck.status || 401).json({
+        success: false,
+        error: accessCheck.message
+      });
+    }
+    
+    // 日次使用量チェック
+    const usageCheck = checkDailyUsage();
+    if (!usageCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: usageCheck.message,
+        currentUsage: usageCheck.currentUsage,
+        resetTime: usageCheck.resetTime
+      });
+    }
+    
     // 環境変数チェック（Vercel対応）
     if (!process.env.GROQ_API_KEY) {
       console.error('GROQ_API_KEY is not set in environment');

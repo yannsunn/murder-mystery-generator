@@ -2,7 +2,7 @@
   "public": true,
   "functions": {
     "api/integrated-micro-generator.js": {
-      "maxDuration": 300
+      "maxDuration": 120
     },
     "api/health.js": {
       "runtime": "edge",
@@ -43,7 +43,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://murdermysterynetlify-605314aqy-yasuus-projects.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
