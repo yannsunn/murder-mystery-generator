@@ -43,6 +43,11 @@ export const config = {
 // メインハンドラー
 export default async function handler(req, res) {
   try {
+    // 初期ログ出力
+    console.log('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
+    console.log('[INIT] Request method:', req.method);
+    console.log('[INIT] Request headers:', req.headers);
+    
     logger.debug('INIT: Integrated Micro Generator called');
     
     setSecurityHeaders(res);
@@ -53,11 +58,14 @@ export default async function handler(req, res) {
 
     // 環境変数チェック（Vercel対応）
     if (!process.env.GROQ_API_KEY) {
-      console.error('GROQ_API_KEY is not set');
+      console.error('GROQ_API_KEY is not set in environment');
+      // より詳細なデバッグ情報
+      console.error('Available env keys:', Object.keys(process.env).filter(k => k.includes('API')));
       return res.status(503).json({
         success: false,
         error: 'Service configuration error',
-        message: 'AI service is temporarily unavailable',
+        message: 'AI service is temporarily unavailable. Please check environment variables.',
+        details: process.env.NODE_ENV === 'development' ? 'GROQ_API_KEY not found' : undefined,
         timestamp: new Date().toISOString()
       });
     }
@@ -85,11 +93,21 @@ export default async function handler(req, res) {
         });
       }
       
-      req.body = {
-        formData: formData ? JSON.parse(formData) : {},
-        sessionId: sessionId || `integrated_micro_${Date.now()}`,
-        action: action || null
-      };
+      // GETリクエストのパラメータをボディに設定
+      try {
+        req.body = {
+          formData: formData ? JSON.parse(formData) : {},
+          sessionId: sessionId || `integrated_micro_${Date.now()}`,
+          action: action || null
+        };
+      } catch (parseError) {
+        console.error('[PARSE ERROR] Failed to parse formData:', parseError);
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid formData format',
+          details: parseError.message
+        });
+      }
     }
   } else if (req.method !== 'POST') {
     return res.status(405).json({ 
@@ -98,29 +116,60 @@ export default async function handler(req, res) {
     });
   }
 
-  // シンプルなミドルウェアチェーン
-  const middlewares = [
-    createSecurityMiddleware('generation')
-  ];
-
-  for (const middleware of middlewares) {
-    try {
-      await new Promise((resolve, reject) => {
-        middleware(req, res, (error) => {
-          if (error) reject(error);
-          else resolve();
-        });
+  // レート制限チェック（シンプル化）
+  try {
+    const securityMiddleware = createSecurityMiddleware('generation');
+    const middlewareResult = await new Promise((resolve) => {
+      // resの状態を監視してミドルウェアがレスポンスを送信したか確認
+      let responsesSent = false;
+      const originalJson = res.json;
+      const originalStatus = res.status;
+      
+      res.json = function(...args) {
+        responsesSent = true;
+        return originalJson.apply(res, args);
+      };
+      
+      res.status = function(...args) {
+        const result = originalStatus.apply(res, args);
+        // statusを設定した後にjsonが呼ばれることを想定
+        return result;
+      };
+      
+      securityMiddleware(req, res, (error) => {
+        if (error) {
+          resolve({ error });
+        } else if (!responsesSent) {
+          // ミドルウェアがレスポンスを送信しなかった場合のみ続行
+          resolve({ success: true });
+        } else {
+          // レスポンスが既に送信されている場合
+          resolve({ responseSent: true });
+        }
       });
-    } catch (middlewareError) {
-      logger.error('Middleware error:', middlewareError);
-      return res.status(500).json({ 
-        success: false, 
-        error: 'Middleware error: ' + middlewareError.message 
-      });
+    });
+    
+    if (middlewareResult.error) {
+      throw middlewareResult.error;
     }
+    
+    if (middlewareResult.responseSent) {
+      // レート制限によりレスポンスが送信された
+      return;
+    }
+  } catch (middlewareError) {
+    console.error('[MIDDLEWARE ERROR]:', middlewareError);
+    logger.error('Middleware error:', middlewareError);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Security check failed',
+      message: middlewareError.message
+    });
   }
 
   try {
+    // リクエストボディの確認
+    console.log('[REQUEST BODY]:', JSON.stringify(req.body, null, 2));
     const { formData, sessionId, action } = req.body;
     
     logger.debug('START: Starting integrated micro generation...');
@@ -364,6 +413,16 @@ export default async function handler(req, res) {
     logger.debug('COMPLETE: 段階的生成完了 - 全9段階実行済み');
 
   } catch (error) {
+    // 詳細なエラーログ出力
+    console.error('[ERROR] Integrated micro generation error:', error);
+    console.error('[ERROR] Error stack:', error.stack);
+    console.error('[ERROR] Error details:', {
+      name: error.name,
+      message: error.message,
+      type: error.type,
+      code: error.code
+    });
+    
     logger.error('ERROR: Integrated micro generation error:', error);
     logger.error('ERROR: Error stack:', error.stack);
     
