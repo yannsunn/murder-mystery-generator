@@ -7,6 +7,8 @@
 
 > **世界最高品質のAI駆動マーダーミステリー生成システム**  
 > 狂気山脈レベルの本格TRPGシナリオを瞬時に創作
+> 
+> ⚠️ **正式リリース準備中** - 2024年1月リリース予定
 
 ## 🚀 **プロジェクト概要**
 
@@ -283,7 +285,7 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照
 
 ## 📞 **サポート・連絡先**
 
-- **公式サイト**: [https://murder-mystery-generator.vercel.app](https://murder-mystery-generator.vercel.app)
+- **公式サイト**: Vercelダッシュボードで最新のデプロイメントURLをご確認ください
 - **GitHub Issues**: [Issues](https://github.com/yannsunn/murder-mystery-generator/issues)
 - **ドキュメント**: [Wiki](https://github.com/yannsunn/murder-mystery-generator/wiki)
 - **ディスカッション**: [Discussions](https://github.com/yannsunn/murder-mystery-generator/discussions)
