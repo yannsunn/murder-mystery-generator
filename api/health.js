@@ -1,14 +1,8 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
-// Vercel Edge Runtime対応版
+// 通常のNode.jsランタイム版
 
-// Edge runtime無効化（デプロイエラー回避）
-// export const config = {
-//   runtime: 'edge',
-// };
-
-export default async function handler(request) {
-  // Edge RuntimeではRequestオブジェクトを使用
-  const url = new URL(request.url);
+export default async function handler(req, res) {
+  // 通常のNode.js APIハンドラー
   
   // 環境変数チェック
   const envChecks = {
@@ -46,14 +40,8 @@ export default async function handler(request) {
     }
   };
   
-  return new Response(JSON.stringify(responseData), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'Referrer-Policy': 'strict-origin-when-cross-origin'
-    },
-  });
+  // 通常のNode.jsレスポンス
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.status(200).json(responseData);
 }
