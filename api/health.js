@@ -1,8 +1,8 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
-// 通常のNode.jsランタイム版
+// シンプル版
 
-export default async function handler(req, res) {
-  // 通常のNode.js APIハンドラー
+module.exports = async function handler(req, res) {
+  // シンプルなAPIハンドラー
   
   // 環境変数チェック
   const envChecks = {
