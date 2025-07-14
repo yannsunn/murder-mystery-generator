@@ -2,7 +2,6 @@
   "name": "murder-mystery-app",
   "version": "2.0.0",
   "description": "マーダーミステリー制作支援ツール - 最適化版",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "node api/index.js",
