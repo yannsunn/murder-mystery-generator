@@ -5,7 +5,7 @@
 /**
  * エラータイプ定義
  */
-export const ErrorTypes = {
+const ErrorTypes = {
   VALIDATION: 'VALIDATION_ERROR',
   API: 'API_ERROR',
   TIMEOUT: 'TIMEOUT_ERROR',
@@ -16,7 +16,7 @@ export const ErrorTypes = {
 /**
  * シンプルなエラークラス
  */
-export class AppError extends Error {
+class AppError extends Error {
   constructor(message, type = ErrorTypes.INTERNAL, statusCode = 500) {
     super(message);
     this.name = 'AppError';
@@ -28,7 +28,7 @@ export class AppError extends Error {
 /**
  * エラーハンドラーミドルウェア
  */
-export function withErrorHandler(handler) {
+function withErrorHandler(handler) {
   return async (req, res) => {
     try {
       const result = await handler(req, res);
@@ -47,7 +47,7 @@ export function withErrorHandler(handler) {
 /**
  * エラーハンドリング
  */
-export function handleError(error, req, res) {
+function handleError(error, req, res) {
   console.error('Error:', error.message);
   
   const statusCode = error.statusCode || 500;
@@ -69,10 +69,20 @@ export function handleError(error, req, res) {
 /**
  * エラー検証とラッピング
  */
-export function validateAndWrapError(error, defaultMessage = 'An error occurred') {
+function validateAndWrapError(error, defaultMessage = 'An error occurred') {
   if (error instanceof AppError) {
     return error;
   }
   
   return new AppError(defaultMessage, ErrorTypes.INTERNAL, 500);
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  ErrorTypes,
+  AppError,
+  withErrorHandler,
+  handleError,
+  validateAndWrapError,
+  createErrorResponse: validateAndWrapError
+};

@@ -3,7 +3,7 @@
  * 高度なレート制限とセキュリティ強化システム
  */
 
-import { envManager } from '../config/env-manager.js';
+const { envManager } = require('../config/env-manager.js');
 
 // レート制限設定（個人利用・コスト重視）
 const RATE_LIMITS = {
@@ -33,7 +33,7 @@ const rateLimitStore = new Map();
 /**
  * レート制限の実装
  */
-export class RateLimiter {
+class RateLimiter {
   constructor(options = {}) {
     this.windowMs = options.windowMs || RATE_LIMITS.api.windowMs;
     this.maxRequests = options.maxRequests || RATE_LIMITS.api.maxRequests;
@@ -181,7 +181,7 @@ export class RateLimiter {
 /**
  * 事前定義されたレート制限設定
  */
-export const rateLimiters = {
+const rateLimiters = {
   generation: new RateLimiter(RATE_LIMITS.generation),
   api: new RateLimiter(RATE_LIMITS.api),
   health: new RateLimiter(RATE_LIMITS.health)
@@ -190,7 +190,7 @@ export const rateLimiters = {
 /**
  * IP whitelist機能
  */
-export class IPWhitelist {
+class IPWhitelist {
   constructor() {
     this.whitelist = new Set([
       '127.0.0.1',
@@ -225,7 +225,7 @@ export class IPWhitelist {
 /**
  * 不正アクセス検知
  */
-export class SecurityMonitor {
+class SecurityMonitor {
   constructor() {
     this.suspiciousIPs = new Map();
     this.blockedIPs = new Set();
@@ -274,13 +274,13 @@ export class SecurityMonitor {
 }
 
 // シングルトンインスタンス
-export const ipWhitelist = new IPWhitelist();
-export const securityMonitor = new SecurityMonitor();
+const ipWhitelist = new IPWhitelist();
+const securityMonitor = new SecurityMonitor();
 
 /**
  * 統合セキュリティミドルウェア
  */
-export function createSecurityMiddleware(type = 'api') {
+function createSecurityMiddleware(type = 'api') {
   const rateLimiter = rateLimiters[type] || rateLimiters.api;
   
   return (req, res, next) => {
@@ -322,3 +322,14 @@ export function createSecurityMiddleware(type = 'api') {
     next?.();
   };
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  RateLimiter,
+  rateLimiters,
+  IPWhitelist,
+  SecurityMonitor,
+  ipWhitelist,
+  securityMonitor,
+  createSecurityMiddleware
+};
