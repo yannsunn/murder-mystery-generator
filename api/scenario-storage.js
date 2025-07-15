@@ -3,17 +3,17 @@
  * 生成されたシナリオの一時保存と取得
  */
 
-import { envManager } from './config/env-manager.js';
-import { setSecurityHeaders } from './security-utils.js';
-import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
-import { createSecurityMiddleware } from './middleware/rate-limiter.js';
-import { 
+const { envManager } = require('./config/env-manager.js');
+const { setSecurityHeaders } = require('./security-utils.js');
+const { withErrorHandler, AppError, ErrorTypes } = require('./utils/error-handler.js');
+const { createSecurityMiddleware } = require('./middleware/rate-limiter.js');
+const { 
   saveScenarioToSupabase, 
   getScenarioFromSupabase, 
   saveUserSessionToSupabase 
-} from './supabase-client.js';
+} = require('./supabase-client.js');
 
-export const config = {
+const config = {
   maxDuration: 30,
 };
 
@@ -26,14 +26,27 @@ const SESSION_TIMEOUT = 30 * 60 * 1000;
 const MAX_STORAGE_SIZE = envManager.get('MAX_STORAGE_SIZE') || 1000;
 
 // 定期的なクリーンアップ（5分毎）
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   cleanupExpiredSessions();
 }, 5 * 60 * 1000);
+
+// プロセス終了時のクリーンアップ
+process.on('SIGINT', () => {
+  clearInterval(cleanupInterval);
+  timeoutHandlers.forEach(handler => clearTimeout(handler));
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  clearInterval(cleanupInterval);
+  timeoutHandlers.forEach(handler => clearTimeout(handler));
+  process.exit(0);
+});
 
 /**
  * シナリオ保存エンドポイント
  */
-export async function saveScenario(req, res) {
+async function saveScenario(req, res) {
   try {
     const { sessionId, scenario, phase, isComplete } = req.body;
     
@@ -112,7 +125,7 @@ export async function saveScenario(req, res) {
 /**
  * シナリオ取得エンドポイント
  */
-export async function getScenario(req, res) {
+async function getScenario(req, res) {
   try {
     const { sessionId } = req.query;
     
@@ -159,7 +172,7 @@ export async function getScenario(req, res) {
 /**
  * セッション作成エンドポイント
  */
-export async function createSession(req, res) {
+async function createSession(req, res) {
   try {
     const sessionId = generateSessionId();
     const sessionData = {
@@ -240,7 +253,7 @@ function cleanupOldestSessions() {
 /**
  * ルーティング処理
  */
-export default async function handler(req, res) {
+async function handler(req, res) {
   // 統一セキュリティヘッダー設定
   setSecurityHeaders(res);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -280,3 +293,10 @@ export default async function handler(req, res) {
       });
   }
 }
+
+// CommonJS形式でエクスポート
+module.exports = handler;
+module.exports.config = config;
+module.exports.saveScenario = saveScenario;
+module.exports.getScenario = getScenario;
+module.exports.createSession = createSession;

@@ -4,10 +4,10 @@
  * パフォーマンス向上とクエリ最適化
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { envManager } from './config/env-manager.js';
-import { databasePool, executeOptimizedQuery, initializeDatabasePool } from './utils/database-pool.js';
-import { logger } from './utils/logger.js';
+const { createClient } = require('@supabase/supabase-js');
+const { envManager } = require('./config/env-manager.js');
+const { databasePool, executeOptimizedQuery, initializeDatabasePool } = require('./utils/database-pool.js');
+const { logger } = require('./utils/logger.js');
 
 // Supabase接続情報（環境変数の検証）
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -27,7 +27,7 @@ let supabaseAdmin = null;
 /**
  * Supabase初期化（接続プール対応版）
  */
-export async function initializeSupabase() {
+async function initializeSupabase() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     logger.error('❌ Supabase初期化エラー: 環境変数が未設定');
     logger.error('  必要な環境変数:');
@@ -58,7 +58,7 @@ export async function initializeSupabase() {
 /**
  * テーブル存在確認と作成
  */
-export async function ensureTablesExist() {
+async function ensureTablesExist() {
   if (!supabaseAdmin) {
     return false;
   }
@@ -256,8 +256,10 @@ setTimeout(() => {
   }
 }, 0);
 
-export { supabase, supabaseAdmin };
-export default { 
+// CommonJS形式でエクスポート
+module.exports = { 
+  supabase,
+  supabaseAdmin,
   initializeSupabase,
   ensureTablesExist,
   saveScenarioToSupabase,

@@ -1,8 +1,8 @@
 // 🏥 詳細ヘルスチェックAPI - 環境変数診断機能付き
-// シンプル版
+// CommonJS版（Vercel対応）
 
-module.exports = async function handler(req, res) {
-  // シンプルなAPIハンドラー
+module.exports = function handler(req, res) {
+  try {
   
   // 環境変数チェック
   const envChecks = {
@@ -40,8 +40,15 @@ module.exports = async function handler(req, res) {
     }
   };
   
-  // 通常のNode.jsレスポンス
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.status(200).json(responseData);
+    // 通常のNode.jsレスポンス
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.status(200).json(responseData);
+  } catch (error) {
+    res.status(500).json({
+      status: "ERROR",
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 }

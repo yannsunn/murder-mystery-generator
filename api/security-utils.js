@@ -3,8 +3,8 @@
  * 入力検証、サニタイゼーション、レート制限
  */
 
-import { envManager } from './config/env-manager.js';
-import { createErrorResponse } from './utils/error-handler.js';
+const { envManager } = require('./config/env-manager.js');
+const { createErrorResponse } = require('./utils/error-handler.js');
 
 // 環境変数マネージャーの初期化
 if (!envManager.initialized) {
@@ -16,14 +16,25 @@ const rateLimitStore = new Map();
 const MAX_RATE_LIMIT_ENTRIES = envManager.get('MAX_STORAGE_SIZE') || 10000;
 
 // 定期的なクリーンアップ（5分毎）
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   cleanupExpiredRateLimits();
 }, 5 * 60 * 1000);
+
+// プロセス終了時のクリーンアップ
+process.on('SIGINT', () => {
+  clearInterval(cleanupInterval);
+  process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+  clearInterval(cleanupInterval);
+  process.exit(0);
+});
 
 /**
  * 入力データの検証とサニタイゼーション
  */
-export function validateAndSanitizeInput(data) {
+function validateAndSanitizeInput(data) {
   const errors = [];
   const sanitized = {};
 
@@ -83,7 +94,7 @@ export function validateAndSanitizeInput(data) {
 /**
  * テキストのサニタイゼーション
  */
-export function sanitizeText(text) {
+function sanitizeText(text) {
   if (typeof text !== 'string') return '';
   
   return text
@@ -105,7 +116,7 @@ export function sanitizeText(text) {
 /**
  * レート制限チェック
  */
-export function checkRateLimit(clientIP, endpoint) {
+function checkRateLimit(clientIP, endpoint) {
   const key = `${clientIP}:${endpoint}`;
   const now = Date.now();
   const windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 900000; // デフォルト15分間
@@ -176,7 +187,7 @@ function cleanupOldestRateLimits() {
 /**
  * セキュアなレスポンスヘッダーの設定 (Vercel最適化版)
  */
-export function setSecurityHeaders(res) {
+function setSecurityHeaders(res) {
   // Vercel環境のCORS設定
   const allowedOrigins = process.env.ALLOWED_ORIGINS ? 
     process.env.ALLOWED_ORIGINS.split(',') : ['*'];
@@ -200,7 +211,7 @@ export function setSecurityHeaders(res) {
 /**
  * リクエストの検証
  */
-export function validateRequest(req) {
+function validateRequest(req) {
   const errors = [];
 
   // Content-Type の検証
@@ -225,7 +236,7 @@ export function validateRequest(req) {
 /**
  * IPアドレスの取得
  */
-export function getClientIP(req) {
+function getClientIP(req) {
   return req.headers['x-forwarded-for'] || 
          req.headers['x-real-ip'] || 
          req.connection?.remoteAddress || 
@@ -237,7 +248,7 @@ export function getClientIP(req) {
 /**
  * セキュアなAPI応答の作成
  */
-export function createSecureResponse(data, statusCode = 200) {
+function createSecureResponse(data, statusCode = 200) {
   return {
     status: statusCode,
     body: {
@@ -252,7 +263,7 @@ export function createSecureResponse(data, statusCode = 200) {
 /**
  * 共通エラーハンドラー
  */
-export async function handleSecureError(error, req, res, operation = 'unknown') {
+async function handleSecureError(error, req, res, operation = 'unknown') {
   const clientIP = getClientIP(req);
   const timestamp = new Date().toISOString();
   
@@ -276,7 +287,7 @@ export async function handleSecureError(error, req, res, operation = 'unknown') 
 /**
  * 共通のAPIハンドラーラッパー
  */
-export function withSecurity(handler, endpoint = 'unknown') {
+function withSecurity(handler, endpoint = 'unknown') {
   return async (req, res) => {
     try {
       // セキュリティヘッダーの設定
@@ -329,9 +340,23 @@ export function withSecurity(handler, endpoint = 'unknown') {
 }
 
 // Netlify Functions handler export
-export const handler = async (event, context) => {
+const handler = async (event, context) => {
   return createSecureResponse({
     message: 'Security utilities loaded',
     timestamp: new Date().toISOString()
   });
+};
+
+// CommonJS形式でエクスポート
+module.exports = {
+  validateAndSanitizeInput,
+  sanitizeText,
+  checkRateLimit,
+  setSecurityHeaders,
+  validateRequest,
+  getClientIP,
+  createSecureResponse,
+  handleSecureError,
+  withSecurity,
+  handler
 };
