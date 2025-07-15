@@ -3,12 +3,12 @@
  * 画像生成関連の機能を集約
  */
 
-import { logger } from '../utils/logger.js';
+const { logger } = require('../utils/logger.js');
 
 /**
  * 画像プロンプト生成関数（トグル対応）
  */
-export function createImagePrompts(sessionData) {
+function createImagePrompts(sessionData) {
   // アートワーク生成がトグルで有効化されているかチェック
   if (!sessionData.formData?.generate_artwork) {
     logger.debug('🎨 アートワーク生成は無効化されています（ユーザー設定）');
@@ -47,7 +47,7 @@ export function createImagePrompts(sessionData) {
 /**
  * OpenAI画像生成関数（トグル対応）
  */
-export async function generateImages(imagePrompts) {
+async function generateImages(imagePrompts) {
   const images = [];
   
   // プロンプトが空の場合はスキップ
@@ -133,3 +133,9 @@ function sanitizeObject(obj) {
   }
   return obj;
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  createImagePrompts,
+  generateImages
+};

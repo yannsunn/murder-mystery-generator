@@ -3,18 +3,18 @@
  * 完全ランダムモードの処理を管理
  */
 
-import { logger } from '../utils/logger.js';
-import { randomMysteryGenerator } from '../utils/random-mystery-generator.js';
-import { 
+const { logger } = require('../utils/logger.js');
+const { randomMysteryGenerator } = require('../utils/random-mystery-generator.js');
+const { 
   setEventSourceHeaders, 
   sendEventSourceMessage,
   simulateRandomProgress 
-} from './event-source-handler.js';
+} = require('./event-source-handler.js');
 
 /**
  * ランダムモードの処理
  */
-export async function processRandomMode(req, res, formData, sessionId) {
+async function processRandomMode(req, res, formData, sessionId) {
   logger.debug('🎲 完全ランダムモード検出 - RandomMysteryGeneratorを使用');
   
   try {
@@ -85,7 +85,7 @@ export async function processRandomMode(req, res, formData, sessionId) {
 /**
  * 🎲 ランダム生成結果を既存のsessionDataフォーマットに変換
  */
-export function convertRandomToSessionFormat(randomData, formData, sessionId) {
+function convertRandomToSessionFormat(randomData, formData, sessionId) {
   const { title, genre, setting, plot, characters, clues, files } = randomData;
   
   // キャラクターハンドアウトの構築
@@ -203,3 +203,9 @@ ${plot.chapters ? plot.chapters.join('\n\n') : plot.fullStory}
     hasImages: false
   };
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  processRandomMode,
+  convertRandomToSessionFormat
+};

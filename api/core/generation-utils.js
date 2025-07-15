@@ -3,12 +3,12 @@
  * 生成処理に関連するユーティリティ関数
  */
 
-import { logger } from '../utils/logger.js';
+const { logger } = require('../utils/logger.js');
 
 /**
  * 🔑 キャッシュキー生成
  */
-export function createCacheKey(stepName, formData) {
+function createCacheKey(stepName, formData) {
   const relevantFields = {
     participants: formData.participants,
     era: formData.era,
@@ -25,7 +25,7 @@ export function createCacheKey(stepName, formData) {
 /**
  * 🔐 フォームデータハッシュ生成
  */
-export function createFormDataHash(formData) {
+function createFormDataHash(formData) {
   try {
     // 簡単で確実なハッシュ生成
     const dataString = JSON.stringify(formData, Object.keys(formData).sort());
@@ -45,7 +45,7 @@ export function createFormDataHash(formData) {
 /**
  * サロゲートペア不正除去ユーティリティ
  */
-export function removeInvalidSurrogates(str) {
+function removeInvalidSurrogates(str) {
   return typeof str === 'string'
     ? str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
     : str;
@@ -54,7 +54,7 @@ export function removeInvalidSurrogates(str) {
 /**
  * オブジェクトのサニタイズ
  */
-export function sanitizeObject(obj) {
+function sanitizeObject(obj) {
   if (typeof obj === 'string') {
     return removeInvalidSurrogates(obj);
   } else if (Array.isArray(obj)) {
@@ -68,3 +68,11 @@ export function sanitizeObject(obj) {
   }
   return obj;
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  createCacheKey,
+  createFormDataHash,
+  removeInvalidSurrogates,
+  sanitizeObject
+};

@@ -1059,11 +1059,17 @@ class UnifiedPerformanceMonitor {
 const unifiedMonitor = new UnifiedPerformanceMonitor();
 
 // ES6モジュールエクスポート
-export { UnifiedPerformanceMonitor };
-export { unifiedMonitor };
-export const createPerformanceMiddleware = () => unifiedMonitor.middleware();
-export const getPerformanceMetrics = () => unifiedMonitor.getMetrics();
-export { ALERT_THRESHOLDS };
+const createPerformanceMiddleware = () => unifiedMonitor.middleware();
+const getPerformanceMetrics = () => unifiedMonitor.getMetrics();
+
+// CommonJS形式でエクスポート
+module.exports = {
+  UnifiedPerformanceMonitor,
+  unifiedMonitor,
+  createPerformanceMiddleware,
+  getPerformanceMetrics,
+  ALERT_THRESHOLDS
+};
 
 // ブラウザ環境での自動開始
 if (typeof window !== 'undefined') {

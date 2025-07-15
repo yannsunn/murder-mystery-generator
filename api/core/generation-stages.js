@@ -3,8 +3,8 @@
  * 段階的生成処理の実装
  */
 
-import { aiClient } from '../utils/ai-client.js';
-import { logger } from '../utils/logger.js';
+const { aiClient } = require('../utils/ai-client.js');
+const { logger } = require('../utils/logger.js');
 
 // プレイ時間取得ユーティリティ
 function getPlayTime(complexity) {
@@ -49,7 +49,7 @@ function generateFallbackCharacters(count) {
 }
 
 // 段階的生成フロー定義
-export const INTEGRATED_GENERATION_FLOW = [
+const INTEGRATED_GENERATION_FLOW = [
   // === 段階0: ランダム全体構造生成 ===
   {
     name: '段階0: ランダム全体構造・アウトライン',
@@ -1012,3 +1012,8 @@ ${characterRelationships}
     }
   }
 ];
+
+// CommonJS形式でエクスポート
+module.exports = {
+  INTEGRATED_GENERATION_FLOW
+};

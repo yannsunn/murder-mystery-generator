@@ -3,10 +3,10 @@
  * Supabase接続を効率的に管理し、パフォーマンスを向上
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { logger } from './logger.js';
+const { createClient } = require('@supabase/supabase-js');
+const { logger } = require('./logger.js');
 
-export class DatabasePool {
+class DatabasePool {
   constructor() {
     this.connections = new Map();
     this.activeConnections = 0;
@@ -439,17 +439,26 @@ export class DatabasePool {
 }
 
 // シングルトンインスタンス
-export const databasePool = new DatabasePool();
+const databasePool = new DatabasePool();
 
 // 便利な関数エクスポート
-export async function executeOptimizedQuery(config) {
+async function executeOptimizedQuery(config) {
   return await databasePool.executeQuery(config);
 }
 
-export async function initializeDatabasePool() {
+async function initializeDatabasePool() {
   return await databasePool.initialize();
 }
 
-export function getDatabaseStats() {
+function getDatabaseStats() {
   return databasePool.getStats();
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  DatabasePool,
+  databasePool,
+  executeOptimizedQuery,
+  initializeDatabasePool,
+  getDatabaseStats
+};

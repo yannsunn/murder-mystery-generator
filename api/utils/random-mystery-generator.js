@@ -3,8 +3,8 @@
  * Google Drive構造準拠・狂気山脈スタイル
  */
 
-import { aiClient } from './ai-client.js';
-import { logger } from './logger.js';
+const { aiClient } = require('./ai-client.js');
+const { logger } = require('./logger.js');
 
 // ランダム要素のテンプレート
 const RANDOM_ELEMENTS = {
@@ -64,7 +64,7 @@ const randomSelect = (array) => array[Math.floor(Math.random() * array.length)];
 const randomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
 // Google Drive構造生成クラス
-export class RandomMysteryGenerator {
+class RandomMysteryGenerator {
   constructor() {
     this.mysteryData = {
       title: '',
@@ -560,5 +560,11 @@ AIが自動生成したオリジナル作品です。
   }
 }
 
-// エクスポート
-export const randomMysteryGenerator = new RandomMysteryGenerator();
+// シングルトンインスタンス
+const randomMysteryGenerator = new RandomMysteryGenerator();
+
+// CommonJS形式でエクスポート
+module.exports = {
+  RandomMysteryGenerator,
+  randomMysteryGenerator
+};

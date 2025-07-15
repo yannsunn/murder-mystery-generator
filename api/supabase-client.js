@@ -105,7 +105,7 @@ async function ensureTablesExist() {
 /**
  * シナリオをSupabaseに保存（最適化版）
  */
-export async function saveScenarioToSupabase(sessionId, scenarioData) {
+async function saveScenarioToSupabase(sessionId, scenarioData) {
   try {
     const data = {
       id: sessionId,
@@ -139,7 +139,7 @@ export async function saveScenarioToSupabase(sessionId, scenarioData) {
 /**
  * Supabaseからシナリオを取得（最適化版）
  */
-export async function getScenarioFromSupabase(sessionId) {
+async function getScenarioFromSupabase(sessionId) {
   try {
     const result = await executeOptimizedQuery({
       table: 'scenarios',
@@ -165,7 +165,7 @@ export async function getScenarioFromSupabase(sessionId) {
 /**
  * ユーザーセッションを保存
  */
-export async function saveUserSessionToSupabase(sessionId, userData) {
+async function saveUserSessionToSupabase(sessionId, userData) {
   if (!supabase) {
     return { success: false, error: 'Supabase未初期化' };
   }
@@ -197,7 +197,7 @@ export async function saveUserSessionToSupabase(sessionId, userData) {
 /**
  * 全シナリオ一覧を取得（最適化版）
  */
-export async function getAllScenariosFromSupabase(limit = 50, offset = 0) {
+async function getAllScenariosFromSupabase(limit = 50, offset = 0) {
   try {
     const result = await executeOptimizedQuery({
       table: 'scenarios',
@@ -223,7 +223,7 @@ export async function getAllScenariosFromSupabase(limit = 50, offset = 0) {
 /**
  * Supabase接続テスト
  */
-export async function testSupabaseConnection() {
+async function testSupabaseConnection() {
   if (!supabase) {
     return { success: false, error: 'Supabase未初期化' };
   }

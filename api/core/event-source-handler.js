@@ -3,12 +3,12 @@
  * EventSource接続管理とストリーミングレスポンス処理
  */
 
-import { logger } from '../utils/logger.js';
+const { logger } = require('../utils/logger.js');
 
 /**
  * EventSource接続の初期化と管理
  */
-export function setupEventSourceConnection(req, res, sessionId) {
+function setupEventSourceConnection(req, res, sessionId) {
   logger.debug('🌐 EventSource接続検出');
   
   const eventSourceId = sessionId || `eventsource_${Date.now()}`;
@@ -34,7 +34,7 @@ export function setupEventSourceConnection(req, res, sessionId) {
 /**
  * EventSourceヘッダーの設定
  */
-export function setEventSourceHeaders(res) {
+function setEventSourceHeaders(res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -48,7 +48,7 @@ export function setEventSourceHeaders(res) {
 /**
  * EventSourceへのメッセージ送信
  */
-export function sendEventSourceMessage(res, event, data) {
+function sendEventSourceMessage(res, event, data) {
   try {
     res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
     return true;
@@ -61,7 +61,7 @@ export function sendEventSourceMessage(res, event, data) {
 /**
  * 進捗更新の送信
  */
-export function sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, totalWeight, isComplete = false) {
+function sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, totalWeight, isComplete = false) {
   const progressData = {
     step: stepIndex + 1,
     totalSteps: 9, // INTEGRATED_GENERATION_FLOW.length
@@ -86,7 +86,7 @@ export function sendProgressUpdate(res, stepIndex, stepName, result, currentWeig
 /**
  * ランダムモード用の進捗シミュレーション
  */
-export async function simulateRandomProgress(res) {
+async function simulateRandomProgress(res) {
   const mockSteps = [
     { name: '段階0: ランダム全体構造・アウトライン', weight: 15 },
     { name: '段階1: コンセプト精密化・世界観詳細化', weight: 10 },
@@ -120,3 +120,12 @@ export async function simulateRandomProgress(res) {
     await new Promise(resolve => setTimeout(resolve, 300));
   }
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  setupEventSourceConnection,
+  setEventSourceHeaders,
+  sendEventSourceMessage,
+  sendProgressUpdate,
+  simulateRandomProgress
+};

@@ -5,7 +5,7 @@
 /**
  * 並列実行ヘルパー
  */
-export async function executeParallel(tasks, maxConcurrency = 3) {
+async function executeParallel(tasks, maxConcurrency = 3) {
   const results = [];
   
   // タスクを並列実行（maxConcurrencyの制限付き）
@@ -23,7 +23,7 @@ export async function executeParallel(tasks, maxConcurrency = 3) {
 /**
  * シンプルなメモリキャッシュ
  */
-export class SimpleCache {
+class SimpleCache {
   constructor() {
     this.cache = new Map();
     this.maxSize = 100;
@@ -56,5 +56,12 @@ export class SimpleCache {
   }
 }
 
-// エクスポート
-export const cache = new SimpleCache();
+// シングルトンインスタンス
+const cache = new SimpleCache();
+
+// CommonJS形式でエクスポート
+module.exports = {
+  executeParallel,
+  SimpleCache,
+  cache
+};
