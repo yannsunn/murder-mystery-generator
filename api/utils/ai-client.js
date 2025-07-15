@@ -3,10 +3,10 @@
  * すべてのAI API呼び出しを一元管理
  */
 
-import { envManager } from '../config/env-manager.js';
-import { logger } from './logger.js';
+const { envManager } = require('../config/env-manager.js');
+const { logger } = require('./logger.js');
 
-export const AI_CONFIG = {
+const AI_CONFIG = {
   maxDuration: 30,
   timeout: 25000,
   retries: 2
@@ -37,7 +37,7 @@ function sanitizeObject(obj) {
 /**
  * 統一AIクライアント
  */
-export class UnifiedAIClient {
+class UnifiedAIClient {
   constructor() {
     // プロダクション環境での確実な初期化
     this.initializeEnvironment();
@@ -270,4 +270,11 @@ export class UnifiedAIClient {
 }
 
 // シングルトンインスタンス
-export const aiClient = new UnifiedAIClient();
+const aiClient = new UnifiedAIClient();
+
+// CommonJS形式でエクスポート
+module.exports = {
+  AI_CONFIG,
+  aiClient,
+  UnifiedAIClient
+};

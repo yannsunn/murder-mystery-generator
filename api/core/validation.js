@@ -4,7 +4,7 @@
  * XSS防止・入力検証・サニタイゼーション
  */
 
-import { logger } from '../utils/logger.js';
+const { logger } = require('../utils/logger.js');
 
 // 📋 統合検証ルール定義
 const VALIDATION_RULES = {
@@ -658,11 +658,17 @@ class UnifiedInputValidator {
 const unifiedValidator = new UnifiedInputValidator();
 
 // ES6モジュールエクスポート
-export { UnifiedInputValidator };
-export { ValidationError };
-export { unifiedValidator };
-export const createValidationMiddleware = (apiType) => unifiedValidator.middleware(apiType);
-export const getValidationRules = () => VALIDATION_RULES;
+const createValidationMiddleware = (apiType) => unifiedValidator.middleware(apiType);
+const getValidationRules = () => VALIDATION_RULES;
+
+// CommonJS形式でエクスポート
+module.exports = {
+  UnifiedInputValidator,
+  ValidationError,
+  unifiedValidator,
+  createValidationMiddleware,
+  getValidationRules
+};
 
 // ブラウザ環境での対応
 if (typeof window !== 'undefined') {

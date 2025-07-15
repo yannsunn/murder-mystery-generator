@@ -302,5 +302,8 @@ class EnvManager {
 // シングルトンインスタンス
 const envManager = new EnvManager();
 
-export { envManager, REQUIRED_ENV_VARS };
-export default envManager;
+// CommonJS形式でエクスポート
+module.exports = {
+  envManager,
+  REQUIRED_ENV_VARS
+};
