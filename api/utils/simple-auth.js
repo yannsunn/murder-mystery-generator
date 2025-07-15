@@ -24,7 +24,7 @@ function checkPersonalAccess(req) {
   
   return { 
     allowed: false, 
-    message: 'アクセスが拒否されました。正しいキーを指定してください。',
+    reason: 'アクセスが拒否されました。正しいキーを指定してください。',
     status: 401
   };
 }
@@ -39,12 +39,12 @@ function checkDailyUsage(identifier = 'personal') {
   const key = `${identifier}_${today}`;
   
   const currentUsage = dailyUsage.get(key) || 0;
-  const MAX_DAILY_REQUESTS = 10; // 1日10回まで
+  const MAX_DAILY_REQUESTS = 100; // 1日100回まで
   
   if (currentUsage >= MAX_DAILY_REQUESTS) {
     return {
       allowed: false,
-      message: `1日の使用制限（${MAX_DAILY_REQUESTS}回）に達しました。`,
+      reason: `1日の使用制限（${MAX_DAILY_REQUESTS}回）に達しました。`,
       currentUsage,
       resetTime: '24時間後'
     };
