@@ -6,7 +6,7 @@
 /**
  * 個人利用のための簡単な認証チェック
  */
-export function checkPersonalAccess(req) {
+function checkPersonalAccess(req) {
   // 環境変数でアクセス制御（オプション）
   const ACCESS_KEY = process.env.PERSONAL_ACCESS_KEY;
   
@@ -34,7 +34,7 @@ export function checkPersonalAccess(req) {
  */
 const dailyUsage = new Map();
 
-export function checkDailyUsage(identifier = 'personal') {
+function checkDailyUsage(identifier = 'personal') {
   const today = new Date().toDateString();
   const key = `${identifier}_${today}`;
   
@@ -59,3 +59,9 @@ export function checkDailyUsage(identifier = 'personal') {
     remaining: MAX_DAILY_REQUESTS - currentUsage - 1
   };
 }
+
+// CommonJS形式でエクスポート
+module.exports = {
+  checkPersonalAccess,
+  checkDailyUsage
+};

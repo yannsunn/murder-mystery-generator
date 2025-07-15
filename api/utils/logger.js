@@ -35,13 +35,16 @@ class SimpleLogger {
 }
 
 // シングルトンインスタンス
-export const logger = new SimpleLogger();
+const logger = new SimpleLogger();
 
 // 便利なエクスポート
-export const log = {
+const log = {
   debug: (...args) => logger.debug(...args),
   info: (...args) => logger.info(...args),
   warn: (...args) => logger.warn(...args),
   error: (...args) => logger.error(...args),
   success: (...args) => logger.success(...args)
 };
+
+// CommonJS形式でエクスポート
+module.exports = { logger, log };
