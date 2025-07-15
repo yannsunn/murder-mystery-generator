@@ -3,14 +3,16 @@
  * 短時間セッション専用・極限精度・完全文章対応
  */
 
-import JSZip from 'jszip';
-import { setSecurityHeaders } from './security-utils.js';
-import { withErrorHandler, AppError, ErrorTypes } from './utils/error-handler.js';
-import { createSecurityMiddleware } from './middleware/rate-limiter.js';
+const JSZip = require('jszip');
+const { setSecurityHeaders } = require('./security-utils.js');
+const { withErrorHandler, AppError, ErrorTypes } = require('./utils/error-handler.js');
+const { createSecurityMiddleware } = require('./middleware/rate-limiter.js');
 
-export const config = {
+const config = {
   maxDuration: 60,
 };
+
+exports.config = config;
 
 /**
  * 完全なテキストファイル生成システム
@@ -389,7 +391,7 @@ function extractBasicInfo(concept) {
 }
 
 // メインハンドラー
-export default withErrorHandler(async function handler(req, res) {
+module.exports = withErrorHandler(async function handler(req, res) {
   
   setSecurityHeaders(res);
   

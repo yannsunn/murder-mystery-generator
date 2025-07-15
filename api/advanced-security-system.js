@@ -2,10 +2,10 @@
  * 🛡️ セキュリティシステム（最適化版）
  */
 
-import { setSecurityHeaders } from './security-utils.js';
-import { createClient } from '@supabase/supabase-js';
+const { setSecurityHeaders } = require('./security-utils.js');
+const { createClient } = require('@supabase/supabase-js');
 
-export const config = {
+const config = {
   maxDuration: 60,
 };
 
@@ -113,7 +113,7 @@ class SecuritySystem {
 }
 
 // API エンドポイント
-export default async function handler(req, res) {
+async function handler(req, res) {
   setSecurityHeaders(res);
   
   if (req.method === 'OPTIONS') {
@@ -164,3 +164,6 @@ export default async function handler(req, res) {
     });
   }
 }
+
+module.exports = handler;
+module.exports.config = config;

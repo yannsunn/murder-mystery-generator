@@ -2,7 +2,7 @@
  * シンプルなリソースマネージャー
  */
 
-import { logger } from './logger.js';
+const { logger } = require('./logger.js');
 
 class SimpleResourceManager {
   constructor() {
@@ -92,7 +92,9 @@ class SimpleResourceManager {
 }
 
 // シングルトンインスタンス
-export const resourceManager = new SimpleResourceManager();
+const resourceManager = new SimpleResourceManager();
+
+module.exports = { resourceManager };
 
 // プロセス終了時のクリーンアップ
 process.on('SIGINT', () => resourceManager.cleanup());

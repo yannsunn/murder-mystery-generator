@@ -3,7 +3,7 @@
  * 商業品質TRPG基準による自動品質チェック・最適化
  */
 
-export class QualityAssessor {
+class QualityAssessor {
   constructor() {
     this.qualityThresholds = {
       narrative: 0.85,      // 物語性
@@ -459,5 +459,7 @@ export class QualityAssessor {
   }
 }
 
-export const qualityAssessor = new QualityAssessor();
+const qualityAssessor = new QualityAssessor();
+
+module.exports = { qualityAssessor };
 

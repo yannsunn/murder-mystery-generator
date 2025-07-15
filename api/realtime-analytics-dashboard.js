@@ -2,10 +2,10 @@
  * 📊 分析ダッシュボード（簡素化版）
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { setSecurityHeaders } from './security-utils.js';
+const { createClient } = require('@supabase/supabase-js');
+const { setSecurityHeaders } = require('./security-utils.js');
 
-export const config = {
+const config = {
   maxDuration: 60,
 };
 
@@ -107,7 +107,7 @@ class AnalyticsDashboard {
 }
 
 // API エンドポイント
-export default async function handler(req, res) {
+async function handler(req, res) {
   setSecurityHeaders(res);
   
   if (req.method === 'OPTIONS') {
@@ -150,3 +150,6 @@ export default async function handler(req, res) {
     });
   }
 }
+
+module.exports = handler;
+module.exports.config = config;

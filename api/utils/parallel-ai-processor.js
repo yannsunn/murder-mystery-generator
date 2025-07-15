@@ -3,11 +3,11 @@
  * 10-15分→3-5分への劇的改善
  */
 
-import { aiClient } from './ai-client.js';
-import { logger } from './logger.js';
-import { resourceManager } from './resource-manager.js';
+const { aiClient } = require('./ai-client.js');
+const { logger } = require('./logger.js');
+const { resourceManager } = require('./resource-manager.js');
 
-export class ParallelAIProcessor {
+class ParallelAIProcessor {
   constructor() {
     this.maxConcurrency = 3; // 同時実行数
     this.queue = [];
@@ -508,4 +508,9 @@ ${characterSummaries}
 }
 
 // シングルトンインスタンス
-export const parallelAIProcessor = new ParallelAIProcessor();
+const parallelAIProcessor = new ParallelAIProcessor();
+
+module.exports = { 
+  ParallelAIProcessor,
+  parallelAIProcessor 
+};

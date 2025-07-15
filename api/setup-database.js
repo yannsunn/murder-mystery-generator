@@ -3,10 +3,10 @@
  * SQLエラー対応 - アプリケーション経由でテーブル作成
  */
 
-import { createClient } from '@supabase/supabase-js';
-import { setSecurityHeaders } from './security-utils.js';
+const { createClient } = require('@supabase/supabase-js');
+const { setSecurityHeaders } = require('./security-utils.js');
 
-export const config = {
+const config = {
   maxDuration: 60,
 };
 
@@ -39,7 +39,7 @@ function validateEnvironment() {
 /**
  * データベースセットアップエンドポイント
  */
-export default async function handler(req, res) {
+async function handler(req, res) {
   setSecurityHeaders(res);
   
   if (req.method === 'OPTIONS') {
@@ -318,3 +318,6 @@ async function setupAll(req, res) {
     });
   }
 }
+
+module.exports = handler;
+module.exports.config = config;

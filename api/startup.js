@@ -3,12 +3,12 @@
  * アプリケーション起動時の環境変数検証
  */
 
-import { envManager } from './config/env-manager.js';
+const { envManager } = require('./config/env-manager.js');
 
 /**
  * アプリケーション起動時の初期化
  */
-export function initializeApplication() {
+function initializeApplication() {
   
   // 環境変数マネージャーの初期化
   const isValid = envManager.initialize();
@@ -31,7 +31,7 @@ export function initializeApplication() {
 /**
  * 起動時ヘルスチェック
  */
-export function healthCheck() {
+function healthCheck() {
   const checks = {
     envManager: envManager.isValid(),
     groqKey: envManager.has('GROQ_API_KEY'),
@@ -46,7 +46,12 @@ export function healthCheck() {
   return allHealthy;
 }
 
-// 自動初期化（importされた時に実行）
+// 自動初期化（requireされた時に実行）
 if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'test') {
   initializeApplication();
 }
+
+module.exports = {
+  initializeApplication,
+  healthCheck
+};

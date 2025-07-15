@@ -1,12 +1,12 @@
 /**
  * 🎯 データベース最適化エンジン
- * インデックス管理、クエリ分析、パフォーマンス監視
+ * インデックス管理、クエリ分析、パフォーマンス監袖
  */
 
-import { databasePool } from './database-pool.js';
-import { logger } from './logger.js';
+const { databasePool } = require('./database-pool.js');
+const { logger } = require('./logger.js');
 
-export class DatabaseOptimizer {
+class DatabaseOptimizer {
   constructor() {
     this.queryMetrics = new Map();
     this.slowQueries = [];
@@ -342,17 +342,25 @@ CREATE POLICY IF NOT EXISTS "query_performance_all_access" ON query_performance 
 }
 
 // シングルトンインスタンス
-export const databaseOptimizer = new DatabaseOptimizer();
+const databaseOptimizer = new DatabaseOptimizer();
 
 // 便利な関数エクスポート
-export async function executeOptimizedQueryWithMonitoring(config) {
+async function executeOptimizedQueryWithMonitoring(config) {
   return await databaseOptimizer.executeWithMonitoring(config);
 }
 
-export function generateDatabaseOptimizationSQL() {
+function generateDatabaseOptimizationSQL() {
   return databaseOptimizer.generateOptimizationSQL();
 }
 
-export function getPerformanceReport() {
+function getPerformanceReport() {
   return databaseOptimizer.generatePerformanceReport();
 }
+
+module.exports = {
+  DatabaseOptimizer,
+  databaseOptimizer,
+  executeOptimizedQueryWithMonitoring,
+  generateDatabaseOptimizationSQL,
+  getPerformanceReport
+};

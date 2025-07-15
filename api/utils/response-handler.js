@@ -3,12 +3,12 @@
  * 全APIで統一されたレスポンス形式とエラーハンドリング
  */
 
-import { logger } from './logger.js';
+const { logger } = require('./logger.js');
 
 /**
  * 統一レスポンス形式
  */
-export function createSuccessResponse(content, metadata = {}) {
+function createSuccessResponse(content, metadata = {}) {
   return {
     success: true,
     content,
@@ -25,7 +25,7 @@ export function createSuccessResponse(content, metadata = {}) {
 /**
  * 統一エラーレスポンス
  */
-export function createErrorResponse(error, statusCode = 500) {
+function createErrorResponse(error, statusCode = 500) {
   const isProduction = process.env.NODE_ENV === 'production';
   
   return {
@@ -40,7 +40,7 @@ export function createErrorResponse(error, statusCode = 500) {
 /**
  * 統一CORSヘッダー設定
  */
-export function setCORSHeaders(res) {
+function setCORSHeaders(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -52,7 +52,7 @@ export function setCORSHeaders(res) {
 /**
  * 統一APIハンドラーラッパー
  */
-export function withStandardHandler(handler, endpointName = 'unknown') {
+function withStandardHandler(handler, endpointName = 'unknown') {
   return async (req, res) => {
     const startTime = Date.now();
     
@@ -107,7 +107,7 @@ export function withStandardHandler(handler, endpointName = 'unknown') {
 /**
  * 入力検証ヘルパー
  */
-export function validateRequiredFields(data, requiredFields) {
+function validateRequiredFields(data, requiredFields) {
   const errors = [];
   
   for (const field of requiredFields) {
@@ -122,7 +122,7 @@ export function validateRequiredFields(data, requiredFields) {
 /**
  * レスポンス送信ヘルパー
  */
-export function sendResponse(res, data, statusCode = 200) {
+function sendResponse(res, data, statusCode = 200) {
   if (res.headersSent) {
     return;
   }
@@ -130,3 +130,12 @@ export function sendResponse(res, data, statusCode = 200) {
   setCORSHeaders(res);
   return res.status(statusCode).json(data);
 }
+
+module.exports = {
+  createSuccessResponse,
+  createErrorResponse,
+  setCORSHeaders,
+  withStandardHandler,
+  validateRequiredFields,
+  sendResponse
+};

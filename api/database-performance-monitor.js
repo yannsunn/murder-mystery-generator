@@ -3,16 +3,16 @@
  * リアルタイムでクエリ性能を監視・レポート生成
  */
 
-import { setSecurityHeaders } from './security-utils.js';
-import { databaseOptimizer, generateDatabaseOptimizationSQL, getPerformanceReport } from './utils/database-optimizer.js';
-import { getDatabaseStats } from './utils/database-pool.js';
-import { logger } from './utils/logger.js';
+const { setSecurityHeaders } = require('./security-utils.js');
+const { databaseOptimizer, generateDatabaseOptimizationSQL, getPerformanceReport } = require('./utils/database-optimizer.js');
+const { getDatabaseStats } = require('./utils/database-pool.js');
+const { logger } = require('./utils/logger.js');
 
-export const config = {
+const config = {
   maxDuration: 30,
 };
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   setSecurityHeaders(res);
   
   if (req.method === 'OPTIONS') {
@@ -285,3 +285,6 @@ function calculateHealthScore(report, poolStats) {
 
   return Math.max(0, Math.min(100, Math.round(score)));
 }
+
+module.exports = handler;
+module.exports.config = config;
