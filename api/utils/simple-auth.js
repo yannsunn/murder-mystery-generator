@@ -30,9 +30,43 @@ function checkPersonalAccess(req) {
 }
 
 /**
- * 日次使用量チェック（簡易版）
+ * 日次使用量チェック（メモリリーク対策版）
  */
 const dailyUsage = new Map();
+const CLEANUP_INTERVAL = 24 * 60 * 60 * 1000; // 24時間
+let cleanupTimer = null;
+
+// メモリリーク防止のための自動クリーンアップ
+function startCleanupTimer() {
+  if (cleanupTimer) return;
+  
+  cleanupTimer = setInterval(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayString = yesterday.toDateString();
+    
+    // 古いエントリを削除
+    for (const [key] of dailyUsage) {
+      const keyDate = key.split('_').slice(1).join('_');
+      if (keyDate !== new Date().toDateString()) {
+        dailyUsage.delete(key);
+      }
+    }
+  }, CLEANUP_INTERVAL);
+  
+  // Node.jsプロセス終了時にタイマーをクリア
+  if (typeof process !== 'undefined') {
+    process.on('exit', () => {
+      if (cleanupTimer) {
+        clearInterval(cleanupTimer);
+        cleanupTimer = null;
+      }
+    });
+  }
+}
+
+// 初回実行時にクリーンアップタイマーを開始
+startCleanupTimer();
 
 function checkDailyUsage(identifier = 'personal') {
   const today = new Date().toDateString();
@@ -52,6 +86,11 @@ function checkDailyUsage(identifier = 'personal') {
   
   // 使用回数を増加
   dailyUsage.set(key, currentUsage + 1);
+  
+  // メモリ使用量の監視（デバッグ用）
+  if (dailyUsage.size > 100) {
+    console.warn(`[simple-auth] Warning: dailyUsage Map size is ${dailyUsage.size}`);
+  }
   
   return {
     allowed: true,

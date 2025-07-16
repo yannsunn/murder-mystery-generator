@@ -359,29 +359,33 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         let allCharacters = [];
         let characterRelationships = '';
         
-        // 段階1: 各キャラクターを個別に生成
-        for (let i = 1; i <= participantCount; i++) {
-          logger.debug(`🎭 プレイヤー${i}のキャラクター生成中...`);
+        // 段階1: 各キャラクターを並列で生成（パフォーマンス最適化）
+        logger.debug(`🚀 並列キャラクター生成開始: ${participantCount}人`);
+        
+        // 並列処理用のプロミス配列を作成
+        const characterPromises = Array.from({length: participantCount}, (_, i) => {
+          const playerId = i + 1;
+          logger.debug(`🎭 プレイヤー${playerId}のキャラクター生成開始...`);
           
           const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
 30分-1時間セッション用の魅力的で複雑なキャラクターを一人ずつ丁寧に作成してください。`;
           
           const userPrompt = `
-【プレイヤー${i}専用キャラクター作成】
+【プレイヤー${playerId}専用キャラクター作成】
 
 ランダム全体構造: ${randomOutline}
 作品情報: ${concept}
 事件核心: ${incidentCore}
 事件詳細: ${incidentDetails}
-参加人数: ${participantCount}人中の${i}人目
-既存キャラクター: ${allCharacters.length > 0 ? allCharacters.map((c, idx) => `プレイヤー${idx + 1}: ${c.name || '未設定'}`).join(', ') : 'なし'}
+参加人数: ${participantCount}人中の${playerId}人目
+既存キャラクター: [並列生成中のため、後で関係性を調整]
 
-以下の形式でプレイヤー${i}の完全なハンドアウトを作成してください：
+以下の形式でプレイヤー${playerId}の完全なハンドアウトを作成してください：
 
-## 【プレイヤー${i}専用ハンドアウト】
+## 【プレイヤー${playerId}専用ハンドアウト】
 
 ### あなたのキャラクター
-**氏名**: [フルネーム - 既存キャラと重複しないユニークな名前]
+**氏名**: [フルネーム - 他のプレイヤーと重複しないユニークな名前]
 **年齢**: [具体的な年齢]
 **職業**: [詳細な職業・立場・社会的ステータス]
 **性格**: [個性的で記憶に残る性格特徴]
@@ -404,27 +408,46 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 [持っている重要なアイテム、証拠、手がかりの詳細リスト]
 
 ### 他のプレイヤーとの関係性（既知の場合）
-${allCharacters.length > 0 ? allCharacters.map((c, idx) => `**プレイヤー${idx + 1}(${c.name})との関係**: [具体的な関係性、感情、過去の経緯]`).join('\n') : '[他のプレイヤーのキャラクターが決まった後で設定されます]'}
+[関係性は後で調整されます]
 
 【絶対要求】
-- 既存キャラクターとの名前重複禁止
+- 他のキャラクターとの名前重複禁止
 - 事件と有意義な関連性を持たせる
 - 30分-1時間で演じ切れる程度の複雑さ
 - 全ての文章を完結させる
 `;
 
-          const characterResult = await aiClient.generateWithRetry(systemPrompt, userPrompt);
-          
-          // キャラクター情報を抽出して保存
-          const nameMatch = characterResult.content.match(/\*\*氏名\*\*:\s*([^\n]+)/);
-          const character = {
-            playerId: i,
-            name: nameMatch ? nameMatch[1].replace(/\[|\]/g, '').trim() : `プレイヤー${i}`,
-            handout: characterResult.content
-          };
-          
-          allCharacters.push(character);
-          logger.debug(`✅ プレイヤー${i} (${character.name}) 生成完了`);
+          return aiClient.generateWithRetry(systemPrompt, userPrompt).then(result => {
+            // キャラクター情報を抽出して保存
+            const nameMatch = result.content.match(/\*\*氏名\*\*:\s*([^\n]+)/);
+            const character = {
+              playerId: playerId,
+              name: nameMatch ? nameMatch[1].replace(/\[|\]/g, '').trim() : `プレイヤー${playerId}`,
+              handout: result.content
+            };
+            
+            logger.debug(`✅ プレイヤー${playerId} (${character.name}) 生成完了`);
+            return character;
+          });
+        });
+        
+        // 全キャラクターの生成を並列実行
+        const allCharacters = await Promise.all(characterPromises);
+        logger.debug(`🎉 並列キャラクター生成完了: ${allCharacters.length}人`);
+        
+        // 名前重複チェック
+        const nameSet = new Set();
+        const duplicateNames = [];
+        allCharacters.forEach(char => {
+          if (nameSet.has(char.name)) {
+            duplicateNames.push(char.name);
+          } else {
+            nameSet.add(char.name);
+          }
+        });
+        
+        if (duplicateNames.length > 0) {
+          logger.warn(`⚠️ 名前重複検出: ${duplicateNames.join(', ')} - 関係性調整で修正されます`);
         }
         
         // 段階2: 全体の関係性を調整し、つじつまを合わせる

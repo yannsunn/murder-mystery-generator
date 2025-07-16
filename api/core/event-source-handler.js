@@ -1,67 +1,48 @@
 /**
  * 🌐 EventSource Handler Module
  * EventSource接続管理とストリーミングレスポンス処理
+ * 統合EventSourceManagerへの互換性レイヤー
  */
 
 const { logger } = require('../utils/logger.js');
+const { integratedEventSourceManager } = require('./integrated-event-source-manager.js');
 
 /**
  * EventSource接続の初期化と管理
+ * @deprecated 統合EventSourceManagerを使用してください
  */
 function setupEventSourceConnection(req, res, sessionId) {
-  logger.debug('🌐 EventSource接続検出');
+  logger.debug('🌐 EventSource接続検出 (Legacy Handler)');
   
-  const eventSourceId = sessionId || `eventsource_${Date.now()}`;
-  
-  // クライアント切断時のクリーンアップ
-  req.on('close', () => {
-    logger.debug(`Client disconnected: ${eventSourceId}`);
-    if (!res.headersSent) {
-      res.end();
-    }
-  });
-  
-  req.on('error', (error) => {
-    logger.warn(`EventSource error: ${error.message}`);
-    if (!res.headersSent) {
-      res.end();
-    }
-  });
-  
-  return eventSourceId;
+  // 統合EventSourceManagerにリダイレクト
+  return integratedEventSourceManager.setupEventSourceConnection(req, res, sessionId);
 }
 
 /**
  * EventSourceヘッダーの設定
+ * @deprecated 統合EventSourceManagerを使用してください
  */
 function setEventSourceHeaders(res) {
-  res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Cache-Control',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
-  });
+  // 統合EventSourceManagerにリダイレクト
+  return integratedEventSourceManager.setEventSourceHeaders(res);
 }
 
 /**
  * EventSourceへのメッセージ送信
+ * @deprecated 統合EventSourceManagerを使用してください
  */
 function sendEventSourceMessage(res, event, data) {
-  try {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
-    return true;
-  } catch (error) {
-    logger.error(`EventSource write error: ${error.message}`);
-    return false;
-  }
+  // レスポンスオブジェクトから接続IDを特定する必要があるため、
+  // 直接的なマッピングは困難。統合EventSourceManagerのsendRawMessageを使用
+  return integratedEventSourceManager.sendRawMessage(res, event, data);
 }
 
 /**
  * 進捗更新の送信
+ * @deprecated 統合EventSourceManagerを使用してください
  */
 function sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, totalWeight, isComplete = false) {
+  // 後方互換性のため、レスポンスオブジェクトから接続を特定
   const progressData = {
     step: stepIndex + 1,
     totalSteps: 9, // INTEGRATED_GENERATION_FLOW.length
@@ -74,9 +55,11 @@ function sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, tot
   };
   
   try {
-    res.write(`event: progress\ndata: ${JSON.stringify(progressData)}\n\n`);
-    logger.debug(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
-    return true;
+    const success = integratedEventSourceManager.sendRawMessage(res, 'progress', progressData);
+    if (success) {
+      logger.debug(`📡 Progress sent: ${stepName} (${progressData.progress}%)`);
+    }
+    return success;
   } catch (writeError) {
     logger.error('❌ Progress write error:', writeError);
     return false;
@@ -122,10 +105,13 @@ async function simulateRandomProgress(res) {
 }
 
 // CommonJS形式でエクスポート
+// 統合EventSourceManagerへの移行を推奨
 module.exports = {
   setupEventSourceConnection,
   setEventSourceHeaders,
   sendEventSourceMessage,
   sendProgressUpdate,
-  simulateRandomProgress
+  simulateRandomProgress,
+  // 統合EventSourceManagerへのアクセスを提供
+  integratedEventSourceManager
 };

@@ -27,8 +27,14 @@ const {
   setupEventSourceConnection, 
   setEventSourceHeaders, 
   sendEventSourceMessage,
-  sendProgressUpdate 
+  sendProgressUpdate,
+  integratedEventSourceManager
 } = require('./core/event-source-handler.js');
+const { 
+  EventSourceError, 
+  EVENT_SOURCE_ERROR_TYPES, 
+  eventSourceErrorHandler 
+} = require('./core/event-source-error-handler.js');
 const { processRandomMode } = require('./core/random-processor.js');
 const { 
   createCacheKey, 
@@ -121,11 +127,26 @@ async function handler(req, res) {
       logger.info('[STREAM] FormData:', formData);
       logger.info('[STREAM] SessionId:', sessionId);
       
-      setEventSourceHeaders(res);
-      
-      // ストリーミング処理
-      await handleStreamingGeneration(req, res, formData, sessionId);
-      return;
+      try {
+        // 統合EventSourceManagerで接続管理
+        const connectionId = integratedEventSourceManager.setupEventSourceConnection(req, res, sessionId);
+        integratedEventSourceManager.setEventSourceHeaders(res);
+        
+        // ストリーミング処理
+        await handleStreamingGeneration(req, res, formData, connectionId);
+        return;
+      } catch (error) {
+        logger.error('[STREAM ERROR] EventSource setup failed:', error);
+        const errorResult = eventSourceErrorHandler.handleError(
+          new EventSourceError(error.message, EVENT_SOURCE_ERROR_TYPES.CONNECTION_FAILED, sessionId),
+          sessionId
+        );
+        
+        if (!res.headersSent) {
+          return res.status(500).json(eventSourceErrorHandler.createErrorResponse(error, sessionId));
+        }
+        return;
+      }
     }
 
     // 通常のJSON応答
@@ -153,13 +174,13 @@ async function handler(req, res) {
 /**
  * ストリーミング生成処理
  */
-async function handleStreamingGeneration(req, res, formData, sessionId) {
+async function handleStreamingGeneration(req, res, formData, connectionId) {
   try {
     // 開始メッセージ
-    sendEventSourceMessage(res, 'message', {
+    integratedEventSourceManager.sendEventSourceMessage(connectionId, 'message', {
       type: 'start',
       message: '🎬 マーダーミステリーの生成を開始します',
-      sessionId
+      sessionId: connectionId
     });
 
     // ランダムモードのチェック
@@ -167,31 +188,48 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
       if (process.env.NODE_ENV === 'development') {
         logger.debug('[STREAM] Processing random mode');
       }
-      await processRandomMode(res, sessionId);
+      await processRandomMode(res, connectionId);
       return;
     }
 
     // 生成フローの実行
     const stages = INTEGRATED_GENERATION_FLOW;
-    let accumulatedData = { formData, sessionId };
+    let accumulatedData = { formData, sessionId: connectionId };
 
     for (let i = 0; i < stages.length; i++) {
       const stage = stages[i];
       if (process.env.NODE_ENV === 'development') {
-      logger.debug(`[STAGE] Processing: ${stage.name}`);
-    }
+        logger.debug(`[STAGE] Processing: ${stage.name}`);
+      }
       
-      // sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, totalWeight, isComplete)
+      // 進捗更新を統合EventSourceManagerで送信
       const currentWeight = (i + 1) * 10;
       const totalWeight = stages.length * 10;
-      sendProgressUpdate(res, i, stage.name, stage.message || '', currentWeight, totalWeight, false);
+      const progressSent = integratedEventSourceManager.sendProgressUpdate(
+        connectionId, i, stage.name, stage.message || '', currentWeight, totalWeight, false
+      );
+      
+      // 進捗送信失敗時のエラーハンドリング
+      if (!progressSent) {
+        const error = new EventSourceError(
+          `Progress update failed for stage: ${stage.name}`,
+          EVENT_SOURCE_ERROR_TYPES.WRITE_FAILED,
+          connectionId
+        );
+        
+        const errorResult = eventSourceErrorHandler.handleError(error, connectionId);
+        if (errorResult.shouldTerminate) {
+          integratedEventSourceManager.closeConnection(connectionId);
+          return;
+        }
+      }
 
       try {
         const stageResult = await stage.handler(accumulatedData);
         accumulatedData = { ...accumulatedData, ...stageResult };
         
         if (stageResult.preview) {
-          sendEventSourceMessage(res, 'preview', {
+          integratedEventSourceManager.sendEventSourceMessage(connectionId, 'preview', {
             type: 'preview',
             stage: stage.name,
             data: stageResult.preview
@@ -199,35 +237,56 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
         }
       } catch (error) {
         logger.error(`[ERROR] Stage ${stage.name} failed:`, error);
-        sendEventSourceMessage(res, 'error', {
+        
+        const stageError = new EventSourceError(
+          `Stage ${stage.name} failed: ${error.message}`,
+          EVENT_SOURCE_ERROR_TYPES.VALIDATION_ERROR,
+          connectionId
+        );
+        
+        const errorResult = eventSourceErrorHandler.handleError(stageError, connectionId);
+        
+        integratedEventSourceManager.sendEventSourceMessage(connectionId, 'error', {
           type: 'error',
           stage: stage.name,
           error: error.message
         });
         
-        if (stage.critical) {
-          throw error;
+        if (stage.critical || errorResult.shouldTerminate) {
+          integratedEventSourceManager.closeConnection(connectionId);
+          return;
         }
       }
     }
 
     // 完了メッセージ
-    sendEventSourceMessage(res, 'complete', {
+    integratedEventSourceManager.sendEventSourceMessage(connectionId, 'complete', {
       type: 'complete',
       message: '✨ マーダーミステリーが完成しました！',
       data: accumulatedData
     });
 
-    res.end();
+    // 統合EventSourceManagerで接続を適切に終了
+    integratedEventSourceManager.closeConnection(connectionId);
 
   } catch (error) {
     logger.error('[STREAM ERROR]', error);
-    sendEventSourceMessage(res, 'error', {
+    
+    const streamError = new EventSourceError(
+      `Streaming generation failed: ${error.message}`,
+      EVENT_SOURCE_ERROR_TYPES.CONNECTION_FAILED,
+      connectionId
+    );
+    
+    eventSourceErrorHandler.handleError(streamError, connectionId);
+    
+    integratedEventSourceManager.sendEventSourceMessage(connectionId, 'error', {
       type: 'error',
       error: error.message,
       critical: true
     });
-    res.end();
+    
+    integratedEventSourceManager.closeConnection(connectionId);
   }
 }
 
