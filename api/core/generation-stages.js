@@ -54,8 +54,10 @@ const INTEGRATED_GENERATION_FLOW = [
   {
     name: '段階0: ランダム全体構造・アウトライン',
     weight: 15,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
       logger.debug('🎲 段階0: ランダム全体構造生成開始');
+      
+      const { formData } = accumulatedData;
       
       const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのマーダーミステリークリエイターです。
 30分-1時間セッション用のマーダーミステリーの大まかな全体構造をランダムに生成してください。
@@ -115,7 +117,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
   {
     name: '段階1: コンセプト精密化・世界観詳細化',
     weight: 10,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🎨 段階1: コンセプト精密化開始');
       
       const randomOutline = context.random_outline || '';
@@ -207,7 +210,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
   {
     name: '段階2: 事件核心・犯人・動機設定',
     weight: 12,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🕵️ 段階2: 事件核心部詳細設計開始');
       
       const randomOutline = context.random_outline || '';
@@ -267,7 +271,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
   {
     name: '段階3: 事件詳細・基本タイムライン',
     weight: 15,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('⏰ 段階3: 事件詳細・タイムライン構築開始');
       
       const concept = context.concept || '';
@@ -340,7 +345,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
   {
     name: '段階4: 段階的キャラクター生成システム',
     weight: 35,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       try {
         const randomOutline = context.random_outline || '';
         const concept = context.concept || '';
@@ -524,7 +530,8 @@ ${characterRelationships}
   {
     name: '段階5: 証拠配置・手がかり体系化',
     weight: 18,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🔍 段階5: 証拠配置・手がかり体系化開始');
       
       const concept = context.concept || '';
@@ -613,7 +620,8 @@ ${characterRelationships}
   {
     name: '段階6: GM進行ガイド・セッション管理',
     weight: 20,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🎓 段階6: GM進行ガイド・セッション管理作成開始');
       
       const concept = context.concept || '';
@@ -710,7 +718,8 @@ ${characterRelationships}
   {
     name: 'ゲームマスター完全ガイド（30分-1時間特化）',
     weight: 20,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       const allData = {
         concept: context.concept || '',
         characters: context.characters || '',
@@ -856,7 +865,8 @@ ${characterRelationships}
   {
     name: '段階7: 統合・品質確認',
     weight: 10,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🔧 段階7: 最終統合・全体つじつま調整開始');
       
       const concept = context.concept || '';
@@ -930,7 +940,8 @@ ${characterRelationships}
   {
     name: '段階8: 最終レビュー・総合調整完了',
     weight: 8,
-    handler: async (formData, context) => {
+    handler: async (accumulatedData) => {
+      const { formData } = accumulatedData;
       logger.debug('🏆 段階8: 全体最終確認・総合品質保証開始');
       
       const randomOutline = context.random_outline || '';

@@ -29,7 +29,7 @@ class ResourceManager {
     
     // Auto cleanup on page unload
     window.addEventListener('beforeunload', () => this.cleanup());
-    window.addEventListener('unload', () => this.cleanup());
+    // unloadイベントは非推奨のため削除
     
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
