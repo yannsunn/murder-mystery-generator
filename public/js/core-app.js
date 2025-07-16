@@ -327,8 +327,21 @@ class CoreApp {
     
     eventSource.addEventListener('error', (event) => {
       logger.error('EventSource error:', event);
-      this.handleError('接続エラーが発生しました');
+      if (eventSource.readyState === EventSource.CLOSED) {
+        logger.error('EventSource connection closed');
+        this.handleError('サーバーとの接続が切断されました。再度お試しください。');
+      } else if (eventSource.readyState === EventSource.CONNECTING) {
+        logger.warn('EventSource reconnecting...');
+      } else {
+        this.handleError('接続エラーが発生しました');
+      }
     });
+    
+    eventSource.onerror = (error) => {
+      logger.error('EventSource onerror:', error);
+      console.error('EventSource URL:', url);
+      console.error('EventSource state:', eventSource.readyState);
+    };
   }
 
   handleProgressUpdate(data) {

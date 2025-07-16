@@ -117,9 +117,10 @@ async function handler(req, res) {
 
     // EventSource対応チェック
     if (req.headers.accept?.includes('text/event-stream')) {
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug('[STREAM] EventSource connection requested');
-      }
+      logger.info('[STREAM] EventSource connection requested');
+      logger.info('[STREAM] FormData:', formData);
+      logger.info('[STREAM] SessionId:', sessionId);
+      
       setEventSourceHeaders(res);
       
       // ストリーミング処理
