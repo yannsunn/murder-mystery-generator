@@ -87,7 +87,17 @@ async function handler(req, res) {
     }
 
     // リクエストデータの取得
-    const formData = req.method === 'GET' ? req.query : req.body || {};
+    let formData = req.method === 'GET' ? req.query : req.body || {};
+    
+    // GETリクエストでformDataがJSON文字列の場合はパース
+    if (req.method === 'GET' && formData.formData && typeof formData.formData === 'string') {
+      try {
+        formData = { ...formData, ...JSON.parse(formData.formData) };
+      } catch (e) {
+        logger.error('[ERROR] Failed to parse formData:', e);
+      }
+    }
+    
     const sessionId = formData.sessionId || `session_${Date.now()}`;
     
     if (process.env.NODE_ENV === 'development') {
