@@ -155,7 +155,7 @@ async function handler(req, res) {
 async function handleStreamingGeneration(req, res, formData, sessionId) {
   try {
     // 開始メッセージ
-    sendEventSourceMessage(res, {
+    sendEventSourceMessage(res, 'message', {
       type: 'start',
       message: '🎬 マーダーミステリーの生成を開始します',
       sessionId
@@ -180,14 +180,17 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
       logger.debug(`[STAGE] Processing: ${stage.name}`);
     }
       
-      sendProgressUpdate(res, stage.name, stage.message, ((i + 1) / stages.length) * 100);
+      // sendProgressUpdate(res, stepIndex, stepName, result, currentWeight, totalWeight, isComplete)
+      const currentWeight = (i + 1) * 10;
+      const totalWeight = stages.length * 10;
+      sendProgressUpdate(res, i, stage.name, stage.message || '', currentWeight, totalWeight, false);
 
       try {
         const stageResult = await stage.handler(accumulatedData);
         accumulatedData = { ...accumulatedData, ...stageResult };
         
         if (stageResult.preview) {
-          sendEventSourceMessage(res, {
+          sendEventSourceMessage(res, 'preview', {
             type: 'preview',
             stage: stage.name,
             data: stageResult.preview
@@ -195,7 +198,7 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
         }
       } catch (error) {
         logger.error(`[ERROR] Stage ${stage.name} failed:`, error);
-        sendEventSourceMessage(res, {
+        sendEventSourceMessage(res, 'error', {
           type: 'error',
           stage: stage.name,
           error: error.message
@@ -208,7 +211,7 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
     }
 
     // 完了メッセージ
-    sendEventSourceMessage(res, {
+    sendEventSourceMessage(res, 'complete', {
       type: 'complete',
       message: '✨ マーダーミステリーが完成しました！',
       data: accumulatedData
@@ -218,7 +221,7 @@ async function handleStreamingGeneration(req, res, formData, sessionId) {
 
   } catch (error) {
     logger.error('[STREAM ERROR]', error);
-    sendEventSourceMessage(res, {
+    sendEventSourceMessage(res, 'error', {
       type: 'error',
       error: error.message,
       critical: true
