@@ -4,7 +4,18 @@
  */
 
 const { aiClient } = require('./utils/ai-client.js');
-const { withErrorHandler, AppError, ErrorTypes } = require('./utils/error-handler.js');
+const { 
+  withErrorHandler, 
+  UnifiedError, 
+  ERROR_TYPES, 
+  unifiedErrorHandler 
+} = require('./utils/error-handler.js');
+const { 
+  withApiErrorHandling, 
+  convertAIError, 
+  convertDatabaseError,
+  convertValidationError
+} = require('./utils/error-handler-integration.js');
 const { setSecurityHeaders } = require('./security-utils.js');
 const { createSecurityMiddleware } = require('./middleware/rate-limiter.js');
 const { checkPersonalAccess, checkDailyUsage } = require('./utils/simple-auth.js');
@@ -47,15 +58,14 @@ const config = {
 };
 
 
-// メインハンドラー
-async function handler(req, res) {
+// メインハンドラー - 統一エラーハンドリング適用
+const handler = withApiErrorHandling(async (req, res) => {
+  const startTime = Date.now();
+  
   try {
     // 初期ログ出力
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
-      logger.debug('[INIT] Request method:', req.method);
-      logger.debug('[INIT] Request headers:', req.headers);
-    }
+    logger.debug('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
+    logger.debug('[INIT] Request method:', req.method);
     
     // セキュリティヘッダーの設定
     setSecurityHeaders(res);
@@ -63,9 +73,7 @@ async function handler(req, res) {
 
     // OPTIONSリクエストの処理
     if (req.method === 'OPTIONS') {
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug('[OPTIONS] Preflight request handled');
-      }
+      logger.debug('[OPTIONS] Preflight request handled');
       return res.status(200).end();
     }
 
@@ -73,23 +81,28 @@ async function handler(req, res) {
     const accessCheck = checkPersonalAccess(req);
     if (!accessCheck.allowed) {
       logger.warn('[AUTH] Personal access denied:', accessCheck.reason);
-      return res.status(401).json({
-        success: false,
-        error: 'Unauthorized',
-        message: accessCheck.reason || 'このサービスは許可されたユーザーのみ利用可能です'
-      });
+      throw new UnifiedError(
+        accessCheck.reason || 'このサービスは許可されたユーザーのみ利用可能です',
+        ERROR_TYPES.AUTHORIZATION_ERROR,
+        401,
+        { service: 'AUTH', check: 'personal_access' }
+      );
     }
 
     // 1日の使用制限チェック
     const usageCheck = checkDailyUsage();
     if (!usageCheck.allowed) {
       logger.warn('[LIMIT] Daily usage limit exceeded');
-      return res.status(429).json({
-        success: false,
-        error: 'Daily limit exceeded',
-        message: usageCheck.reason || '本日の利用上限に達しました。明日再度お試しください。',
-        resetTime: usageCheck.resetTime
-      });
+      throw new UnifiedError(
+        usageCheck.reason || '本日の利用上限に達しました。明日再度お試しください。',
+        ERROR_TYPES.RATE_LIMIT_ERROR,
+        429,
+        { 
+          service: 'RATE_LIMIT', 
+          resetTime: usageCheck.resetTime,
+          check: 'daily_usage' 
+        }
+      );
     }
 
     // リクエストデータの取得
@@ -101,24 +114,28 @@ async function handler(req, res) {
         formData = { ...formData, ...JSON.parse(formData.formData) };
       } catch (e) {
         logger.error('[ERROR] Failed to parse formData:', e);
+        throw convertValidationError(e, { 
+          field: 'formData', 
+          value: formData.formData,
+          validator: 'JSON.parse' 
+        });
       }
     }
     
     const sessionId = formData.sessionId || `session_${Date.now()}`;
     
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('[REQUEST] Form data:', formData);
-      logger.debug('[REQUEST] Session ID:', sessionId);
-    }
+    logger.debug('[REQUEST] Form data:', formData);
+    logger.debug('[REQUEST] Session ID:', sessionId);
 
     // GROQ APIキーの確認
     if (!process.env.GROQ_API_KEY) {
       logger.error('[ERROR] GROQ_API_KEY is not set in environment variables');
-      return res.status(503).json({
-        success: false,
-        error: 'Service unavailable',
-        message: 'AI service is not configured. Please set GROQ_API_KEY.'
-      });
+      throw new UnifiedError(
+        'AI service is not configured. Please set GROQ_API_KEY.',
+        ERROR_TYPES.CONFIGURATION_ERROR,
+        503,
+        { service: 'AI_API', provider: 'GROQ', missing: 'API_KEY' }
+      );
     }
 
     // EventSource対応チェック
@@ -137,39 +154,47 @@ async function handler(req, res) {
         return;
       } catch (error) {
         logger.error('[STREAM ERROR] EventSource setup failed:', error);
-        const errorResult = eventSourceErrorHandler.handleError(
-          new EventSourceError(error.message, EVENT_SOURCE_ERROR_TYPES.CONNECTION_FAILED, sessionId),
-          sessionId
+        throw new UnifiedError(
+          error.message,
+          ERROR_TYPES.NETWORK_ERROR,
+          500,
+          { 
+            service: 'EVENT_SOURCE', 
+            sessionId, 
+            connectionType: 'streaming',
+            originalError: error 
+          }
         );
-        
-        if (!res.headersSent) {
-          return res.status(500).json(eventSourceErrorHandler.createErrorResponse(error, sessionId));
-        }
-        return;
       }
     }
 
     // 通常のJSON応答
     const result = await generateMysteryScenario(formData, sessionId);
     
-    if (process.env.NODE_ENV === 'development') {
-      logger.debug('[COMPLETE] Generation completed for session:', sessionId);
-    }
-    return res.status(200).json({
+    logger.debug('[COMPLETE] Generation completed for session:', sessionId);
+    
+    // 統一レスポンス形式
+    return {
       success: true,
-      ...result
-    });
+      data: result,
+      metadata: {
+        sessionId,
+        processingTime: `${Date.now() - startTime}ms`,
+        timestamp: new Date().toISOString(),
+        version: '1.0.0'
+      }
+    };
 
   } catch (error) {
-    logger.error('[ERROR] Handler error:', error);
-    return res.status(error.statusCode || 500).json({
-      success: false,
-      error: error.type || 'GENERATION_ERROR',
-      message: error.message || 'An error occurred during generation',
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
+    // エラーは統一エラーハンドリングシステムで処理
+    throw error;
   }
-}
+}, {
+  context: { 
+    service: 'INTEGRATED_MICRO_GENERATOR',
+    version: '1.0.0'
+  }
+});
 
 /**
  * ストリーミング生成処理
