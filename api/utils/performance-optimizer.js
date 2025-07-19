@@ -2,6 +2,10 @@
  * シンプルなパフォーマンス最適化
  */
 
+// 新しい動的キャッシュシステムを使用
+const { SimpleCacheCompat } = require('./dynamic-cache');
+const { cacheManager } = require('./cache-manager');
+
 /**
  * 並列実行ヘルパー
  */
@@ -21,47 +25,30 @@ async function executeParallel(tasks, maxConcurrency = 3) {
 }
 
 /**
- * シンプルなメモリキャッシュ
+ * シンプルなメモリキャッシュ（互換性のため維持、内部では動的キャッシュを使用）
  */
-class SimpleCache {
+class SimpleCache extends SimpleCacheCompat {
   constructor() {
-    this.cache = new Map();
+    super();
+    // 互換性のためのプロパティ
     this.maxSize = 100;
   }
 
-  get(key) {
-    return this.cache.get(key);
-  }
-
-  set(key, value) {
-    // サイズ制限チェック
-    if (this.cache.size >= this.maxSize) {
-      // 最初のアイテムを削除（FIFO）
-      const firstKey = this.cache.keys().next().value;
-      this.cache.delete(firstKey);
-    }
-    
-    this.cache.set(key, {
-      data: value,
-      timestamp: Date.now()
-    });
-  }
-
-  clear() {
-    this.cache.clear();
-  }
-
+  // 互換性のためのメソッド
   size() {
-    return this.cache.size;
+    return super.size();
   }
 }
 
-// シングルトンインスタンス
+// シングルトンインスタンス（既存のコードとの互換性を維持）
 const cache = new SimpleCache();
 
 // CommonJS形式でエクスポート
 module.exports = {
   executeParallel,
   SimpleCache,
-  cache
+  cache,
+  // 新しいキャッシュシステムへのアクセスも提供
+  cacheManager,
+  advancedCache: cache
 };
