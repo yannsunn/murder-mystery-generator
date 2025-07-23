@@ -3,6 +3,7 @@
  * 統合マイクロ生成システム
  */
 
+const { envManager } = require('./config/env-manager.js');
 const { aiClient } = require('./utils/ai-client.js');
 const { 
   withErrorHandler, 
@@ -128,20 +129,34 @@ const handler = withApiErrorHandling(async (req, res) => {
     logger.debug('[REQUEST] Form data:', formData);
     logger.debug('[REQUEST] Session ID:', sessionId);
 
-    // GROQ APIキーの確認
-    if (!process.env.GROQ_API_KEY) {
-      logger.error('[ERROR] GROQ_API_KEY is not set in environment variables');
+    // GROQ APIキーの確認（複数の方法で試行）
+    const groqKey = process.env.GROQ_API_KEY || 
+                   envManager.get('GROQ_API_KEY') || 
+                   process.env['GROQ_API_KEY']; // 文字列アクセスも試行
+    
+    if (!groqKey) {
+      logger.error('[ERROR] GROQ_API_KEY is not found in any environment source');
+      logger.error('[ERROR] Checked: process.env, envManager');
+      logger.error('[ERROR] Available env keys:', Object.keys(process.env).filter(k => k.includes('GROQ')));
+      
       // 開発環境の場合は詳細なエラーメッセージを表示
-      const isDev = process.env.NODE_ENV !== 'production';
+      const isDev = process.env.NODE_ENV !== 'production' || !process.env.VERCEL;
       const errorMessage = isDev 
-        ? 'GROQ_API_KEY is not set. Please create a .env file with GROQ_API_KEY=your_key_here or set it in your deployment environment.'
+        ? 'GROQ_API_KEY is not set. Please check your Vercel environment variables or create a .env file locally.'
         : 'AI service is temporarily unavailable.';
       
       throw new UnifiedError(
         errorMessage,
         ERROR_TYPES.CONFIGURATION_ERROR,
         503,
-        { service: 'AI_API', provider: 'GROQ', missing: 'API_KEY', isDev }
+        { 
+          service: 'AI_API', 
+          provider: 'GROQ', 
+          missing: 'API_KEY', 
+          isDev,
+          vercel: !!process.env.VERCEL,
+          nodeEnv: process.env.NODE_ENV
+        }
       );
     }
 
