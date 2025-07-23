@@ -4,18 +4,24 @@
  */
 
 // ========== LOGGER SYSTEM ==========
-class Logger {
-  constructor() {
-    this.isProduction = !['localhost', '127.0.0.1'].includes(window.location.hostname) && 
-                       !window.location.hostname.includes('dev');
-    this.debugMode = localStorage.getItem('debug_mode') === 'true';
-  }
+// グローバルスコープでの重複定義を防ぐ
+if (typeof Logger === 'undefined') {
+  class Logger {
+    constructor() {
+      this.isProduction = !['localhost', '127.0.0.1'].includes(window.location.hostname) && 
+                         !window.location.hostname.includes('dev');
+      this.debugMode = localStorage.getItem('debug_mode') === 'true';
+    }
 
-  debug() {}
-  info() {}
-  success() {}
-  warn() {}
-  error() {}
+    debug() {}
+    info() {}
+    success() {}
+    warn() {}
+    error() {}
+  }
+  
+  // グローバルに公開
+  window.Logger = Logger;
 }
 
 // ========== RESOURCE MANAGER ==========
@@ -587,7 +593,11 @@ class CoreApp {
 }
 
 // ========== GLOBAL INSTANCES ==========
-const logger = new Logger();
+// Loggerインスタンスを安全に作成
+const logger = window.Logger ? new window.Logger() : (window.logger || { debug: () => {}, info: () => {}, success: () => {}, warn: () => {}, error: () => {} });
+// グローバルに公開
+window.logger = logger;
+
 const resourceManager = new ResourceManager();
 let coreApp = null;
 

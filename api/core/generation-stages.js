@@ -432,7 +432,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         });
         
         // 全キャラクターの生成を並列実行
-        const allCharacters = await Promise.all(characterPromises);
+        allCharacters = await Promise.all(characterPromises);
         logger.debug(`🎉 並列キャラクター生成完了: ${allCharacters.length}人`);
         
         // 名前重複チェック

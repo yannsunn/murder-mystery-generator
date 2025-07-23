@@ -74,7 +74,8 @@ const handler = withApiErrorHandling(async (req, res) => {
     // OPTIONSリクエストの処理
     if (req.method === 'OPTIONS') {
       logger.debug('[OPTIONS] Preflight request handled');
-      return res.status(200).end();
+      res.status(200).end();
+      return { success: true, message: 'CORS preflight handled' };
     }
 
     // パーソナルアクセスチェック
@@ -130,11 +131,17 @@ const handler = withApiErrorHandling(async (req, res) => {
     // GROQ APIキーの確認
     if (!process.env.GROQ_API_KEY) {
       logger.error('[ERROR] GROQ_API_KEY is not set in environment variables');
+      // 開発環境の場合は詳細なエラーメッセージを表示
+      const isDev = process.env.NODE_ENV !== 'production';
+      const errorMessage = isDev 
+        ? 'GROQ_API_KEY is not set. Please create a .env file with GROQ_API_KEY=your_key_here or set it in your deployment environment.'
+        : 'AI service is temporarily unavailable.';
+      
       throw new UnifiedError(
-        'AI service is not configured. Please set GROQ_API_KEY.',
+        errorMessage,
         ERROR_TYPES.CONFIGURATION_ERROR,
         503,
-        { service: 'AI_API', provider: 'GROQ', missing: 'API_KEY' }
+        { service: 'AI_API', provider: 'GROQ', missing: 'API_KEY', isDev }
       );
     }
 

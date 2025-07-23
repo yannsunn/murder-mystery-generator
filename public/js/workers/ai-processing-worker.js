@@ -4,7 +4,14 @@
  */
 
 // Worker内で使用するライブラリ
-importScripts('/js/logger-frontend.js');
+// logger-frontend.jsが存在しないため、シンプルなloggerを定義
+const logger = {
+  debug: (...args) => console.debug('[Worker]', ...args),
+  info: (...args) => console.info('[Worker]', ...args),
+  success: (...args) => console.log('[Worker] ✅', ...args),
+  warn: (...args) => console.warn('[Worker]', ...args),
+  error: (...args) => console.error('[Worker]', ...args)
+};
 
 class AIProcessingWorker {
   constructor() {
