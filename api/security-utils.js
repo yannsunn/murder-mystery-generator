@@ -339,7 +339,7 @@ function withSecurity(handler, endpoint = 'unknown') {
   };
 }
 
-// Netlify Functions handler export
+// Vercel Functions handler export
 const handler = async (event, context) => {
   return createSecureResponse({
     message: 'Security utilities loaded',
