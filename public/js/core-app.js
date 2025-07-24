@@ -797,7 +797,7 @@ class CoreApp {
   handleComplete(data) {
     logger.success('🎉 生成完了:', data);
     
-    this.sessionData = data.sessionData;
+    this.sessionData = data.sessionData || data;
     this.isGenerating = false;
     
     // EventSource切断
@@ -806,8 +806,37 @@ class CoreApp {
       this.eventSource = null;
     }
     
+    // 成功メッセージを表示
+    this.showSuccessMessage();
+    
     // 結果表示
     this.showResults();
+  }
+  
+  showSuccessMessage() {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'alert alert-success';
+    successDiv.innerHTML = `
+      <strong>🎉 シナリオ生成完了！</strong><br>
+      生成されたシナリオが下に表示されています。
+      ダウンロードボタンからZIPファイルとして保存できます。
+    `;
+    
+    const container = document.querySelector('.main-container');
+    if (container) {
+      // 既存のアラートを削除
+      const existingAlerts = container.querySelectorAll('.alert');
+      existingAlerts.forEach(alert => alert.remove());
+      
+      container.insertBefore(successDiv, container.firstChild);
+      
+      // 5秒後に自動的に削除
+      resourceManager.setTimeout(() => {
+        if (successDiv.parentNode) {
+          successDiv.remove();
+        }
+      }, 5000);
+    }
   }
 
   handleError(message) {
@@ -963,39 +992,148 @@ class CoreApp {
   renderResults() {
     if (!this.sessionData || !this.elements.resultContainer) return;
     
-    // シンプルな結果表示
-    this.createResultPresentation();
+    // 詳細な結果表示
+    this.createDetailedResultPresentation();
   }
   
-  createResultPresentation() {
+  createDetailedResultPresentation() {
     const container = this.elements.resultContainer;
     const scenarioContent = container.querySelector('#scenario-content');
     
     if (!scenarioContent) return;
     
+    const scenario = this.sessionData.scenario || this.sessionData;
+    
     // メインシナリオコンテンツ
     scenarioContent.innerHTML = `
       <div class="mystery-title-card">
-        <h2 class="mystery-title">🔍 マーダーミステリーシナリオ</h2>
-        <div class="mystery-subtitle">【事件解決】 【検証完了】</div>
+        <h2 class="mystery-title">🔍 ${scenario.title || 'マーダーミステリーシナリオ'}</h2>
+        <div class="mystery-subtitle">${scenario.subtitle || '【生成完了】'}</div>
       </div>
       
-      <div class="scenario-details">
-        <div class="detail-card">
-          <h3>🎭 事件概要</h3>
-          <p>セッションID: ${this.sessionData.sessionId || 'MYSTERY-' + Date.now()}</p>
-          <p>生成日時: ${new Date().toLocaleString('ja-JP')}</p>
-          <p>状態: 【解決済み】</p>
-        </div>
-        
-        <div class="detail-card">
-          <h3>🕵️ 捜査結果</h3>
-          <p>全ての証拠が揃いました</p>
-          <p>真犯人の特定に成功</p>
-          <p>動機・手口・アリバイを解明</p>
+      <div class="scenario-meta-info">
+        <span class="meta-item">📅 ${scenario.era || '現代'}</span>
+        <span class="meta-item">🏠 ${scenario.setting || '洋館'}</span>
+        <span class="meta-item">👥 ${scenario.participants || 6}人</span>
+        <span class="meta-item">⏱️ ${scenario.playtime || '2-3時間'}</span>
+      </div>
+      
+      <div class="scenario-sections">
+        ${this.renderScenarioSection('📖 シナリオ概要', scenario.overview || scenario.concept)}
+        ${this.renderScenarioSection('🎭 キャラクター', this.formatCharacters(scenario.characters))}
+        ${this.renderScenarioSection('📅 タイムライン', this.formatTimeline(scenario.timeline))}
+        ${this.renderScenarioSection('🔍 手がかり・証拠', this.formatClues(scenario.clues || scenario.evidence))}
+        ${this.renderScenarioSection('🎯 真相', scenario.truth || scenario.solution, 'truth-section')}
+      </div>
+      
+      <div class="action-buttons">
+        <button class="btn btn-primary download-btn" onclick="app.downloadScenario()">
+          📥 シナリオをダウンロード (ZIP)
+        </button>
+        <button class="btn btn-secondary" onclick="app.generateNew()">
+          🔄 新しいシナリオを生成
+        </button>
+      </div>
+    `;
+  }
+  
+  renderScenarioSection(title, content, className = '') {
+    if (!content) return '';
+    
+    const contentHtml = typeof content === 'string' 
+      ? `<p>${content.replace(/\n/g, '<br>')}</p>`
+      : content;
+    
+    return `
+      <div class="scenario-section ${className}">
+        <h3>${title}</h3>
+        <div class="section-content">
+          ${contentHtml}
         </div>
       </div>
     `;
+  }
+  
+  formatCharacters(characters) {
+    if (!characters || !Array.isArray(characters)) return '<p>キャラクター情報なし</p>';
+    
+    return characters.map(char => `
+      <div class="character-card">
+        <h4>${char.name || '名前未設定'}</h4>
+        <p class="character-role">${char.role || '役職未設定'}</p>
+        <p>${char.description || char.background || '説明なし'}</p>
+        ${char.secret ? `<p class="character-secret">秘密: ${char.secret}</p>` : ''}
+      </div>
+    `).join('');
+  }
+  
+  formatTimeline(timeline) {
+    if (!timeline) return '<p>タイムライン情報なし</p>';
+    
+    if (Array.isArray(timeline)) {
+      return timeline.map(event => `
+        <div class="timeline-event">
+          <span class="time">${event.time || '時刻不明'}</span>
+          <span class="event">${event.event || event.description || ''}</span>
+        </div>
+      `).join('');
+    }
+    
+    return `<p>${timeline.replace(/\n/g, '<br>')}</p>`;
+  }
+  
+  formatClues(clues) {
+    if (!clues) return '<p>手がかり情報なし</p>';
+    
+    if (Array.isArray(clues)) {
+      return clues.map(clue => `
+        <div class="clue-item">
+          <h4>${clue.name || clue.title || '手がかり'}</h4>
+          <p>${clue.description || clue.content || ''}</p>
+          ${clue.location ? `<p class="clue-location">場所: ${clue.location}</p>` : ''}
+        </div>
+      `).join('');
+    }
+    
+    return `<p>${clues.replace(/\n/g, '<br>')}</p>`;
+  }
+  
+  async downloadScenario() {
+    if (!this.sessionData) {
+      this.showError('ダウンロードするシナリオがありません');
+      return;
+    }
+    
+    try {
+      const sessionId = this.sessionData.sessionId || this.sessionData.id;
+      const response = await fetch(`/api/export?sessionId=${sessionId}`);
+      
+      if (!response.ok) {
+        throw new Error('ダウンロードに失敗しました');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `murder-mystery-${sessionId}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      logger.success('シナリオをダウンロードしました');
+    } catch (error) {
+      logger.error('ダウンロードエラー:', error);
+      this.showError('ダウンロードに失敗しました');
+    }
+  }
+  
+  generateNew() {
+    // 結果をクリアして新規生成画面に戻る
+    this.hideResults();
+    this.elements.form.reset();
+    window.scrollTo(0, 0);
   }
 
   handleKeyboardShortcut(e) {
@@ -1038,6 +1176,9 @@ class CoreApp {
 // ========== GLOBAL INSTANCES ==========
 // Loggerインスタンスを安全に作成
 const logger = window.Logger ? new window.Logger() : (window.logger || { debug: () => {}, info: () => {}, success: () => {}, warn: () => {}, error: () => {} });
+
+// グローバルAppインスタンス（HTML内から参照可能）
+let app;
 // グローバルに公開
 window.logger = logger;
 
@@ -1056,6 +1197,7 @@ function initializeApp() {
     coreApp = new CoreApp();
     window.coreApp = coreApp; // Global access
     window.app = coreApp; // Compatibility alias
+    app = coreApp; // グローバル変数にも設定
     
     // Prevent UltraIntegratedApp initialization
     window.ultraAppInitialized = true;
