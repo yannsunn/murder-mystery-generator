@@ -180,6 +180,25 @@ class ApiKeyManager {
         body: JSON.stringify({ apiKey: key })
       });
 
+      if (!response.ok) {
+        // HTTPエラーレスポンスの場合
+        let errorMessage = 'APIキーの検証に失敗しました';
+        try {
+          const errorResult = await response.json();
+          errorMessage = errorResult.error || errorMessage;
+        } catch (jsonError) {
+          // JSONパースエラーの場合、HTTPステータスをチェック
+          if (response.status === 400) {
+            errorMessage = 'APIキーの形式が正しくありません';
+          } else if (response.status === 500) {
+            errorMessage = 'サーバーエラーが発生しました';
+          }
+        }
+        
+        this.isValidated = false;
+        return { success: false, error: errorMessage };
+      }
+
       const result = await response.json();
       
       if (result.success) {
@@ -191,6 +210,7 @@ class ApiKeyManager {
         return { success: false, error: result.error };
       }
     } catch (error) {
+      (process.env.NODE_ENV !== "production" || true) && console.error('API validation error:', error);
       this.isValidated = false;
       return { 
         success: false, 
