@@ -830,40 +830,78 @@ class CoreApp {
   }
   
   handlePollingProgress(data) {
-    // 進捗更新
-    this.generationProgress = {
-      currentPhase: data.currentStep || 0,
-      totalPhases: data.totalSteps || 9,
-      status: 'generating'
-    };
-    
-    const progress = data.progress || 0;
-    this.updateProgressBar(progress);
-    
-    // 最新のメッセージを表示
-    if (data.messages && data.messages.length > 0) {
-      const latestMessage = data.messages[data.messages.length - 1];
-      this.updateStatusText(latestMessage.message || '処理中...');
-    }
-    
-    // フェーズ番号更新
-    const phaseNumber = document.getElementById('current-phase-number');
-    if (phaseNumber) {
-      phaseNumber.textContent = `${data.currentStep}/${data.totalSteps}`;
-    }
+    // 統一された進捗データ構造を使用
+    const normalizedData = this.normalizeProgressData(data, 'polling');
+    this.updateProgressDisplay(normalizedData);
   }
 
   handleProgressUpdate(data) {
     logger.debug('進捗更新:', data);
     
+    // 統一された進捗データ構造を使用
+    const normalizedData = this.normalizeProgressData(data, 'eventsource');
+    this.updateProgressDisplay(normalizedData);
+  }
+
+  /**
+   * 進捗データの正規化（EventSourceとPolling両方に対応）
+   */
+  normalizeProgressData(data, source) {
+    const currentStep = source === 'polling' ? (data.currentStep || 0) : (data.step || 0);
+    const totalSteps = data.totalSteps || 9;
+    const progress = data.progress || 0;
+    
+    // より正確な進捗計算（1/10で止まる問題の修正）
+    let adjustedProgress = progress;
+    if (progress < 10 && currentStep > 0) {
+      // 最初の段階でも適切な進捗を表示
+      adjustedProgress = Math.max(progress, (currentStep / totalSteps) * 100);
+    }
+    
+    const statusMessage = source === 'polling' 
+      ? (data.messages && data.messages.length > 0 ? data.messages[data.messages.length - 1].message : '処理中...')
+      : (data.stepName || data.message || '処理中...');
+    
+    return {
+      currentStep: currentStep,
+      totalSteps: totalSteps,
+      progress: Math.min(adjustedProgress, 100),
+      statusMessage: statusMessage,
+      estimatedTimeRemaining: data.estimatedTimeRemaining || 0,
+      source: source
+    };
+  }
+
+  /**
+   * 統一された進捗表示更新
+   */
+  updateProgressDisplay(normalizedData) {
+    // 進捗状態の更新
     this.generationProgress = {
-      currentPhase: data.step || 0,
-      totalPhases: data.totalSteps || 9,
-      status: 'generating'
+      currentPhase: normalizedData.currentStep,
+      totalPhases: normalizedData.totalSteps,
+      status: 'generating',
+      progress: normalizedData.progress
     };
     
-    this.updateProgressBar(data.progress || 0);
-    this.updateStatusText(data.stepName || '処理中...');
+    // UI要素の更新
+    this.updateProgressBar(normalizedData.progress);
+    this.updateStatusText(normalizedData.statusMessage);
+    
+    // フェーズ番号の更新
+    const phaseNumber = document.getElementById('current-phase-number');
+    if (phaseNumber) {
+      phaseNumber.textContent = `${normalizedData.currentStep}/${normalizedData.totalSteps}`;
+    }
+    
+    // 残り時間の表示（存在する場合）
+    const timeRemaining = document.getElementById('time-remaining');
+    if (timeRemaining && normalizedData.estimatedTimeRemaining > 0) {
+      timeRemaining.textContent = `残り約${normalizedData.estimatedTimeRemaining}秒`;
+    }
+    
+    // デバッグ情報
+    logger.debug(`進捗表示更新: ${normalizedData.progress}% (段階${normalizedData.currentStep}/${normalizedData.totalSteps}) - ${normalizedData.source}`);
   }
 
   handleComplete(data) {

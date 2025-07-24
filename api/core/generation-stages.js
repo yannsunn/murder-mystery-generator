@@ -123,7 +123,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
       const { formData } = accumulatedData;
       logger.debug('🎨 段階1: コンセプト精密化開始');
       
-      const randomOutline = context.random_outline || '';
+      const randomOutline = accumulatedData.random_outline || '';
       
       const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
 ランダム生成された大まかな構造を基に、詳細なコンセプトと世界観を精密に作成してください。`;
@@ -218,8 +218,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
       const { formData } = accumulatedData;
       logger.debug('🕵️ 段階2: 事件核心部詳細設計開始');
       
-      const randomOutline = context.random_outline || '';
-      const concept = context.concept || '';
+      const randomOutline = accumulatedData.random_outline || '';
+      const concept = accumulatedData.concept || '';
       const systemPrompt = `あなたはマーダーミステリーの事件設計のエキスパートです。
 ランダム生成された大まかな構造と精密化されたコンセプトを基に、事件の核心部分を詳細に設計してください。
 この段階では犯人、動機、犯行手段の具体的な詳細を確定します。`;
@@ -281,8 +281,8 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
       const { formData } = accumulatedData;
       logger.debug('⏰ 段階3: 事件詳細・タイムライン構築開始');
       
-      const concept = context.concept || '';
-      const incidentCore = context.incident_core || '';
+      const concept = accumulatedData.concept || '';
+      const incidentCore = accumulatedData.incident_core || '';
       const systemPrompt = `あなたはマーダーミステリーの事件詳細設計のエキスパートです。
 30分-1時間セッション用の詳細な事件タイムラインと状況を段階的に構築してください。
 この段階では、キャラクター生成の前段階として事件の詳細を確定します。`;
@@ -356,10 +356,10 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
     handler: async (accumulatedData) => {
       const { formData } = accumulatedData;
       try {
-        const randomOutline = context.random_outline || '';
-        const concept = context.concept || '';
-        const incidentCore = context.incident_core || '';
-        const incidentDetails = context.incident_details || '';
+        const randomOutline = accumulatedData.random_outline || '';
+        const concept = accumulatedData.concept || '';
+        const incidentCore = accumulatedData.incident_core || '';
+        const incidentDetails = accumulatedData.incident_details || '';
         const participantCount = parseInt(formData.participants) || 5;
         
         logger.debug(`👥 段階的キャラクター生成開始: ${participantCount}人`);
@@ -571,10 +571,10 @@ ${characterRelationships}
       const { formData } = accumulatedData;
       logger.debug('🔍 段階5: 証拠配置・手がかり体系化開始');
       
-      const concept = context.concept || '';
-      const incidentCore = context.incident_core || '';
-      const incidentDetails = context.incident_details || '';
-      const characters = context.characters || '';
+      const concept = accumulatedData.concept || '';
+      const incidentCore = accumulatedData.incident_core || '';
+      const incidentDetails = accumulatedData.incident_details || '';
+      const characters = accumulatedData.characters || '';
       
       const systemPrompt = `あなたはマーダーミステリーの証拠配置とヒントシステム設計の専門家です。
 30分-1時間で確実に解決可能な、段階的で論理的な証拠配置システムを構築してください。
@@ -663,11 +663,11 @@ ${characterRelationships}
       const { formData } = accumulatedData;
       logger.debug('🎓 段階6: GM進行ガイド・セッション管理作成開始');
       
-      const concept = context.concept || '';
-      const incidentCore = context.incident_core || '';
-      const incidentDetails = context.incident_details || '';
-      const characters = context.characters || '';
-      const evidenceSystem = context.evidence_system || '';
+      const concept = accumulatedData.concept || '';
+      const incidentCore = accumulatedData.incident_core || '';
+      const incidentDetails = accumulatedData.incident_details || '';
+      const characters = accumulatedData.characters || '';
+      const evidenceSystem = accumulatedData.evidence_system || '';
       
       const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルGM（ゲームマスター）です。
 30分-1時間セッション用の完璧なGM進行ガイドを、これまでの全段階の情報を統合して作成してください。
@@ -762,10 +762,10 @@ ${characterRelationships}
     handler: async (accumulatedData) => {
       const { formData } = accumulatedData;
       const allData = {
-        concept: context.concept || '',
-        characters: context.characters || '',
-        incident: context.incident_and_truth || '',
-        timeline: context.timeline || ''
+        concept: accumulatedData.concept || '',
+        characters: accumulatedData.characters || '',
+        incident: accumulatedData.incident_and_truth || '',
+        timeline: accumulatedData.timeline || ''
       };
       
       const systemPrompt = `30分-1時間短時間マーダーミステリーセッション専門のゲームマスター指導者として、短時間で完璧に進行する実用的ガイドを作成してください。文章の切れや不完全さは絶対に許されません。`;
@@ -912,12 +912,12 @@ ${characterRelationships}
       const { formData } = accumulatedData;
       logger.debug('🔧 段階7: 最終統合・全体つじつま調整開始');
       
-      const concept = context.concept || '';
-      const incidentCore = context.incident_core || '';
-      const incidentDetails = context.incident_details || '';
-      const characters = context.characters || '';
-      const evidenceSystem = context.evidence_system || '';
-      const gamemasterGuide = context.gamemaster_guide || '';
+      const concept = accumulatedData.concept || '';
+      const incidentCore = accumulatedData.incident_core || '';
+      const incidentDetails = accumulatedData.incident_details || '';
+      const characters = accumulatedData.characters || '';
+      const evidenceSystem = accumulatedData.evidence_system || '';
+      const gamemasterGuide = accumulatedData.gamemaster_guide || '';
       
       const systemPrompt = `あなたはマーダーミステリー品質管理の最終責任者です。
 これまでの全段階で作成された要素を統合し、全体のつじつま合わせと品質確認を行ってください。
@@ -989,14 +989,14 @@ ${characterRelationships}
       const { formData } = accumulatedData;
       logger.debug('🏆 段階8: 全体最終確認・総合品質保証開始');
       
-      const randomOutline = context.random_outline || '';
-      const concept = context.concept || '';
-      const incidentCore = context.incident_core || '';
-      const incidentDetails = context.incident_details || '';
-      const characters = context.characters || '';
-      const evidenceSystem = context.evidence_system || '';
-      const gamemasterGuide = context.gamemaster_guide || '';
-      const finalIntegration = context.final_integration || '';
+      const randomOutline = accumulatedData.random_outline || '';
+      const concept = accumulatedData.concept || '';
+      const incidentCore = accumulatedData.incident_core || '';
+      const incidentDetails = accumulatedData.incident_details || '';
+      const characters = accumulatedData.characters || '';
+      const evidenceSystem = accumulatedData.evidence_system || '';
+      const gamemasterGuide = accumulatedData.gamemaster_guide || '';
+      const finalIntegration = accumulatedData.final_integration || '';
       
       const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルの品質管理最高責任者です。
 理想的な生成フローを完了した全ての出力物を総合的にレビューし、最終的な品質保証を行ってください。
@@ -1071,7 +1071,61 @@ ${characterRelationships}
   }
 ];
 
+/**
+ * 重み付き進捗計算システム
+ */
+function calculateWeightedProgress(currentStageIndex, stageProgress = 0) {
+  let totalWeight = 0;
+  let currentWeight = 0;
+  
+  // 全段階の総重量を計算
+  for (const stage of INTEGRATED_GENERATION_FLOW) {
+    totalWeight += stage.weight || 10;
+  }
+  
+  // 現在の段階までの重量を計算
+  for (let i = 0; i < currentStageIndex; i++) {
+    currentWeight += INTEGRATED_GENERATION_FLOW[i].weight || 10;
+  }
+  
+  // 現在の段階内での進捗を追加
+  if (currentStageIndex < INTEGRATED_GENERATION_FLOW.length) {
+    const currentStageWeight = INTEGRATED_GENERATION_FLOW[currentStageIndex].weight || 10;
+    currentWeight += (currentStageWeight * stageProgress / 100);
+  }
+  
+  const progressPercentage = Math.min(Math.round((currentWeight / totalWeight) * 100), 100);
+  
+  return {
+    progressPercentage,
+    currentWeight,
+    totalWeight,
+    stageInfo: currentStageIndex < INTEGRATED_GENERATION_FLOW.length 
+      ? INTEGRATED_GENERATION_FLOW[currentStageIndex]
+      : null
+  };
+}
+
+/**
+ * 段階情報と進捗データを取得
+ */
+function getStageProgressData(stageIndex, stageProgress = 0) {
+  const progress = calculateWeightedProgress(stageIndex, stageProgress);
+  const stage = INTEGRATED_GENERATION_FLOW[stageIndex];
+  
+  return {
+    step: stageIndex + 1,
+    totalSteps: INTEGRATED_GENERATION_FLOW.length,
+    stageName: stage ? stage.name : '完了',
+    progress: progress.progressPercentage,
+    weight: stage ? stage.weight : 0,
+    estimatedTimeRemaining: Math.max(0, Math.floor((progress.totalWeight - progress.currentWeight) * 2 / progress.totalWeight))
+  };
+}
+
 // CommonJS形式でエクスポート
 module.exports = {
-  INTEGRATED_GENERATION_FLOW
+  INTEGRATED_GENERATION_FLOW,
+  calculateWeightedProgress,
+  getStageProgressData
 };

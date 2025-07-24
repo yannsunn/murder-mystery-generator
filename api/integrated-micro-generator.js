@@ -35,7 +35,7 @@ const { logger } = require('./utils/logger.js');
 // const { resourceManager } = require('./utils/resource-manager.js'); // Removed for simplicity
 // const { executeOptimizedQueryWithMonitoring } = require('./utils/database-optimizer.js'); // Removed for simplicity
 const { saveScenarioToSupabase } = require('./supabase-client.js');
-const { INTEGRATED_GENERATION_FLOW } = require('./core/generation-stages.js');
+const { INTEGRATED_GENERATION_FLOW, getStageProgressData } = require('./core/generation-stages.js');
 const { createImagePrompts, generateImages } = require('./core/image-generator.js');
 const { 
   setupEventSourceConnection, 
@@ -260,11 +260,19 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
         logger.debug(`[STAGE] Processing: ${stage.name}`);
       }
       
-      // 進捗更新を統合EventSourceManagerで送信
-      const currentWeight = (i + 1) * 10;
-      const totalWeight = stages.length * 10;
-      const progressSent = integratedEventSourceManager.sendProgressUpdate(
-        connectionId, i, stage.name, stage.message || '', currentWeight, totalWeight, false
+      // 重み付き進捗計算システムを使用
+      const progressData = getStageProgressData(i, 0); // 段階開始時は0%
+      const progressSent = integratedEventSourceManager.sendEventSourceMessage(
+        connectionId, 'progress', {
+          step: progressData.step,
+          totalSteps: progressData.totalSteps,
+          stepName: stage.name,
+          message: stage.message || `${stage.name}を処理中...`,
+          progress: progressData.progress,
+          weight: progressData.weight,
+          estimatedTimeRemaining: progressData.estimatedTimeRemaining,
+          timestamp: new Date().toISOString()
+        }
       );
       
       // 進捗送信失敗時のエラーハンドリング
@@ -285,6 +293,20 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
       try {
         const stageResult = await stage.handler(accumulatedData);
         accumulatedData = { ...accumulatedData, ...stageResult };
+        
+        // 段階完了時の進捗更新（100%）
+        const completedProgressData = getStageProgressData(i, 100);
+        integratedEventSourceManager.sendEventSourceMessage(connectionId, 'progress', {
+          step: completedProgressData.step,
+          totalSteps: completedProgressData.totalSteps,
+          stepName: stage.name,
+          message: `${stage.name}が完了しました`,
+          progress: completedProgressData.progress,
+          weight: completedProgressData.weight,
+          estimatedTimeRemaining: completedProgressData.estimatedTimeRemaining,
+          completed: true,
+          timestamp: new Date().toISOString()
+        });
         
         if (stageResult.preview) {
           integratedEventSourceManager.sendEventSourceMessage(connectionId, 'preview', {

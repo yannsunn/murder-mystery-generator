@@ -6,7 +6,7 @@
 const { envManager } = require('./config/env-manager.js');
 const { aiClient } = require('./utils/ai-client.js');
 const { logger } = require('./utils/logger.js');
-const { INTEGRATED_GENERATION_FLOW } = require('./core/generation-stages.js');
+const { INTEGRATED_GENERATION_FLOW, getStageProgressData } = require('./core/generation-stages.js');
 
 // セッション状態を保存（本番環境ではRedis等を使用すべき）
 const sessions = new Map();
@@ -191,12 +191,17 @@ async function processGeneration(session) {
         break;
       }
 
-      session.currentStep = i + 1;
-      session.progress = Math.round((i / INTEGRATED_GENERATION_FLOW.length) * 100);
+      // 重み付き進捗計算システムを使用
+      const progressData = getStageProgressData(i, 0); // 段階開始時は0%
+      
+      session.currentStep = progressData.step;
+      session.progress = progressData.progress;
       session.messages.push({
         timestamp: new Date().toISOString(),
         step: stage.name,
-        message: `${stage.name}を処理中...`
+        message: `${stage.name}を処理中...`,
+        weight: progressData.weight,
+        estimatedTimeRemaining: progressData.estimatedTimeRemaining
       });
       session.lastUpdate = Date.now();
 
@@ -206,11 +211,18 @@ async function processGeneration(session) {
         const result = await stage.handler(accumulatedData);
         accumulatedData = { ...accumulatedData, ...result };
         
+        // 段階完了時の進捗更新（100%）
+        const completedProgressData = getStageProgressData(i, 100);
+        session.progress = completedProgressData.progress;
         session.messages.push({
           timestamp: new Date().toISOString(),
           step: stage.name,
-          message: `${stage.name}が完了しました`
+          message: `${stage.name}が完了しました`,
+          weight: completedProgressData.weight,
+          estimatedTimeRemaining: completedProgressData.estimatedTimeRemaining,
+          completed: true
         });
+        session.lastUpdate = Date.now();
       } catch (stageError) {
         logger.error(`Stage ${stage.name} failed:`, stageError);
         throw stageError;
