@@ -58,6 +58,14 @@ const {
 
 const config = {
   maxDuration: 300,
+  // Vercel Edge Runtime設定
+  runtime: 'nodejs',
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+    responseLimit: false, // ストリーミングレスポンスのため無制限に
+  },
 };
 
 

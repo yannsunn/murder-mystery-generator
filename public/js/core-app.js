@@ -331,22 +331,24 @@ class CoreApp {
       this.handleComplete(data);
     });
     
-    eventSource.addEventListener('error', (event) => {
-      logger.error('EventSource error:', event);
+    // EventSourceのエラーハンドリング（1つに統合）
+    eventSource.onerror = (event) => {
+      console.error('[EventSource Error]', {
+        url: url,
+        readyState: eventSource.readyState,
+        readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],
+        event: event
+      });
+      
       if (eventSource.readyState === EventSource.CLOSED) {
         logger.error('EventSource connection closed');
         this.handleError('サーバーとの接続が切断されました。再度お試しください。');
       } else if (eventSource.readyState === EventSource.CONNECTING) {
         logger.warn('EventSource reconnecting...');
+        // 接続試行中は何もしない（自動リトライ）
       } else {
         this.handleError('接続エラーが発生しました');
       }
-    });
-    
-    eventSource.onerror = (error) => {
-      logger.error('EventSource onerror:', error);
-      console.error('EventSource URL:', url);
-      console.error('EventSource state:', eventSource.readyState);
     };
   }
 

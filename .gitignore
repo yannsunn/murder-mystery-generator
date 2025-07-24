@@ -53,3 +53,8 @@ temp/
 
 # Vercel
 .vercel
+
+# Vercel local environment files
+.env.development.local
+.env.production.local
+.env.local
