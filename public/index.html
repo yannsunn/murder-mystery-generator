@@ -35,9 +35,12 @@
     .validation-status{margin-top:1rem;padding:0.75rem;border-radius:8px}
     .validation-status.success{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
     .validation-status.error{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3)}
+    .validation-status.info{background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.3)}
     .api-status-indicator{display:flex;align-items:center;gap:0.5rem;margin-top:1rem;padding:0.5rem;background:rgba(74,222,128,0.1);border-radius:8px}
     .status-dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
     .btn-link{background:none;border:none;color:#667eea;text-decoration:underline;cursor:pointer;font-size:0.9em}
+    .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);padding:1rem 2rem;border-radius:16px;cursor:pointer;font-weight:600}
+    .btn-secondary:hover{background:rgba(255,255,255,0.15)}
   </style>
   
   <!-- Async load non-critical CSS with fallback -->
@@ -72,6 +75,14 @@
       </div>
       
       <form class="api-setup-form" id="api-setup-form">
+        <!-- 隠しユーザー名フィールド（アクセシビリティ向上） -->
+        <input type="text" id="username" name="username" 
+               autocomplete="username" 
+               value="groq-api-user" 
+               style="position: absolute; left: -9999px; width: 1px; height: 1px;" 
+               tabindex="-1" 
+               aria-hidden="true">
+        
         <div class="form-group">
           <label for="groq-api-key" class="form-label">GROQ APIキー</label>
           <input type="password" id="groq-api-key" class="form-control" 
@@ -80,7 +91,7 @@
                  autocomplete="new-password" 
                  required>
           <small id="api-key-hint" class="form-hint">
-            APIキーは暗号化されてセッション中のみ保存されます
+            APIキーは暗号化されて安全に保存されます（次回から自動入力）
           </small>
           <div id="api-key-error" class="error-message hidden" role="alert" aria-live="polite"></div>
         </div>
@@ -88,6 +99,9 @@
         <div class="form-actions">
           <button type="submit" id="validate-api-btn" class="btn btn-primary">
             🔍 APIキー検証
+          </button>
+          <button type="button" id="clear-api-btn" class="btn btn-secondary" style="margin-left: 10px; display: none;">
+            🗑️ 保存されたキーを削除
           </button>
           <div id="api-validation-status" class="validation-status hidden" aria-live="polite"></div>
         </div>

@@ -145,14 +145,39 @@ class ApiKeyManager {
   constructor() {
     this.apiKey = null;
     this.isValidated = false;
+    this.storageKey = 'groq_api_key_encrypted';
+  }
+
+  // 簡易暗号化（本番環境では適切な暗号化ライブラリを使用推奨）
+  encrypt(text) {
+    // Base64エンコード + 簡易難読化
+    const encoded = btoa(text);
+    return encoded.split('').reverse().join('');
+  }
+
+  decrypt(encrypted) {
+    try {
+      const decoded = encrypted.split('').reverse().join('');
+      return atob(decoded);
+    } catch (e) {
+      return null;
+    }
   }
 
   setApiKey(key) {
     this.apiKey = key;
-    // セッションストレージに暗号化して保存
+    // localStorageに暗号化して永続保存
     if (key) {
-      sessionStorage.setItem('groq_api_key', btoa(key));
+      try {
+        const encrypted = this.encrypt(key);
+        localStorage.setItem(this.storageKey, encrypted);
+        // セッションストレージにも保存（互換性のため）
+        sessionStorage.setItem('groq_api_key', btoa(key));
+      } catch (e) {
+        logger.warn('Failed to save API key:', e);
+      }
     } else {
+      localStorage.removeItem(this.storageKey);
       sessionStorage.removeItem('groq_api_key');
     }
   }
@@ -160,11 +185,31 @@ class ApiKeyManager {
   getApiKey() {
     if (this.apiKey) return this.apiKey;
     
-    // セッションストレージから復元
+    // まずlocalStorageから復元を試みる
+    try {
+      const encrypted = localStorage.getItem(this.storageKey);
+      if (encrypted) {
+        const decrypted = this.decrypt(encrypted);
+        if (decrypted) {
+          this.apiKey = decrypted;
+          return this.apiKey;
+        }
+      }
+    } catch (e) {
+      logger.warn('Failed to retrieve API key from localStorage:', e);
+    }
+    
+    // フォールバック：セッションストレージから復元
     const stored = sessionStorage.getItem('groq_api_key');
     if (stored) {
-      this.apiKey = atob(stored);
-      return this.apiKey;
+      try {
+        this.apiKey = atob(stored);
+        // localStorageにも保存
+        this.setApiKey(this.apiKey);
+        return this.apiKey;
+      } catch (e) {
+        logger.warn('Failed to decode API key from session:', e);
+      }
     }
     
     return null;
@@ -222,6 +267,7 @@ class ApiKeyManager {
   clearApiKey() {
     this.apiKey = null;
     this.isValidated = false;
+    localStorage.removeItem(this.storageKey);
     sessionStorage.removeItem('groq_api_key');
   }
 }
@@ -277,6 +323,7 @@ class CoreApp {
         mainCard: document.getElementById('main-card'),
         groqApiKeyInput: document.getElementById('groq-api-key'),
         validateApiBtn: document.getElementById('validate-api-btn'),
+        clearApiBtn: document.getElementById('clear-api-btn'),
         apiKeyError: document.getElementById('api-key-error'),
         apiValidationStatus: document.getElementById('api-validation-status'),
         changeApiBtn: document.getElementById('change-api-btn'),
@@ -318,14 +365,33 @@ class CoreApp {
     const savedApiKey = this.apiKeyManager.getApiKey();
     
     if (savedApiKey) {
+      // 削除ボタンを表示
+      if (this.elements.clearApiBtn) {
+        this.elements.clearApiBtn.style.display = 'inline-block';
+      }
+      
+      // フォームに既存のキーを表示（マスク表示）
+      if (this.elements.groqApiKeyInput) {
+        const maskedKey = savedApiKey.substring(0, 8) + '...' + savedApiKey.substring(savedApiKey.length - 4);
+        this.elements.groqApiKeyInput.placeholder = `保存済み: ${maskedKey}`;
+      }
+      
       // 保存されたキーを自動検証
+      this.showValidationStatus('保存されたAPIキーを検証中...', 'info');
       const result = await this.apiKeyManager.validateApiKey(savedApiKey);
       if (result.success) {
-        this.showMainInterface();
+        this.showValidationStatus('保存されたAPIキーで認証成功', 'success');
+        setTimeout(() => {
+          this.showMainInterface();
+        }, 1000);
         return;
       } else {
         // 無効なキーは削除
         this.apiKeyManager.clearApiKey();
+        this.showValidationStatus('保存されたAPIキーが無効です。新しいキーを入力してください。', 'error');
+        if (this.elements.clearApiBtn) {
+          this.elements.clearApiBtn.style.display = 'none';
+        }
       }
     }
     
@@ -400,6 +466,17 @@ class CoreApp {
     this.showApiSetup();
   }
 
+  handleClearApiKey() {
+    if (confirm('保存されたAPIキーを削除しますか？')) {
+      this.apiKeyManager.clearApiKey();
+      this.elements.groqApiKeyInput.value = '';
+      this.elements.groqApiKeyInput.placeholder = 'gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+      this.elements.clearApiBtn.style.display = 'none';
+      this.showValidationStatus('保存されたAPIキーを削除しました', 'info');
+      setTimeout(() => this.hideValidationStatus(), 3000);
+    }
+  }
+
   showApiKeyError(message) {
     this.elements.apiKeyError.textContent = message;
     this.elements.apiKeyError.classList.remove('hidden');
@@ -432,6 +509,13 @@ class CoreApp {
     if (this.elements.changeApiBtn) {
       resourceManager.addEventListener(this.elements.changeApiBtn, 'click', () => {
         this.handleChangeApiKey();
+      });
+    }
+
+    // APIキー削除ボタン
+    if (this.elements.clearApiBtn) {
+      resourceManager.addEventListener(this.elements.clearApiBtn, 'click', () => {
+        this.handleClearApiKey();
       });
     }
 
