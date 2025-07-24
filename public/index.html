@@ -66,12 +66,12 @@
         <p>GROQ APIキーを入力してシステムを開始してください</p>
       </div>
       
-      <div class="api-setup-form">
+      <form class="api-setup-form" id="api-setup-form">
         <div class="form-group">
           <label for="groq-api-key" class="form-label">GROQ APIキー</label>
           <input type="password" id="groq-api-key" class="form-control" 
                  placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                 aria-describedby="api-key-hint">
+                 aria-describedby="api-key-hint" required>
           <small id="api-key-hint" class="form-hint">
             APIキーは暗号化されてセッション中のみ保存されます
           </small>
@@ -79,12 +79,12 @@
         </div>
         
         <div class="form-actions">
-          <button type="button" id="validate-api-btn" class="btn btn-primary">
+          <button type="submit" id="validate-api-btn" class="btn btn-primary">
             🔍 APIキー検証
           </button>
           <div id="api-validation-status" class="validation-status hidden" aria-live="polite"></div>
         </div>
-      </div>
+      </form>
     </div>
 
     <!-- メインシナリオ生成カード（初期は非表示） -->

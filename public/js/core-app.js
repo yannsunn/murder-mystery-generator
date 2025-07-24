@@ -231,12 +231,29 @@ class CoreApp {
 
   async init() {
     try {
+      // グローバルエラーハンドリング（ブラウザ拡張機能エラーを抑制）
+      window.addEventListener('error', (event) => {
+        if (event.message && event.message.includes('message channel closed')) {
+          event.preventDefault();
+          return false;
+        }
+      });
+
+      window.addEventListener('unhandledrejection', (event) => {
+        if (event.reason && event.reason.message && 
+            event.reason.message.includes('message channel closed')) {
+          event.preventDefault();
+          return false;
+        }
+      });
+
       logger.info('🚀 Core App 初期化開始');
       
       // DOM要素取得
       this.elements = {
         // APIキー関連
         apiSetupCard: document.getElementById('api-setup-card'),
+        apiSetupForm: document.getElementById('api-setup-form'),
         mainCard: document.getElementById('main-card'),
         groqApiKeyInput: document.getElementById('groq-api-key'),
         validateApiBtn: document.getElementById('validate-api-btn'),
@@ -369,9 +386,10 @@ class CoreApp {
   }
 
   setupEventListeners() {
-    // APIキー検証ボタン
-    if (this.elements.validateApiBtn) {
-      resourceManager.addEventListener(this.elements.validateApiBtn, 'click', () => {
+    // APIキー設定フォーム
+    if (this.elements.apiSetupForm) {
+      resourceManager.addEventListener(this.elements.apiSetupForm, 'submit', (e) => {
+        e.preventDefault();
         this.handleApiKeyValidation();
       });
     }
@@ -380,16 +398,6 @@ class CoreApp {
     if (this.elements.changeApiBtn) {
       resourceManager.addEventListener(this.elements.changeApiBtn, 'click', () => {
         this.handleChangeApiKey();
-      });
-    }
-
-    // APIキー入力でEnterキー
-    if (this.elements.groqApiKeyInput) {
-      resourceManager.addEventListener(this.elements.groqApiKeyInput, 'keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.handleApiKeyValidation();
-        }
       });
     }
 

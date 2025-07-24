@@ -58,11 +58,16 @@ class UnifiedAIClient {
 
     // Groq APIキーかどうかを判定
     if (apiKey.startsWith('gsk_')) {
-      const Groq = require('groq-sdk');
-      return new Groq({
-        apiKey: apiKey,
-        timeout: this.timeout
-      });
+      try {
+        const Groq = require('groq-sdk');
+        return new Groq({
+          apiKey: apiKey,
+          timeout: this.timeout
+        });
+      } catch (error) {
+        logger.error('Failed to create Groq client:', error);
+        throw new Error('Failed to initialize Groq client. Please check your API key.');
+      }
     } else {
       throw new Error('Unsupported API key format. Only GROQ keys (gsk_) are supported.');
     }

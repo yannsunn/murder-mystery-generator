@@ -31,7 +31,16 @@ async function validateApiKey(req, res) {
     }
 
     // 実際のAPI呼び出しテスト
-    const testClient = aiClient.createClient(apiKey);
+    let testClient;
+    try {
+      testClient = aiClient.createClient(apiKey);
+    } catch (createError) {
+      logger.warn('Client creation failed:', createError.message);
+      return res.status(400).json({
+        success: false,
+        error: 'APIクライアントの作成に失敗しました。キーの形式を確認してください。'
+      });
+    }
     
     try {
       // 簡単なテストリクエストを送信
@@ -39,7 +48,7 @@ async function validateApiKey(req, res) {
         messages: [
           {
             role: 'user',
-            content: 'テスト'
+            content: 'Hello'
           }
         ],
         model: 'llama3-8b-8192',
