@@ -355,6 +355,18 @@ class CoreApp {
       return;
     }
 
+    // キー形式の基本チェック
+    if (!apiKey.startsWith('gsk_')) {
+      this.showApiKeyError('GROQ APIキーは "gsk_" で始まる必要があります');
+      return;
+    }
+
+    // デバッグ情報
+    logger.info('Validating API key format:', { 
+      keyLength: apiKey.length, 
+      prefix: apiKey.substring(0, 4) 
+    });
+
     // 検証ボタンを無効化
     this.elements.validateApiBtn.disabled = true;
     this.elements.validateApiBtn.textContent = '🔍 検証中...';
@@ -363,16 +375,18 @@ class CoreApp {
       const result = await this.apiKeyManager.validateApiKey(apiKey);
       
       if (result.success) {
-        this.showValidationStatus(result.message, 'success');
+        this.showValidationStatus(result.message || 'APIキーの検証に成功しました', 'success');
         // 1秒後にメインインターフェースに移動
         setTimeout(() => {
           this.showMainInterface();
         }, 1000);
       } else {
-        this.showValidationStatus(result.error, 'error');
+        this.showValidationStatus(result.error || 'APIキーの検証に失敗しました', 'error');
+        logger.warn('API key validation failed:', result.error);
       }
     } catch (error) {
-      this.showValidationStatus('検証中にエラーが発生しました', 'error');
+      logger.error('API key validation error:', error);
+      this.showValidationStatus('検証中にエラーが発生しました: ' + error.message, 'error');
     } finally {
       // 検証ボタンを再有効化
       this.elements.validateApiBtn.disabled = false;
