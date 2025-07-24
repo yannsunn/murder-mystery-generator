@@ -3,7 +3,9 @@
  * 統合マイクロ生成システム
  */
 
-const { envManager } = require('./config/env-manager.js');
+// Vercel環境では環境変数は直接process.envから読む必要がある
+const isVercel = process.env.VERCEL === '1';
+const { envManager } = !isVercel ? require('./config/env-manager.js') : { get: (key) => process.env[key], initialized: true };
 const { aiClient } = require('./utils/ai-client.js');
 const { 
   withErrorHandler, 
@@ -382,6 +384,7 @@ async function generateMysteryScenario(formData, sessionId) {
   return accumulatedData;
 }
 
-// CommonJS形式でエクスポート
+// CommonJS形式でエクスポート（Vercelもこの形式をサポート）
 module.exports = handler;
 module.exports.config = config;
+module.exports.handler = handler; // 明示的にhandlerもエクスポート
