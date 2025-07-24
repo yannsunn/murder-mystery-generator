@@ -3,6 +3,9 @@
  * 限界突破: 型安全な環境変数管理とvalidation
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 /**
  * 必須環境変数の定義
  */
@@ -77,6 +80,23 @@ const REQUIRED_ENV_VARS = {
     required: false,
     fallback: false,
     description: 'Enable detailed debug logging'
+  },
+
+  // Supabase Database
+  SUPABASE_URL: {
+    type: 'string',
+    required: false,
+    description: 'Supabase project URL'
+  },
+  SUPABASE_ANON_KEY: {
+    type: 'string',
+    required: false,
+    description: 'Supabase anonymous key'
+  },
+  SUPABASE_SERVICE_KEY: {
+    type: 'string',
+    required: false,
+    description: 'Supabase service role key (admin)'
   }
 };
 

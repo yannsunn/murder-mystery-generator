@@ -88,7 +88,8 @@ async function validateApiKey(req, res) {
       return res.status(400).json({
         success: false,
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? apiError.message : undefined
+        // 本番環境では詳細なエラー情報を隠す
+        ...(process.env.NODE_ENV === 'development' && { details: apiError.message })
       });
     }
 

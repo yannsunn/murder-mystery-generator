@@ -4,6 +4,9 @@
  * パフォーマンス向上とクエリ最適化
  */
 
+// Load environment variables
+require('dotenv').config();
+
 const { createClient } = require('@supabase/supabase-js');
 const { envManager } = require('./config/env-manager.js');
 const { databasePool, executeOptimizedQuery, initializeDatabasePool } = require('./utils/database-pool.js');

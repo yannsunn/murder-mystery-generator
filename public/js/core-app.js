@@ -171,8 +171,9 @@ class ApiKeyManager {
       try {
         const encrypted = this.encrypt(key);
         localStorage.setItem(this.storageKey, encrypted);
-        // セッションストレージにも保存（互換性のため）
-        sessionStorage.setItem('groq_api_key', btoa(key));
+        // セッションストレージにも暗号化保存（セキュリティ強化）
+        const encryptedBackup = this.encrypt(key + '_backup_' + Date.now());
+        sessionStorage.setItem('groq_api_key_backup', encryptedBackup);
       } catch (e) {
         logger.warn('Failed to save API key:', e);
       }
@@ -199,17 +200,31 @@ class ApiKeyManager {
       logger.warn('Failed to retrieve API key from localStorage:', e);
     }
     
-    // フォールバック：セッションストレージから復元
-    const stored = sessionStorage.getItem('groq_api_key');
-    if (stored) {
+    // フォールバック：暗号化セッションストレージから復元
+    const encryptedBackup = sessionStorage.getItem('groq_api_key_backup');
+    if (encryptedBackup) {
       try {
-        this.apiKey = atob(stored);
-        // localStorageにも保存
-        this.setApiKey(this.apiKey);
-        return this.apiKey;
+        const decryptedBackup = this.decrypt(encryptedBackup);
+        if (decryptedBackup) {
+          // バックアップフォーマットから元のキーを抽出
+          const parts = decryptedBackup.split('_backup_');
+          if (parts.length === 2 && parts[0].startsWith('gsk_')) {
+            this.apiKey = parts[0];
+            // localStorageにも保存
+            this.setApiKey(this.apiKey);
+            return this.apiKey;
+          }
+        }
       } catch (e) {
-        logger.warn('Failed to decode API key from session:', e);
+        logger.warn('Failed to decrypt API key from session backup:', e);
       }
+    }
+    
+    // 古いフォーマットの削除（セキュリティ改善）
+    const oldStored = sessionStorage.getItem('groq_api_key');
+    if (oldStored) {
+      sessionStorage.removeItem('groq_api_key');
+      logger.info('古い平文APIキーを削除しました');
     }
     
     return null;
@@ -255,7 +270,12 @@ class ApiKeyManager {
         return { success: false, error: result.error };
       }
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.error('API validation error:', error);
+      // 本番環境では詳細なエラー情報を隠す
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.error('API validation error:', error);
+      } else {
+        console.warn('API validation failed');
+      }
       this.isValidated = false;
       return { 
         success: false, 
@@ -636,16 +656,25 @@ class CoreApp {
   async connectEventSource() {
     const sessionId = `session_${Date.now()}`;
     
-    // Vercel環境チェック
-    const isVercel = window.location.hostname.includes('vercel.app') || 
-                    window.location.hostname === 'murder-mystery-generator.vercel.app' ||
-                    window.location.hostname.includes('murder-mystery-generator');
+    // 環境チェックと初期化を並列実行
+    const initPromises = [
+      this.checkEnvironment(),
+      this.prepareSession(sessionId)
+    ];
     
-    if (isVercel) {
-      // Vercel環境ではPolling方式を使用
-      logger.info('Vercel環境検出 - Polling方式に切り替えます');
-      await this.connectPolling(sessionId);
-      return;
+    try {
+      const [envResult, sessionResult] = await Promise.allSettled(initPromises);
+      
+      const isVercel = envResult.status === 'fulfilled' ? envResult.value : this.detectVercelFallback();
+      
+      if (isVercel) {
+        // Vercel環境ではPolling方式を使用
+        logger.info('Vercel環境検出 - Polling方式に切り替えます');
+        await this.connectPolling(sessionId);
+        return;
+      }
+    } catch (error) {
+      logger.warn('環境チェック失敗、フォールバック使用:', error);
     }
     
     // ローカル環境ではEventSource使用
@@ -683,10 +712,12 @@ class CoreApp {
     
     // EventSourceのエラーハンドリング（1つに統合）
     eventSource.onerror = (event) => {
-      (process.env.NODE_ENV !== "production" || true) && console.error('[EventSource Error]', {
-        url: url,
-        readyState: eventSource.readyState,
-        readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],
+      // 本番環境では詳細なエラー情報を隠す
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.error('[EventSource Error]', {
+          url: url,
+          readyState: eventSource.readyState,
+          readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],
         event: event,
         retryCount: this.eventSourceRetryCount
       });
@@ -1129,6 +1160,31 @@ class CoreApp {
     }
   }
   
+  // 環境チェックメソッド（並列処理用）
+  async checkEnvironment() {
+    return new Promise((resolve) => {
+      const isVercel = window.location.hostname.includes('vercel.app') || 
+                      window.location.hostname === 'murder-mystery-generator.vercel.app' ||
+                      window.location.hostname.includes('murder-mystery-generator');
+      resolve(isVercel);
+    });
+  }
+  
+  // セッション準備メソッド（並列処理用）
+  async prepareSession(sessionId) {
+    return new Promise((resolve) => {
+      // セッション固有の準備処理
+      this.sessionId = sessionId;
+      resolve({ sessionId, prepared: true });
+    });
+  }
+  
+  // フォールバック環境チェック
+  detectVercelFallback() {
+    return window.location.hostname.includes('vercel.app') || 
+           window.location.hostname === 'murder-mystery-generator.vercel.app';
+  }
+
   generateNew() {
     // 結果をクリアして新規生成画面に戻る
     this.hideResults();

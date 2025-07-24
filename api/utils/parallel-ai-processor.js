@@ -396,12 +396,68 @@ ${characterSummaries}
   }
 
   /**
-   * 証拠・手がかり生成
+   * 証拠・手がかり生成（並列処理対応）
    */
   async generateEvidence(formData, context) {
-    const systemPrompt = `あなたは証拠設計の専門家です。
-論理的で段階的な証拠システムを構築してください。`;
-    
+    try {
+      // 並列で異なる種類の証拠を生成
+      const evidencePromises = [
+        this.generatePhysicalEvidence(formData, context),
+        this.generateTestimonyEvidence(formData, context),
+        this.generateClueEvidence(formData, context),
+        this.generateMisleadingEvidence(formData, context)
+      ];
+      
+      const results = await Promise.allSettled(evidencePromises);
+      
+      // 成功した結果をまとめる
+      const successResults = results
+        .filter(result => result.status === 'fulfilled')
+        .map(result => result.value);
+      
+      if (successResults.length === 0) {
+        throw new Error('全ての証拠生成が失敗しました');
+      }
+      
+      // 結合して返す
+      return `## 証拠・手がかり統合結果\n\n${successResults.join('\n\n')}`;
+      
+    } catch (error) {
+      // フォールバック：従来の単一処理
+      return this.generateEvidenceFallback(formData, context);
+    }
+  }
+  
+  async generatePhysicalEvidence(formData, context) {
+    const systemPrompt = `物的証拠の専門家として、現場に残る具体的な証拠を設計してください。`;
+    const userPrompt = `## 物的証拠\n参加者数: ${formData.participants}人\n設定: ${formData.setting}\n時代: ${formData.era}`;
+    const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+    return `## 物的証拠\n${result.content}`;
+  }
+  
+  async generateTestimonyEvidence(formData, context) {
+    const systemPrompt = `証言分析の専門家として、各キャラクターの証言を設計してください。`;
+    const userPrompt = `## 証言・情報\n参加者数: ${formData.participants}人\n複雑さ: ${formData.complexity}`;
+    const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+    return `## 証言・情報\n${result.content}`;
+  }
+  
+  async generateClueEvidence(formData, context) {
+    const systemPrompt = `推理ゲームの手がかり設計専門家として、論理的な手がかりを設計してください。`;
+    const userPrompt = `## 推理の手がかり\nトーン: ${formData.tone}\n複雑さ: ${formData.complexity}`;
+    const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+    return `## 推理の手がかり\n${result.content}`;
+  }
+  
+  async generateMisleadingEvidence(formData, context) {
+    const systemPrompt = `ミステリーのミスリード設計専門家として、適度な偽の手がかりを設計してください。`;
+    const userPrompt = `## ミスリード要素\n参加者数: ${formData.participants}人\nトーン: ${formData.tone}`;
+    const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+    return `## ミスリード要素\n${result.content}`;
+  }
+  
+  async generateEvidenceFallback(formData, context) {
+    const systemPrompt = `あなたは証拠設計の専門家です。論理的で段階的な証拠システムを構築してください。`;
     const userPrompt = `
 以下の形式で証拠・手がかりを設計してください：
 
@@ -417,7 +473,6 @@ ${characterSummaries}
 ## ミスリード要素
 1. [偽の手がかり] - [誤導する方向]
 `;
-    
     const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
     return result.content;
   }

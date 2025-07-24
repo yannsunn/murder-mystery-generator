@@ -87,7 +87,11 @@ class UnifiedAIClient {
       this.openaiKey = envManager.get('OPENAI_API_KEY');
     } catch (error) {
       // envManagerが失敗した場合、直接process.envから取得
-      logger.warn('EnvManager failed, using direct process.env access:', error.message);
+      if (process.env.NODE_ENV === 'development') {
+        logger.warn('EnvManager failed, using direct process.env access:', error.message);
+      } else {
+        logger.warn('EnvManager failed, using fallback configuration');
+      }
       this.groqKey = process.env.GROQ_API_KEY;
       this.openaiKey = process.env.OPENAI_API_KEY;
     }
@@ -98,7 +102,11 @@ class UnifiedAIClient {
     logger.info(`   OpenAI: ${this.openaiKey ? '✅ Configured' : '❌ Missing'}`);
     
     if (!this.groqKey && !this.openaiKey) {
-      logger.error('❌ No AI providers configured! Please set GROQ_API_KEY or OPENAI_API_KEY');
+      if (process.env.NODE_ENV === 'development') {
+        logger.error('❌ No AI providers configured! Please set GROQ_API_KEY or OPENAI_API_KEY');
+      } else {
+        logger.error('AI provider configuration missing');
+      }
     }
   }
 
