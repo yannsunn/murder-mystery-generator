@@ -707,7 +707,7 @@ class UnifiedPerformanceMonitor {
    * 🚨 アラート送信
    */
   async sendAlerts(alerts) {
-    console.log('🚨 Performance Alerts:', 
+    process.env.NODE_ENV !== "production" && console.log('🚨 Performance Alerts:', 
                 JSON.stringify(alerts, null, 2));
     
     // 本番環境では外部アラートサービスに送信
@@ -814,7 +814,7 @@ class UnifiedPerformanceMonitor {
       recommendations: this.generateRecommendations()
     };
 
-    console.log('📊 Performance Report:', 
+    process.env.NODE_ENV !== "production" && console.log('📊 Performance Report:', 
                 JSON.stringify(report, null, 2));
     
     return report;

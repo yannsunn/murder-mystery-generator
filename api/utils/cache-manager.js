@@ -279,7 +279,7 @@ class CacheManager {
       const stats = cache.getStats();
       // ここで統計をログに記録したり、メトリクスサービスに送信したりできます
       if (process.env.NODE_ENV === 'development') {
-        console.log(`Cache ${name} stats:`, {
+        process.env.NODE_ENV !== "production" && console.log(`Cache ${name} stats:`, {
           hitRate: stats.hitRate,
           size: stats.size,
           memoryMB: stats.memoryUsageMB

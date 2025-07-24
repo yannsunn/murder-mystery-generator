@@ -89,7 +89,7 @@ class EnhancedLogger {
         fs.mkdirSync(this.logDir, { recursive: true });
       }
     } catch (error) {
-      console.error('Failed to create log directory:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to create log directory:', error);
       this.enableFileLogging = false;
     }
   }
@@ -221,17 +221,17 @@ class EnhancedLogger {
       case 'DEBUG':
       case 'INFO':
       case 'SUCCESS':
-        console.log(formattedMessage);
+        process.env.NODE_ENV !== "production" && console.log(formattedMessage);
         break;
       case 'WARN':
-        console.warn(formattedMessage);
+        (process.env.NODE_ENV !== "production" || true) && console.warn(formattedMessage);
         break;
       case 'ERROR':
       case 'CRITICAL':
-        console.error(formattedMessage);
+        (process.env.NODE_ENV !== "production" || true) && console.error(formattedMessage);
         break;
       default:
-        console.log(formattedMessage);
+        process.env.NODE_ENV !== "production" && console.log(formattedMessage);
     }
   }
 
@@ -269,7 +269,7 @@ class EnhancedLogger {
       // バッファークリア
       this.logBuffer = [];
     } catch (error) {
-      console.error('Failed to flush logs to file:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to flush logs to file:', error);
     }
   }
 
@@ -299,7 +299,7 @@ class EnhancedLogger {
         }
       }
     } catch (error) {
-      console.error('Failed to rotate log file:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to rotate log file:', error);
     }
   }
 
@@ -324,7 +324,7 @@ class EnhancedLogger {
         });
       }
     } catch (error) {
-      console.error('Failed to cleanup old log files:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to cleanup old log files:', error);
     }
   }
 

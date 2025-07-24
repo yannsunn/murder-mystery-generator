@@ -52,7 +52,7 @@ class PollingClient {
       return this.sessionId;
 
     } catch (error) {
-      console.error('Failed to start generation:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to start generation:', error);
       if (this.onError) {
         this.onError(error);
       }
@@ -126,7 +126,7 @@ class PollingClient {
         this.currentPollTimer = setTimeout(poll, this.pollInterval);
 
       } catch (error) {
-        console.error('Polling error:', error);
+        (process.env.NODE_ENV !== "production" || true) && console.error('Polling error:', error);
         this.retryCount = (this.retryCount || 0) + 1;
         
         if (this.retryCount >= this.maxRetries) {
@@ -178,7 +178,7 @@ class PollingClient {
         })
       });
     } catch (error) {
-      console.error('Failed to cancel:', error);
+      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to cancel:', error);
     }
   }
 }

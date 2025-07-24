@@ -27,9 +27,9 @@ function validateEnvironment() {
   }
   
   if (errors.length > 0) {
-    console.error('❌ 環境変数エラー:');
-    errors.forEach(error => console.error(`  - ${error}`));
-    console.error('💡 .envファイルを確認してください');
+    (process.env.NODE_ENV !== "production" || true) && console.error('❌ 環境変数エラー:');
+    errors.forEach(error => (process.env.NODE_ENV !== "production" || true) && console.error(`  - ${error}`));
+    (process.env.NODE_ENV !== "production" || true) && console.error('💡 .envファイルを確認してください');
     return false;
   }
   

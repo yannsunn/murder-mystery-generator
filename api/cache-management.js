@@ -127,7 +127,7 @@ exports.handler = async (event, context) => {
     };
     
   } catch (error) {
-    console.error('Cache management error:', error);
+    (process.env.NODE_ENV !== "production" || true) && console.error('Cache management error:', error);
     
     return {
       statusCode: 500,

@@ -350,7 +350,7 @@ class CoreApp {
     
     // EventSourceのエラーハンドリング（1つに統合）
     eventSource.onerror = (event) => {
-      console.error('[EventSource Error]', {
+      (process.env.NODE_ENV !== "production" || true) && console.error('[EventSource Error]', {
         url: url,
         readyState: eventSource.readyState,
         readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],

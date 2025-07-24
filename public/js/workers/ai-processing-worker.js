@@ -6,11 +6,11 @@
 // Worker内で使用するライブラリ
 // logger-frontend.jsが存在しないため、シンプルなloggerを定義
 const logger = {
-  debug: (...args) => console.debug('[Worker]', ...args),
-  info: (...args) => console.info('[Worker]', ...args),
-  success: (...args) => console.log('[Worker] ✅', ...args),
-  warn: (...args) => console.warn('[Worker]', ...args),
-  error: (...args) => console.error('[Worker]', ...args)
+  debug: (...args) => process.env.NODE_ENV !== "production" && console.debug('[Worker]', ...args),
+  info: (...args) => process.env.NODE_ENV !== "production" && console.info('[Worker]', ...args),
+  success: (...args) => process.env.NODE_ENV !== "production" && console.log('[Worker] ✅', ...args),
+  warn: (...args) => (process.env.NODE_ENV !== "production" || true) && console.warn('[Worker]', ...args),
+  error: (...args) => (process.env.NODE_ENV !== "production" || true) && console.error('[Worker]', ...args)
 };
 
 class AIProcessingWorker {
