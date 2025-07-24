@@ -1,9 +1,11 @@
 /**
  * 🛡️ EventSource統一エラーハンドラー
  * EventSourceのエラーハンドリングを統一化
+ * 統一エラーハンドラーシステムと統合
  */
 
 const { logger } = require('../utils/logger.js');
+const { UnifiedError, ERROR_TYPES } = require('../utils/error-handler.js');
 
 /**
  * EventSource関連のエラータイプ
@@ -19,19 +21,36 @@ const EVENT_SOURCE_ERROR_TYPES = {
 };
 
 /**
- * EventSource専用エラークラス
+ * EventSourceタイプを統一エラータイプにマッピング
  */
-class EventSourceError extends Error {
+function mapToUnifiedType(eventSourceType) {
+  const mapping = {
+    'CONNECTION_FAILED': ERROR_TYPES.NETWORK_ERROR,
+    'WRITE_FAILED': ERROR_TYPES.SYSTEM_FAILURE,
+    'CLIENT_DISCONNECTED': ERROR_TYPES.CLIENT_ERROR,
+    'TIMEOUT': ERROR_TYPES.TIMEOUT_ERROR,
+    'MEMORY_PRESSURE': ERROR_TYPES.RESOURCE_EXHAUSTION,
+    'RATE_LIMIT': ERROR_TYPES.RATE_LIMIT_ERROR,
+    'VALIDATION_ERROR': ERROR_TYPES.VALIDATION_ERROR
+  };
+  return mapping[eventSourceType] || ERROR_TYPES.SYSTEM_FAILURE;
+}
+
+/**
+ * EventSource専用エラークラス（UnifiedErrorを継承）
+ */
+class EventSourceError extends UnifiedError {
   constructor(message, type = EVENT_SOURCE_ERROR_TYPES.CONNECTION_FAILED, connectionId = null, statusCode = 500) {
-    super(message);
+    // EventSourceタイプを統一タイプにマッピング
+    const unifiedType = mapToUnifiedType(type);
+    super(message, unifiedType, statusCode, { 
+      connectionId, 
+      eventSourceType: type,
+      component: 'EventSource'
+    });
     this.name = 'EventSourceError';
-    this.type = type;
     this.connectionId = connectionId;
-    this.statusCode = statusCode;
-    this.timestamp = new Date().toISOString();
-    
-    // スタックトレースを保持
-    Error.captureStackTrace(this, EventSourceError);
+    this.eventSourceType = type;
   }
 }
 

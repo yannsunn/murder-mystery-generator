@@ -24,29 +24,14 @@ async function executeParallel(tasks, maxConcurrency = 3) {
   return results;
 }
 
-/**
- * シンプルなメモリキャッシュ（互換性のため維持、内部では動的キャッシュを使用）
- */
-class SimpleCache extends SimpleCacheCompat {
-  constructor() {
-    super();
-    // 互換性のためのプロパティ
-    this.maxSize = 100;
-  }
-
-  // 互換性のためのメソッド
-  size() {
-    return super.size();
-  }
-}
-
 // シングルトンインスタンス（既存のコードとの互換性を維持）
-const cache = new SimpleCache();
+// SimpleCacheCompatを直接使用して重複を削除
+const cache = new SimpleCacheCompat();
 
 // CommonJS形式でエクスポート
 module.exports = {
   executeParallel,
-  SimpleCache,
+  SimpleCache: SimpleCacheCompat, // 互換性のためSimpleCacheCompatをSimpleCacheとしてエクスポート
   cache,
   // 新しいキャッシュシステムへのアクセスも提供
   cacheManager,
