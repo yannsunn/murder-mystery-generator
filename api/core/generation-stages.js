@@ -107,7 +107,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階0: ランダム全体構造完成');
       return { random_outline: result.content };
     }
@@ -200,7 +202,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - タイムスタンプ${Date.now()}を考慮した完全にユニークな創作
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階1: 基本コンセプト完成');
       return { concept: result.content };
     }
@@ -261,7 +265,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階2: 事件核心部完成');
       return { incident_core: result.content };
     }
@@ -335,7 +341,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階3: 事件詳細・タイムライン完成');
       return { incident_details: result.content };
     }
@@ -417,7 +425,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-          return aiClient.generateWithRetry(systemPrompt, userPrompt).then(result => {
+          return aiClient.generateWithRetry(systemPrompt, userPrompt, {
+            apiKey: formData.apiKey
+          }).then(result => {
             // キャラクター情報を抽出して保存
             const nameMatch = result.content.match(/\*\*氏名\*\*:\s*([^\n]+)/);
             const character = {
@@ -489,7 +499,9 @@ ${allCharacters.map((c1, i) =>
 【重要】事件の複雑さと謎解きに適した絶妙なバランスを保つこと。
 `;
 
-        const relationshipResult = await aiClient.generateWithRetry(relationshipSystemPrompt, relationshipUserPrompt);
+        const relationshipResult = await aiClient.generateWithRetry(relationshipSystemPrompt, relationshipUserPrompt, {
+          apiKey: formData.apiKey
+        });
         characterRelationships = relationshipResult.content;
         
         // 段階3: 各キャラクターのハンドアウトを関係性情報で更新
@@ -520,7 +532,9 @@ ${characterRelationships}
 - 元のハンドアウトの品質を維持
 `;
 
-          const updatedHandout = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+          const updatedHandout = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+            apiKey: formData.apiKey
+          });
           allCharacters[i].handout = updatedHandout.content;
           logger.debug(`✅ ${character.name}のハンドアウト更新完了`);
         }
@@ -633,7 +647,9 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階5: 証拠配置・手がかり体系化完成');
       return { evidence_system: result.content };
     }
@@ -733,7 +749,9 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       return { timeline: result.content };
     }
   },
@@ -878,7 +896,9 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階6: GM進行ガイド完成');
       return { gamemaster_guide: result.content };
     }
@@ -953,7 +973,9 @@ ${characterRelationships}
 【最終確認】このマーダーミステリーは30分-1時間セッションとして完璧に機能しますか？
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('✅ 段階7: 最終統合・全体調整完成');
       return { final_integration: result.content };
     }
@@ -1040,7 +1062,9 @@ ${characterRelationships}
 【最終判定】このマーダーミステリーは理想的な生成フローを経て、プロフェッショナル品質に達しましたか？
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt);
+      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey: formData.apiKey
+      });
       logger.debug('🎉 段階8: 最終総合レビュー完了 - プロ品質保証済み');
       return { comprehensive_review: result.content };
     }

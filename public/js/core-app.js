@@ -140,6 +140,72 @@ class ResourceManager {
   }
 }
 
+// ========== API KEY MANAGER ==========
+class ApiKeyManager {
+  constructor() {
+    this.apiKey = null;
+    this.isValidated = false;
+  }
+
+  setApiKey(key) {
+    this.apiKey = key;
+    // セッションストレージに暗号化して保存
+    if (key) {
+      sessionStorage.setItem('groq_api_key', btoa(key));
+    } else {
+      sessionStorage.removeItem('groq_api_key');
+    }
+  }
+
+  getApiKey() {
+    if (this.apiKey) return this.apiKey;
+    
+    // セッションストレージから復元
+    const stored = sessionStorage.getItem('groq_api_key');
+    if (stored) {
+      this.apiKey = atob(stored);
+      return this.apiKey;
+    }
+    
+    return null;
+  }
+
+  async validateApiKey(key) {
+    try {
+      const response = await fetch('/api/validate-api-key', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ apiKey: key })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        this.setApiKey(key);
+        this.isValidated = true;
+        return { success: true, message: result.message };
+      } else {
+        this.isValidated = false;
+        return { success: false, error: result.error };
+      }
+    } catch (error) {
+      this.isValidated = false;
+      return { 
+        success: false, 
+        error: 'ネットワークエラーが発生しました。接続を確認してください。' 
+      };
+    }
+  }
+
+  clearApiKey() {
+    this.apiKey = null;
+    this.isValidated = false;
+    sessionStorage.removeItem('groq_api_key');
+  }
+}
+
 // ========== MAIN APPLICATION ==========
 class CoreApp {
   constructor() {
@@ -154,6 +220,7 @@ class CoreApp {
     };
     
     this.elements = {};
+    this.apiKeyManager = new ApiKeyManager();
     
     // デバウンス/スロットル用
     this._debounceTimers = new Map();
@@ -168,6 +235,17 @@ class CoreApp {
       
       // DOM要素取得
       this.elements = {
+        // APIキー関連
+        apiSetupCard: document.getElementById('api-setup-card'),
+        mainCard: document.getElementById('main-card'),
+        groqApiKeyInput: document.getElementById('groq-api-key'),
+        validateApiBtn: document.getElementById('validate-api-btn'),
+        apiKeyError: document.getElementById('api-key-error'),
+        apiValidationStatus: document.getElementById('api-validation-status'),
+        changeApiBtn: document.getElementById('change-api-btn'),
+        apiStatusText: document.getElementById('api-status-text'),
+        
+        // メインフォーム関連
         form: document.getElementById('scenario-form'),
         generateBtn: document.getElementById('generate-btn'),
         randomGenerateBtn: document.getElementById('random-generate-btn'),
@@ -184,6 +262,9 @@ class CoreApp {
         throw new Error(`必須要素が見つかりません: ${missingElements.join(', ')}`);
       }
       
+      // APIキー初期化
+      await this.initializeApiKey();
+      
       // イベントリスナー設定
       this.setupEventListeners();
       
@@ -195,7 +276,123 @@ class CoreApp {
     }
   }
 
+  async initializeApiKey() {
+    // 保存されたAPIキーがあるかチェック
+    const savedApiKey = this.apiKeyManager.getApiKey();
+    
+    if (savedApiKey) {
+      // 保存されたキーを自動検証
+      const result = await this.apiKeyManager.validateApiKey(savedApiKey);
+      if (result.success) {
+        this.showMainInterface();
+        return;
+      } else {
+        // 無効なキーは削除
+        this.apiKeyManager.clearApiKey();
+      }
+    }
+    
+    // APIキー設定画面を表示
+    this.showApiSetup();
+  }
+
+  showApiSetup() {
+    this.elements.apiSetupCard.classList.remove('hidden');
+    this.elements.mainCard.classList.add('hidden');
+  }
+
+  showMainInterface() {
+    this.elements.apiSetupCard.classList.add('hidden');
+    this.elements.mainCard.classList.remove('hidden');
+  }
+
+  async handleApiKeyValidation() {
+    const apiKey = this.elements.groqApiKeyInput.value.trim();
+    
+    // エラー表示をクリア
+    this.hideApiKeyError();
+    this.hideValidationStatus();
+    
+    if (!apiKey) {
+      this.showApiKeyError('APIキーを入力してください');
+      return;
+    }
+
+    // 検証ボタンを無効化
+    this.elements.validateApiBtn.disabled = true;
+    this.elements.validateApiBtn.textContent = '🔍 検証中...';
+
+    try {
+      const result = await this.apiKeyManager.validateApiKey(apiKey);
+      
+      if (result.success) {
+        this.showValidationStatus(result.message, 'success');
+        // 1秒後にメインインターフェースに移動
+        setTimeout(() => {
+          this.showMainInterface();
+        }, 1000);
+      } else {
+        this.showValidationStatus(result.error, 'error');
+      }
+    } catch (error) {
+      this.showValidationStatus('検証中にエラーが発生しました', 'error');
+    } finally {
+      // 検証ボタンを再有効化
+      this.elements.validateApiBtn.disabled = false;
+      this.elements.validateApiBtn.textContent = '🔍 APIキー検証';
+    }
+  }
+
+  handleChangeApiKey() {
+    this.apiKeyManager.clearApiKey();
+    this.elements.groqApiKeyInput.value = '';
+    this.showApiSetup();
+  }
+
+  showApiKeyError(message) {
+    this.elements.apiKeyError.textContent = message;
+    this.elements.apiKeyError.classList.remove('hidden');
+  }
+
+  hideApiKeyError() {
+    this.elements.apiKeyError.classList.add('hidden');
+  }
+
+  showValidationStatus(message, type) {
+    this.elements.apiValidationStatus.textContent = message;
+    this.elements.apiValidationStatus.className = `validation-status ${type}`;
+    this.elements.apiValidationStatus.classList.remove('hidden');
+  }
+
+  hideValidationStatus() {
+    this.elements.apiValidationStatus.classList.add('hidden');
+  }
+
   setupEventListeners() {
+    // APIキー検証ボタン
+    if (this.elements.validateApiBtn) {
+      resourceManager.addEventListener(this.elements.validateApiBtn, 'click', () => {
+        this.handleApiKeyValidation();
+      });
+    }
+
+    // APIキー変更ボタン
+    if (this.elements.changeApiBtn) {
+      resourceManager.addEventListener(this.elements.changeApiBtn, 'click', () => {
+        this.handleChangeApiKey();
+      });
+    }
+
+    // APIキー入力でEnterキー
+    if (this.elements.groqApiKeyInput) {
+      resourceManager.addEventListener(this.elements.groqApiKeyInput, 'keypress', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.handleApiKeyValidation();
+        }
+      });
+    }
+
     // フォーム送信
     if (this.elements.form) {
       resourceManager.addEventListener(this.elements.form, 'submit', (e) => {
@@ -229,12 +426,22 @@ class CoreApp {
       logger.warn('既に生成中です');
       return;
     }
+
+    // APIキーの検証
+    if (!this.apiKeyManager.isValidated || !this.apiKeyManager.getApiKey()) {
+      this.showError('APIキーが設定されていません。設定画面に戻ります。');
+      this.showApiSetup();
+      return;
+    }
     
     try {
       logger.info('🎯 シナリオ生成開始');
       
       // フォームデータ収集
       this.formData = this.collectFormData();
+      
+      // APIキーを追加
+      this.formData.apiKey = this.apiKeyManager.getApiKey();
       
       // バリデーション
       const validation = this.validateFormData(this.formData);

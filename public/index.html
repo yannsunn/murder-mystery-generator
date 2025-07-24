@@ -24,6 +24,15 @@
     /* シンプルなローディングスピナー */
     .loading-spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;margin:20px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
+    /* API設定関連 */
+    .api-setup-form{padding:1rem 0}
+    .error-message{color:#ff6b6b;font-size:0.9em;margin-top:0.5rem;padding:0.5rem;background:rgba(255,107,107,0.1);border-radius:8px}
+    .validation-status{margin-top:1rem;padding:0.75rem;border-radius:8px}
+    .validation-status.success{background:rgba(74,222,128,0.1);color:#4ade80;border:1px solid rgba(74,222,128,0.3)}
+    .validation-status.error{background:rgba(248,113,113,0.1);color:#f87171;border:1px solid rgba(248,113,113,0.3)}
+    .api-status-indicator{display:flex;align-items:center;gap:0.5rem;margin-top:1rem;padding:0.5rem;background:rgba(74,222,128,0.1);border-radius:8px}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:#4ade80}
+    .btn-link{background:none;border:none;color:#667eea;text-decoration:underline;cursor:pointer;font-size:0.9em}
   </style>
   
   <!-- Async load non-critical CSS with fallback -->
@@ -50,10 +59,44 @@
   </header>
 
   <main class="main-container" id="main-content" role="main" aria-label="マーダーミステリー生成システム">
-    <div class="card bg-ultra-contrast" id="main-card">
+    <!-- APIキー設定セクション -->
+    <div class="card bg-ultra-contrast" id="api-setup-card">
+      <div class="card-header">
+        <h2>🔑 API設定</h2>
+        <p>GROQ APIキーを入力してシステムを開始してください</p>
+      </div>
+      
+      <div class="api-setup-form">
+        <div class="form-group">
+          <label for="groq-api-key" class="form-label">GROQ APIキー</label>
+          <input type="password" id="groq-api-key" class="form-control" 
+                 placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                 aria-describedby="api-key-hint">
+          <small id="api-key-hint" class="form-hint">
+            APIキーは暗号化されてセッション中のみ保存されます
+          </small>
+          <div id="api-key-error" class="error-message hidden" role="alert" aria-live="polite"></div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" id="validate-api-btn" class="btn btn-primary">
+            🔍 APIキー検証
+          </button>
+          <div id="api-validation-status" class="validation-status hidden" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- メインシナリオ生成カード（初期は非表示） -->
+    <div class="card bg-ultra-contrast hidden" id="main-card">
       <div class="card-header">
         <h2>シナリオ生成システム</h2>
         <p>プロフェッショナル品質のマーダーミステリーシナリオを効率的に生成</p>
+        <div class="api-status-indicator">
+          <span class="status-dot" id="api-status-dot"></span>
+          <span id="api-status-text">API接続済み</span>
+          <button type="button" id="change-api-btn" class="btn-link">変更</button>
+        </div>
       </div>
       
       <!-- 統合フォーム -->

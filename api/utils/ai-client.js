@@ -49,6 +49,26 @@ class UnifiedAIClient {
   }
 
   /**
+   * 動的にAPIキーを設定してクライアントを作成
+   */
+  createClient(apiKey) {
+    if (!apiKey) {
+      throw new Error('API key is required');
+    }
+
+    // Groq APIキーかどうかを判定
+    if (apiKey.startsWith('gsk_')) {
+      const Groq = require('groq-sdk');
+      return new Groq({
+        apiKey: apiKey,
+        timeout: this.timeout
+      });
+    } else {
+      throw new Error('Unsupported API key format. Only GROQ keys (gsk_) are supported.');
+    }
+  }
+
+  /**
    * 環境変数の確実な初期化
    */
   initializeEnvironment() {
@@ -247,14 +267,21 @@ class UnifiedAIClient {
     const {
       preferredProvider = 'groq',
       maxRetries = AI_CONFIG.retries,
-      retryDelay = 1000
+      retryDelay = 1000,
+      apiKey = null
     } = options;
 
     let lastError;
     
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        return await this.generateContent(systemPrompt, userPrompt, preferredProvider);
+        if (apiKey) {
+          // 動的APIキーを使用
+          return await this.generateContentWithKey(systemPrompt, userPrompt, apiKey);
+        } else {
+          // 従来の方式
+          return await this.generateContent(systemPrompt, userPrompt, preferredProvider);
+        }
       } catch (error) {
         lastError = error;
         
@@ -266,6 +293,32 @@ class UnifiedAIClient {
     }
     
     throw new Error(`Failed after ${maxRetries + 1} attempts. Last error: ${lastError?.message}`);
+  }
+
+  /**
+   * 動的APIキーを使用してコンテンツ生成
+   */
+  async generateContentWithKey(systemPrompt, userPrompt, apiKey) {
+    const client = this.createClient(apiKey);
+    
+    const response = await client.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+      ],
+      model: 'llama3-8b-8192',
+      max_tokens: 4000,
+      temperature: 0.7
+    });
+
+    if (!response?.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from AI service');
+    }
+
+    return sanitizeObject({
+      content: response.choices[0].message.content,
+      usage: response.usage
+    });
   }
 }
 
