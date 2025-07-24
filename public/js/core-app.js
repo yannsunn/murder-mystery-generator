@@ -302,6 +302,20 @@ class CoreApp {
 
   async connectEventSource() {
     const sessionId = `session_${Date.now()}`;
+    
+    // Vercel環境チェック
+    const isVercel = window.location.hostname.includes('vercel.app') || 
+                    window.location.hostname === 'murder-mystery-generator.vercel.app' ||
+                    window.location.hostname.includes('murder-mystery-generator');
+    
+    if (isVercel) {
+      // Vercel環境ではPolling方式を使用
+      logger.info('Vercel環境検出 - Polling方式に切り替えます');
+      await this.connectPolling(sessionId);
+      return;
+    }
+    
+    // ローカル環境ではEventSource使用
     const params = new URLSearchParams({
       formData: JSON.stringify(this.formData),
       sessionId: sessionId,
@@ -319,11 +333,14 @@ class CoreApp {
     }
     
     this.eventSource = eventSource;
+    this.eventSourceRetryCount = 0;
+    this.maxEventSourceRetries = 3;
     
     // イベントハンドラー設定
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       this.handleProgressUpdate(data);
+      this.eventSourceRetryCount = 0; // 成功したらリセット
     };
     
     eventSource.addEventListener('complete', (event) => {
@@ -337,19 +354,98 @@ class CoreApp {
         url: url,
         readyState: eventSource.readyState,
         readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],
-        event: event
+        event: event,
+        retryCount: this.eventSourceRetryCount
       });
+      
+      this.eventSourceRetryCount++;
+      
+      // 最大リトライ回数を超えたらPollingに切り替え
+      if (this.eventSourceRetryCount > this.maxEventSourceRetries) {
+        logger.warn('EventSource max retries exceeded, switching to polling');
+        eventSource.close();
+        resourceManager.closeEventSource(id);
+        this.connectPolling(sessionId);
+        return;
+      }
       
       if (eventSource.readyState === EventSource.CLOSED) {
         logger.error('EventSource connection closed');
         this.handleError('サーバーとの接続が切断されました。再度お試しください。');
       } else if (eventSource.readyState === EventSource.CONNECTING) {
-        logger.warn('EventSource reconnecting...');
+        logger.warn(`EventSource reconnecting... (${this.eventSourceRetryCount}/${this.maxEventSourceRetries})`);
         // 接続試行中は何もしない（自動リトライ）
       } else {
         this.handleError('接続エラーが発生しました');
       }
     };
+  }
+  
+  async connectPolling(sessionId) {
+    // Polling用スクリプトの動的読み込み
+    if (!window.PollingClient) {
+      try {
+        const script = document.createElement('script');
+        script.src = '/js/polling-client.js';
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      } catch (error) {
+        logger.error('Polling client script load failed:', error);
+        throw new Error('Pollingクライアントの読み込みに失敗しました');
+      }
+    }
+    
+    // Pollingクライアントの初期化
+    this.pollingClient = new PollingClient();
+    
+    // イベントハンドラー設定
+    this.pollingClient.onProgress = (data) => {
+      this.handlePollingProgress(data);
+    };
+    
+    this.pollingClient.onComplete = (result) => {
+      this.handleComplete(result);
+    };
+    
+    this.pollingClient.onError = (error) => {
+      this.handleError(error.message || '生成中にエラーが発生しました');
+    };
+    
+    // 生成開始
+    try {
+      this.formData.sessionId = sessionId;
+      await this.pollingClient.start(this.formData);
+    } catch (error) {
+      logger.error('Polling start failed:', error);
+      throw error;
+    }
+  }
+  
+  handlePollingProgress(data) {
+    // 進捗更新
+    this.generationProgress = {
+      currentPhase: data.currentStep || 0,
+      totalPhases: data.totalSteps || 9,
+      status: 'generating'
+    };
+    
+    const progress = data.progress || 0;
+    this.updateProgressBar(progress);
+    
+    // 最新のメッセージを表示
+    if (data.messages && data.messages.length > 0) {
+      const latestMessage = data.messages[data.messages.length - 1];
+      this.updateStatusText(latestMessage.message || '処理中...');
+    }
+    
+    // フェーズ番号更新
+    const phaseNumber = document.getElementById('current-phase-number');
+    if (phaseNumber) {
+      phaseNumber.textContent = `${data.currentStep}/${data.totalSteps}`;
+    }
   }
 
   handleProgressUpdate(data) {
@@ -492,6 +588,17 @@ class CoreApp {
   }
 
   resetUI() {
+    // EventSource/Pollingのクリーンアップ
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+    
+    if (this.pollingClient) {
+      this.pollingClient.cancel();
+      this.pollingClient = null;
+    }
+    
     if (this.elements.generateBtn) {
       this.elements.generateBtn.disabled = false;
       this.elements.generateBtn.textContent = '🚀 シナリオ生成開始';
@@ -502,6 +609,7 @@ class CoreApp {
       totalPhases: 9,
       status: 'waiting'
     };
+    this.eventSourceRetryCount = 0;
   }
 
   // シンプルな進捗バー更新
