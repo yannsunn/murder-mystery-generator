@@ -853,9 +853,23 @@ class CoreApp {
     
     // より正確な進捗計算（1/10で止まる問題の修正）
     let adjustedProgress = progress;
-    if (progress < 10 && currentStep > 0) {
-      // 最初の段階でも適切な進捗を表示
-      adjustedProgress = Math.max(progress, (currentStep / totalSteps) * 100);
+    
+    // 進捗が異常に低い場合の修正
+    if (progress <= 10 && currentStep > 0) {
+      // 段階0完了後は最低15%を保証
+      const minimumProgress = Math.max(15, (currentStep / totalSteps) * 100);
+      adjustedProgress = Math.max(progress, minimumProgress);
+      
+      logger.warn(`🔧 Progress Adjustment: ${progress}% -> ${adjustedProgress}% (Step ${currentStep})`);
+    }
+    
+    // 段階が進んでいるのに進捗が戻る問題を防ぐ
+    if (this.generationProgress && this.generationProgress.progress) {
+      const lastProgress = this.generationProgress.progress;
+      if (adjustedProgress < lastProgress && currentStep >= this.generationProgress.currentPhase) {
+        adjustedProgress = Math.max(adjustedProgress, lastProgress + 1);
+        logger.warn(`🔧 Progress Regression Fix: Kept at ${adjustedProgress}%`);
+      }
     }
     
     const statusMessage = source === 'polling' 
@@ -865,7 +879,7 @@ class CoreApp {
     return {
       currentStep: currentStep,
       totalSteps: totalSteps,
-      progress: Math.min(adjustedProgress, 100),
+      progress: Math.min(Math.max(adjustedProgress, 0), 100),
       statusMessage: statusMessage,
       estimatedTimeRemaining: data.estimatedTimeRemaining || 0,
       source: source
@@ -876,6 +890,14 @@ class CoreApp {
    * 統一された進捗表示更新
    */
   updateProgressDisplay(normalizedData) {
+    // デバッグログを追加
+    logger.info(`🔄 Progress Update [${normalizedData.source}]:`, {
+      step: normalizedData.currentStep,
+      total: normalizedData.totalSteps,
+      progress: normalizedData.progress,
+      message: normalizedData.statusMessage
+    });
+    
     // 進捗状態の更新
     this.generationProgress = {
       currentPhase: normalizedData.currentStep,
