@@ -787,46 +787,121 @@ class CoreApp {
   }
   
   async connectPolling(sessionId) {
-    // Polling用スクリプトの動的読み込み
-    if (!window.PollingClient) {
-      try {
-        const script = document.createElement('script');
-        script.src = '/js/polling-client.js';
-        await new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-          document.head.appendChild(script);
-        });
-      } catch (error) {
-        logger.error('Polling client script load failed:', error);
-        throw new Error('Pollingクライアントの読み込みに失敗しました');
-      }
-    }
+    logger.info('🆓 Free Plan Mode: 段階別Function分離システムを使用');
     
-    // Pollingクライアントの初期化
-    this.pollingClient = new PollingClient();
-    
-    // イベントハンドラー設定
-    this.pollingClient.onProgress = (data) => {
-      this.handlePollingProgress(data);
-    };
-    
-    this.pollingClient.onComplete = (result) => {
-      this.handleComplete(result);
-    };
-    
-    this.pollingClient.onError = (error) => {
-      this.handleError(error.message || '生成中にエラーが発生しました');
-    };
-    
-    // 生成開始
     try {
-      this.formData.sessionId = sessionId;
-      await this.pollingClient.start(this.formData);
+      // 無料プラン用の生成開始
+      const startResponse = await this.startFreePlanGeneration();
+      
+      if (!startResponse.success) {
+        throw new Error(startResponse.error || '生成開始に失敗しました');
+      }
+      
+      this.sessionId = startResponse.sessionId;
+      logger.success(`✅ Free Plan Session Started: ${this.sessionId}`);
+      
+      // ポーリング開始
+      await this.startFreePlanPolling(startResponse.sessionId, startResponse.nextPollIn || 2000);
+      
     } catch (error) {
-      logger.error('Polling start failed:', error);
+      logger.error('Free Plan Polling start failed:', error);
       throw error;
     }
+  }
+  
+  /**
+   * 無料プラン用生成開始
+   */
+  async startFreePlanGeneration() {
+    const response = await fetch('/api/free-plan-generator', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'start',
+        formData: this.formData
+      })
+    });
+    
+    return await response.json();
+  }
+  
+  /**
+   * 無料プラン用ポーリング
+   */
+  async startFreePlanPolling(sessionId, pollInterval = 3000) {
+    this.pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/free-plan-generator', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'poll',
+            sessionId: sessionId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+          throw new Error(data.error || 'ポーリング失敗');
+        }
+        
+        // 進捗更新
+        this.handleFreePlanProgress(data);
+        
+        // 完了チェック
+        if (data.status === 'completed') {
+          clearInterval(this.pollInterval);
+          this.handleFreePlanComplete(data);
+        } else if (data.nextPollIn) {
+          // 動的ポーリング間隔調整
+          clearInterval(this.pollInterval);
+          this.startFreePlanPolling(sessionId, data.nextPollIn);
+        }
+        
+      } catch (error) {
+        logger.error('Free Plan Polling Error:', error);
+        clearInterval(this.pollInterval);
+        this.handleError(error.message || 'ポーリング中にエラーが発生しました');
+      }
+    }, pollInterval);
+  }
+  
+  /**
+   * 無料プラン進捗処理
+   */
+  handleFreePlanProgress(data) {
+    const normalizedData = {
+      currentStep: data.currentStage,
+      totalSteps: data.totalStages,
+      progress: data.progress,
+      statusMessage: data.message || data.stageName || '処理中...',
+      estimatedTimeRemaining: 0,
+      source: 'free-plan'
+    };
+    
+    logger.info(`🔄 Free Plan Progress [${data.currentStage}/${data.totalStages}]: ${data.progress}%`);
+    this.updateProgressDisplay(normalizedData);
+  }
+  
+  /**
+   * 無料プラン完了処理
+   */
+  handleFreePlanComplete(data) {
+    logger.success('🎉 Free Plan Generation Complete!');
+    
+    this.sessionData = {
+      sessionId: data.sessionId,
+      scenario: data.result,
+      freePlanOptimized: true
+    };
+    
+    this.isGenerating = false;
+    this.showResults();
   }
   
   handlePollingProgress(data) {

@@ -1,7 +1,19 @@
 {
   "functions": {
-    "api/integrated-micro-generator.js": {
-      "maxDuration": 120
+    "api/stage-generator/*.js": {
+      "maxDuration": 10
+    },
+    "api/stage-controller.js": {
+      "maxDuration": 10
+    },
+    "api/polling-generator.js": {
+      "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/generate-stage",
+      "destination": "/api/stage-controller"
+    }
+  ]
 }
