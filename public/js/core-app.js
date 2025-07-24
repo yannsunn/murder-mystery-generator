@@ -437,13 +437,21 @@ class CoreApp {
     this.hideValidationStatus();
     
     if (!apiKey) {
-      this.showApiKeyError('APIキーを入力してください');
+      this.showApiKeyError('❌ APIキーを入力してください');
+      this.showValidationStatus('APIキーが入力されていません', 'error');
       return;
     }
 
-    // キー形式の基本チェック
+    // キー形式の詳細チェック
     if (!apiKey.startsWith('gsk_')) {
-      this.showApiKeyError('GROQ APIキーは "gsk_" で始まる必要があります');
+      this.showApiKeyError('❌ GROQ APIキーは "gsk_" で始まる必要があります');
+      this.showValidationStatus('無効なAPIキー形式', 'error');
+      return;
+    }
+
+    if (apiKey.length < 56) {
+      this.showApiKeyError('❌ APIキーが短すぎます。完全なキーを入力してください');
+      this.showValidationStatus('APIキーの長さが不足しています', 'error');
       return;
     }
 
@@ -456,28 +464,50 @@ class CoreApp {
     // 検証ボタンを無効化
     this.elements.validateApiBtn.disabled = true;
     this.elements.validateApiBtn.textContent = '🔍 検証中...';
+    this.showValidationStatus('🔍 APIキーを検証しています...', 'info');
 
     try {
       const result = await this.apiKeyManager.validateApiKey(apiKey);
       
       if (result.success) {
-        this.showValidationStatus(result.message || 'APIキーの検証に成功しました', 'success');
+        this.showValidationStatus('✅ ' + (result.message || 'APIキーの検証に成功しました'), 'success');
+        this.hideApiKeyError();
         // 1秒後にメインインターフェースに移動
         setTimeout(() => {
           this.showMainInterface();
         }, 1000);
       } else {
-        this.showValidationStatus(result.error || 'APIキーの検証に失敗しました', 'error');
+        const errorMsg = result.error || 'APIキーの検証に失敗しました';
+        this.showValidationStatus('❌ ' + errorMsg, 'error');
+        this.showDetailedApiError(result);
         logger.warn('API key validation failed:', result.error);
       }
     } catch (error) {
       logger.error('API key validation error:', error);
-      this.showValidationStatus('検証中にエラーが発生しました: ' + error.message, 'error');
+      const errorMsg = `検証中にエラーが発生しました: ${error.message}`;
+      this.showValidationStatus('❌ ' + errorMsg, 'error');
+      this.showApiKeyError(`❌ ${errorMsg}\n\n対処方法:\n• ネットワーク接続を確認\n• しばらく待ってから再試行`);
     } finally {
       // 検証ボタンを再有効化
       this.elements.validateApiBtn.disabled = false;
       this.elements.validateApiBtn.textContent = '🔍 APIキー検証';
     }
+  }
+  
+  showDetailedApiError(result) {
+    let errorMessage = '❌ 検証に失敗しました\n\n';
+    
+    if (result.error && result.error.includes('unauthorized')) {
+      errorMessage += '【認証エラー】\nAPIキーが無効または期限切れです。\n\n対処方法:\n• GROQ Console (console.groq.com) でAPIキーを確認\n• 新しいAPIキーを生成して再試行';
+    } else if (result.error && result.error.includes('rate limit')) {
+      errorMessage += '【レート制限エラー】\nAPI使用量の上限に達しました。\n\n対処方法:\n• しばらく待ってから再試行\n• アカウントのプランを確認';
+    } else if (result.error && result.error.includes('network')) {
+      errorMessage += '【ネットワークエラー】\nサーバーに接続できませんでした。\n\n対処方法:\n• インターネット接続を確認\n• VPNを無効にして再試行';
+    } else {
+      errorMessage += `【検証エラー】\n${result.error || '不明なエラー'}\n\n対処方法:\n• APIキーをコピー&ペーストで再入力\n• GROQ Consoleで新しいキーを生成`;
+    }
+    
+    this.showApiKeyError(errorMessage);
   }
 
   handleChangeApiKey() {
@@ -520,6 +550,14 @@ class CoreApp {
     // APIキー設定フォーム
     if (this.elements.apiSetupForm) {
       resourceManager.addEventListener(this.elements.apiSetupForm, 'submit', (e) => {
+        e.preventDefault();
+        this.handleApiKeyValidation();
+      });
+    }
+
+    // APIキー検証ボタン
+    if (this.elements.validateApiBtn) {
+      resourceManager.addEventListener(this.elements.validateApiBtn, 'click', (e) => {
         e.preventDefault();
         this.handleApiKeyValidation();
       });
@@ -718,9 +756,12 @@ class CoreApp {
           url: url,
           readyState: eventSource.readyState,
           readyStateText: ['CONNECTING', 'OPEN', 'CLOSED'][eventSource.readyState],
-        event: event,
-        retryCount: this.eventSourceRetryCount
-      });
+          event: event,
+          retryCount: this.eventSourceRetryCount
+        });
+      } else {
+        console.warn('EventSource接続エラーが発生しました');
+      }
       
       this.eventSourceRetryCount++;
       
