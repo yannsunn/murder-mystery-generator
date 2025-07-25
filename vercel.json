@@ -11,6 +11,24 @@
     },
     "api/free-plan-generator.js": {
       "maxDuration": 10
+    },
+    "api/integrated-micro-generator.js": {
+      "maxDuration": 10
+    },
+    "api/env-check.js": {
+      "maxDuration": 10
+    },
+    "api/health.js": {
+      "maxDuration": 10
+    },
+    "api/validate-api-key.js": {
+      "maxDuration": 10
+    },
+    "api/export.js": {
+      "maxDuration": 10
+    },
+    "api/scenario-storage.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
