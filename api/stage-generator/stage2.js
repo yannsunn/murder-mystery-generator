@@ -4,7 +4,7 @@
  */
 
 const { StageBase } = require('./stage-base.js');
-const { withSecurity } = require('../utils/security-middleware.js');
+const { withSecurity } = require('../security-utils.js');
 
 class Stage2Generator extends StageBase {
   constructor() {

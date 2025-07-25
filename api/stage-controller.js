@@ -3,7 +3,7 @@
  * Vercel無料プラン対応（10秒制限）- セッション管理・進行制御
  */
 
-const { withSecurity } = require('./utils/security-middleware.js');
+const { withSecurity } = require('./security-utils.js');
 const { logger } = require('./utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('./supabase-client.js');
 

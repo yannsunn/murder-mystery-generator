@@ -3,7 +3,7 @@
  * 段階別Function分離によるマーダーミステリー生成
  */
 
-const { withSecurity } = require('./utils/security-middleware.js');
+const { withSecurity } = require('./security-utils.js');
 const { logger } = require('./utils/logger.js');
 
 /**

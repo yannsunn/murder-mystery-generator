@@ -8,6 +8,9 @@
     },
     "api/polling-generator.js": {
       "maxDuration": 10
+    },
+    "api/free-plan-generator.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [

@@ -3,7 +3,7 @@
  * Vercel無料プラン（10秒制限）対応
  */
 
-const { withSecurity } = require('../utils/security-middleware.js');
+const { withSecurity } = require('../security-utils.js');
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('../supabase-client.js');
