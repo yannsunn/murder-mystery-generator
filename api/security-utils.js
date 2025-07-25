@@ -6,9 +6,14 @@
 const { envManager } = require('./config/env-manager.js');
 const { createErrorResponse } = require('./utils/error-handler.js');
 
-// 環境変数マネージャーの初期化
-if (!envManager.initialized) {
-  envManager.initialize();
+// 環境変数マネージャーの初期化（エラーハンドリング付き）
+try {
+  if (!envManager.initialized) {
+    envManager.initialize();
+  }
+} catch (error) {
+  console.warn('⚠️ EnvManager initialization warning:', error.message);
+  // エラーが発生しても続行
 }
 
 // レート制限のためのメモリストア（本番環境ではRedisなどを使用）

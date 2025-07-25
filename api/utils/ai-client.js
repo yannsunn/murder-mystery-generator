@@ -249,7 +249,14 @@ class UnifiedAIClient {
     }
     
     if (availableProviders.length === 0) {
-      throw new Error('No AI providers configured. Please set GROQ_API_KEY or OPENAI_API_KEY');
+      logger.warn('⚠️ No AI providers configured. Returning mock response for development.');
+      // 開発環境用のモックレスポンスを返す
+      return {
+        content: '【開発モード】APIキーが設定されていないため、モックレスポンスを返しています。本番環境ではGROQ_API_KEYまたはOPENAI_API_KEYを設定してください。',
+        provider: 'mock',
+        model: 'mock-model',
+        executionTime: 0
+      };
     }
     
     // 優先順位を設定

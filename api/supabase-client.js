@@ -4,8 +4,13 @@
  * パフォーマンス向上とクエリ最適化
  */
 
-// Load environment variables
-require('dotenv').config();
+// Load environment variables with error handling
+try {
+  require('dotenv').config();
+} catch (e) {
+  // Dotenv might not be available in some environments
+  console.warn('dotenv not loaded:', e.message);
+}
 
 const { createClient } = require('@supabase/supabase-js');
 const { envManager } = require('./config/env-manager.js');
@@ -17,10 +22,11 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
-// 環境変数の事前検証
+// 環境変数の事前検証（エラーをスローしない）
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  logger.error('❌ 必須環境変数が設定されていません: SUPABASE_URL, SUPABASE_ANON_KEY');
-  logger.error('💡 .envファイルに環境変数を設定してください');
+  logger.warn('⚠️  Supabase環境変数が設定されていません');
+  logger.warn('💡 Supabaseを使用する場合は、環境変数を設定してください');
+  // エラーをスローせず、機能を無効化
 }
 
 // Supabaseクライアント初期化
