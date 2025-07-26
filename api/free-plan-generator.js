@@ -285,34 +285,25 @@ async function downloadResult(req, res) {
 
 async function callStageController(payload) {
   try {
-    // Stage Controller を直接呼び出し
-    const stageController = require('./stage-controller.js');
+    // Stage Controller の直接関数を使用（セキュリティラップをバイパス）
+    const { stageControllerDirect } = require('./stage-controller.js');
     
     const mockReq = {
       method: 'POST',
-      body: payload,
-      headers: {
-        'content-type': 'application/json',
-        'user-agent': 'FreePlanGenerator/1.0'
-      }
+      body: payload
     };
     
     let result = null;
     const mockRes = {
-      setHeader: () => {}, // セキュリティヘッダー設定用のダミー関数
       status: (code) => ({
         json: (data) => {
           result = { statusCode: code, ...data };
-          return result;
-        },
-        end: () => {
-          result = { statusCode: code };
           return result;
         }
       })
     };
 
-    await stageController(mockReq, mockRes);
+    await stageControllerDirect(mockReq, mockRes);
     return result;
   } catch (error) {
     console.error('[CALL-STAGE-CONTROLLER] Error:', error);

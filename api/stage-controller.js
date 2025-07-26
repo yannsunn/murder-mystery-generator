@@ -348,4 +348,6 @@ function extractTitle(outline) {
   return match ? match[1].trim() : 'マーダーミステリーシナリオ';
 }
 
+// 内部呼び出し用に生の関数もエクスポート
 module.exports = withSecurity(stageController, 'stage-control');
+module.exports.stageControllerDirect = stageController; // セキュリティラップなし版

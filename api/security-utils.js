@@ -18,7 +18,14 @@ try {
 
 // レート制限のためのメモリストア（本番環境ではRedisなどを使用）
 const rateLimitStore = new Map();
-const MAX_RATE_LIMIT_ENTRIES = envManager.get('MAX_STORAGE_SIZE') || 10000;
+// 環境変数は動的に取得するように変更
+const getMaxRateLimitEntries = () => {
+  try {
+    return envManager.initialized ? (envManager.get('MAX_STORAGE_SIZE') || 10000) : 10000;
+  } catch (e) {
+    return 10000;
+  }
+};
 
 // 定期的なクリーンアップ（5分毎）
 const cleanupInterval = setInterval(() => {
@@ -124,11 +131,22 @@ function sanitizeText(text) {
 function checkRateLimit(clientIP, endpoint) {
   const key = `${clientIP}:${endpoint}`;
   const now = Date.now();
-  const windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 900000; // デフォルト15分間
-  const maxRequests = envManager.get('RATE_LIMIT_MAX_REQUESTS') || 10;
+  // 環境変数を動的に取得
+  let windowMs = 900000; // デフォルト15分間
+  let maxRequests = 10;
+  
+  try {
+    if (envManager.initialized) {
+      windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 900000;
+      maxRequests = envManager.get('RATE_LIMIT_MAX_REQUESTS') || 10;
+    }
+  } catch (e) {
+    // エラーが発生してもデフォルト値を使用
+  }
 
   // ストレージ容量制限チェック
-  if (rateLimitStore.size > MAX_RATE_LIMIT_ENTRIES) {
+  const maxEntries = getMaxRateLimitEntries();
+  if (rateLimitStore.size > maxEntries) {
     cleanupOldestRateLimits();
   }
 
@@ -283,8 +301,10 @@ async function handleSecureError(error, req, res, operation = 'unknown') {
   };
   
   if (process.env.NODE_ENV !== 'production') {
+    console.error('[SECURITY-ERROR]', errorLog);
   }
 
+  // createErrorResponseは内部で適切にエラーを変換する
   const errorResponse = createErrorResponse(error);
   return res.status(error.statusCode || 500).json(errorResponse);
 }
