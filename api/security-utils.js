@@ -230,10 +230,10 @@ function validateRequest(req) {
     errors.push('Request body too large');
   }
 
-  // User-Agent の検証（空の場合は疑わしい）
-  if (!req.headers['user-agent']) {
-    errors.push('User-Agent header is required');
-  }
+  // User-Agent の検証（オプショナルに変更）
+  // if (!req.headers['user-agent']) {
+  //   errors.push('User-Agent header is required');
+  // }
 
   return errors;
 }
@@ -304,7 +304,7 @@ function withSecurity(handler, endpoint = 'unknown') {
       }
 
       // メソッドの検証
-      if (req.method !== 'POST') {
+      if (req.method !== 'POST' && req.method !== 'GET') {
         return res.status(405).json({
           success: false,
           error: 'Method not allowed'

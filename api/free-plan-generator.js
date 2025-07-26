@@ -11,6 +11,7 @@ const { logger } = require('./utils/logger.js');
  */
 async function freePlanGenerator(req, res) {
   const startTime = Date.now();
+  console.log('[FREE-PLAN-GENERATOR] Request received:', req.method, req.body?.action);
 
   try {
     // CORS設定
@@ -48,11 +49,14 @@ async function freePlanGenerator(req, res) {
 
   } catch (error) {
     const executionTime = Date.now() - startTime;
+    console.error('[FREE-PLAN-GENERATOR] Error:', error);
+    console.error('[FREE-PLAN-GENERATOR] Stack:', error.stack);
     logger.error(`Free Plan Generator Error [${executionTime}ms]:`, error);
 
     return res.status(500).json({
       success: false,
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       executionTime: executionTime,
       freePlanOptimized: true
     });
@@ -280,26 +284,40 @@ async function downloadResult(req, res) {
  */
 
 async function callStageController(payload) {
-  // Stage Controller を直接呼び出し
-  const stageController = require('./stage-controller.js');
-  
-  const mockReq = {
-    method: 'POST',
-    body: payload
-  };
-  
-  let result = null;
-  const mockRes = {
-    status: (code) => ({
-      json: (data) => {
-        result = { statusCode: code, ...data };
-        return result;
+  try {
+    // Stage Controller を直接呼び出し
+    const stageController = require('./stage-controller.js');
+    
+    const mockReq = {
+      method: 'POST',
+      body: payload,
+      headers: {
+        'content-type': 'application/json',
+        'user-agent': 'FreePlanGenerator/1.0'
       }
-    })
-  };
+    };
+    
+    let result = null;
+    const mockRes = {
+      setHeader: () => {}, // セキュリティヘッダー設定用のダミー関数
+      status: (code) => ({
+        json: (data) => {
+          result = { statusCode: code, ...data };
+          return result;
+        },
+        end: () => {
+          result = { statusCode: code };
+          return result;
+        }
+      })
+    };
 
-  await stageController(mockReq, mockRes);
-  return result;
+    await stageController(mockReq, mockRes);
+    return result;
+  } catch (error) {
+    console.error('[CALL-STAGE-CONTROLLER] Error:', error);
+    throw error;
+  }
 }
 
 function calculateProgress(currentStage) {
