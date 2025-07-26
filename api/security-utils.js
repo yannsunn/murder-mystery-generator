@@ -129,16 +129,21 @@ function sanitizeText(text) {
  * レート制限チェック
  */
 function checkRateLimit(clientIP, endpoint) {
+  // free-plan-generatorはレート制限を緩和
+  if (endpoint === 'free-plan-generation') {
+    return { allowed: true, remaining: 9999 };
+  }
+  
   const key = `${clientIP}:${endpoint}`;
   const now = Date.now();
   // 環境変数を動的に取得
-  let windowMs = 900000; // デフォルト15分間
-  let maxRequests = 10;
+  let windowMs = 60000; // デフォルト1分間に緩和
+  let maxRequests = 100; // デフォルト100リクエストに緩和
   
   try {
     if (envManager.initialized) {
-      windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 900000;
-      maxRequests = envManager.get('RATE_LIMIT_MAX_REQUESTS') || 10;
+      windowMs = envManager.get('RATE_LIMIT_WINDOW_MS') || 60000;
+      maxRequests = envManager.get('RATE_LIMIT_MAX_REQUESTS') || 100;
     }
   } catch (e) {
     // エラーが発生してもデフォルト値を使用

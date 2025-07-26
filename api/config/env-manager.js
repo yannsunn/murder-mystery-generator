@@ -49,13 +49,13 @@ const REQUIRED_ENV_VARS = {
   RATE_LIMIT_WINDOW_MS: {
     type: 'number',
     required: false,
-    fallback: 900000, // 15分
+    fallback: 60000, // 1分に緩和
     description: 'Rate limiting window in milliseconds'
   },
   RATE_LIMIT_MAX_REQUESTS: {
     type: 'number',
     required: false,
-    fallback: 10,
+    fallback: 100, // 100リクエストに緩和
     description: 'Maximum requests per window'
   },
   
