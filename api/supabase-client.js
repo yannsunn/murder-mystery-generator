@@ -115,6 +115,12 @@ async function ensureTablesExist() {
  * シナリオをSupabaseに保存（最適化版）
  */
 async function saveScenarioToSupabase(sessionId, scenarioData) {
+  // Supabaseが初期化されていない場合はスキップ
+  if (!supabase) {
+    logger.warn('⚠️ Supabase not initialized, skipping save');
+    return { success: false, error: 'Supabase not initialized' };
+  }
+  
   try {
     const data = {
       id: sessionId,
@@ -149,6 +155,12 @@ async function saveScenarioToSupabase(sessionId, scenarioData) {
  * Supabaseからシナリオを取得（最適化版）
  */
 async function getScenarioFromSupabase(sessionId) {
+  // Supabaseが初期化されていない場合はスキップ
+  if (!supabase) {
+    logger.warn('⚠️ Supabase not initialized, skipping read');
+    return { success: false, error: 'Supabase not initialized' };
+  }
+  
   try {
     const result = await executeOptimizedQuery({
       table: 'scenarios',

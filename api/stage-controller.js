@@ -7,6 +7,41 @@ const { withSecurity } = require('./security-utils.js');
 const { logger } = require('./utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('./supabase-client.js');
 
+// メモリストレージ（Supabase未設定時のフォールバック）
+const memoryStorage = new Map();
+
+/**
+ * セッションデータを保存（Supabaseまたはメモリ）
+ */
+async function saveSessionData(sessionId, data) {
+  try {
+    const result = await saveScenarioToSupabase(sessionId, data);
+    if (!result || !result.success) {
+      throw new Error('Supabase save failed');
+    }
+  } catch (error) {
+    logger.warn(`⚠️ Using memory storage for session ${sessionId}`);
+    memoryStorage.set(sessionId, data);
+  }
+}
+
+/**
+ * セッションデータを取得（Supabaseまたはメモリ）
+ */
+async function getSessionData(sessionId) {
+  try {
+    const result = await getScenarioFromSupabase(sessionId);
+    if (result && result.success && result.data) {
+      return result.data.scenario_data || result.data;
+    }
+  } catch (error) {
+    logger.warn(`⚠️ Supabase read failed, checking memory for ${sessionId}`);
+  }
+  
+  // メモリから取得
+  return memoryStorage.get(sessionId);
+}
+
 /**
  * 段階制御の核となるハンドラー
  */
@@ -71,7 +106,8 @@ async function initializeSession(req, res) {
   };
 
   try {
-    await saveScenarioToSupabase(sessionId, sessionData);
+    // セッションデータを保存
+    await saveSessionData(sessionId, sessionData);
     logger.info(`✅ Session initialized: ${sessionId}`);
 
     return res.status(200).json({
@@ -107,7 +143,7 @@ async function getSessionStatus(req, res) {
   }
 
   try {
-    const sessionData = await getScenarioFromSupabase(sessionId);
+    const sessionData = await getSessionData(sessionId);
     
     if (!sessionData) {
       return res.status(404).json({
@@ -154,7 +190,7 @@ async function executeStage(req, res) {
 
   try {
     // セッションデータ取得
-    const sessionData = await getScenarioFromSupabase(sessionId);
+    const sessionData = await getSessionData(sessionId);
     if (!sessionData) {
       return res.status(404).json({
         success: false,
@@ -211,7 +247,7 @@ async function getFinalResult(req, res) {
   const { sessionId } = req.body;
 
   try {
-    const sessionData = await getScenarioFromSupabase(sessionId);
+    const sessionData = await getSessionData(sessionId);
     
     if (!sessionData) {
       return res.status(404).json({

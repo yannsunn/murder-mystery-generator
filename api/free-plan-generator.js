@@ -86,8 +86,11 @@ async function startGeneration(req, res) {
       formData: parsedFormData
     });
 
-    if (!initResponse.success) {
-      throw new Error('Session initialization failed');
+    console.log('[START-GENERATION] initResponse:', initResponse);
+    
+    if (!initResponse || !initResponse.success) {
+      console.error('[START-GENERATION] Init failed:', initResponse);
+      throw new Error('Session initialization failed: ' + (initResponse?.error || 'Unknown error'));
     }
 
     const sessionId = initResponse.sessionId;
@@ -99,6 +102,8 @@ async function startGeneration(req, res) {
       sessionId: sessionId,
       stageIndex: 0
     });
+    
+    console.log('[START-GENERATION] stage0Response:', stage0Response);
 
     return res.status(200).json({
       success: true,
@@ -126,6 +131,8 @@ async function startGeneration(req, res) {
  */
 async function pollProgress(req, res) {
   const { sessionId } = req.method === 'GET' ? req.query : req.body;
+  
+  console.log('[POLL-PROGRESS] Request for sessionId:', sessionId);
 
   if (!sessionId) {
     return res.status(400).json({
@@ -140,6 +147,8 @@ async function pollProgress(req, res) {
       action: 'get_status',
       sessionId: sessionId
     });
+    
+    console.log('[POLL-PROGRESS] statusResponse:', statusResponse);
 
     if (!statusResponse.success) {
       return res.status(404).json({
