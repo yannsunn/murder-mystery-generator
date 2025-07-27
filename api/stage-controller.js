@@ -102,7 +102,9 @@ async function initializeSession(req, res) {
     createdAt: new Date().toISOString(),
     lastUpdate: new Date().toISOString(),
     stages_completed: [],
-    free_plan_optimized: true
+    free_plan_optimized: true,
+    // APIキーを最上位レベルにも保存
+    apiKey: formData.apiKey || null
   };
 
   try {
@@ -198,12 +200,14 @@ async function executeStage(req, res) {
       });
     }
 
-    // 段階実行準備
+    // 段階実行準備（APIキーを確実に含める）
     const stageUrl = getStageUrl(stageIndex);
     const stagePayload = {
       sessionId: sessionId,
       stageIndex: stageIndex,
-      ...sessionData
+      ...sessionData,
+      // APIキーが複数の場所にある可能性があるため確実に渡す
+      apiKey: sessionData.apiKey || sessionData.formData?.apiKey || null
     };
 
     logger.info(`🎯 Executing stage ${stageIndex} for session ${sessionId}`);
