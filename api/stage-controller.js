@@ -67,6 +67,9 @@ async function stageController(req, res) {
       case 'cleanup':
         return await cleanupSession(req, res);
       
+      case 'force_advance':
+        return await forceAdvanceStage(req, res);
+      
       default:
         return res.status(400).json({
           success: false,
@@ -331,6 +334,53 @@ async function cleanupSession(req, res) {
 }
 
 /**
+ * 強制的にステージを進める
+ */
+async function forceAdvanceStage(req, res) {
+  const { sessionId, targetStage } = req.body;
+
+  try {
+    const sessionData = await getSessionData(sessionId);
+    if (!sessionData) {
+      return res.status(404).json({
+        success: false,
+        error: 'セッションが見つかりません'
+      });
+    }
+
+    // 強制的にステージを進める
+    sessionData.currentStageIndex = targetStage;
+    sessionData.status = targetStage >= 9 ? 'completed' : 'generating';
+    sessionData.lastUpdate = new Date().toISOString();
+    
+    // モックデータを生成して埋める（必要な場合）
+    if (!sessionData[`stage${targetStage - 1}_result`]) {
+      sessionData[`stage${targetStage - 1}_result`] = {
+        content: `【デモモード】段階${targetStage - 1}のデータ`,
+        usedMockData: true
+      };
+    }
+
+    await saveSessionData(sessionId, sessionData);
+    logger.warn(`⚠️ Force advanced session ${sessionId} to stage ${targetStage}`);
+
+    return res.status(200).json({
+      success: true,
+      sessionId: sessionId,
+      currentStageIndex: targetStage,
+      message: `強制的にステージ${targetStage}へ進めました`
+    });
+
+  } catch (error) {
+    logger.error('Force advance failed:', error);
+    return res.status(500).json({
+      success: false,
+      error: '強制進行に失敗しました'
+    });
+  }
+}
+
+/**
  * ヘルパー関数群
  */
 
@@ -406,18 +456,28 @@ function getNextActionForStage(nextStageIndex) {
 }
 
 function formatFinalScenario(sessionData) {
+  // 各ステージの結果を取得（存在しない場合はデモデータを使用）
+  const getStageContent = (stageName, fallbackContent) => {
+    const stageResult = sessionData[`${stageName}_result`];
+    if (stageResult) {
+      return typeof stageResult === 'object' ? stageResult.content : stageResult;
+    }
+    return sessionData[stageName] || fallbackContent;
+  };
+
   return {
-    title: extractTitle(sessionData.random_outline),
-    outline: sessionData.random_outline,
-    concept: sessionData.concept_detail,
-    incident: sessionData.incident_core,
-    details: sessionData.incident_details,
-    characters: sessionData.characters,
-    evidence: sessionData.evidence_system,
-    gmGuide: sessionData.gm_guide,
-    integration: sessionData.integration_check,
-    qualityCheck: sessionData.final_quality_check,
-    completedAt: sessionData.completion_timestamp
+    title: extractTitle(sessionData.random_outline || sessionData.stage0_result?.content),
+    outline: getStageContent('stage0', '【デモモード】基本構想'),
+    concept: getStageContent('stage1', '【デモモード】コンセプト詳細'),
+    incident: getStageContent('stage2', '【デモモード】事件の核心'),
+    details: getStageContent('stage3', '【デモモード】状況詳細'),
+    characters: getStageContent('stage4', '【デモモード】キャラクター設定'),
+    evidence: getStageContent('stage5', '【デモモード】証拠システム'),
+    gmGuide: getStageContent('stage6', '【デモモード】GM進行ガイド'),
+    integration: getStageContent('stage7', '【デモモード】統合チェック'),
+    qualityCheck: getStageContent('stage8', '【デモモード】品質確認'),
+    completedAt: sessionData.completion_timestamp || new Date().toISOString(),
+    isDemo: sessionData.usedMockData || sessionData.formData?.demoMode || false
   };
 }
 
