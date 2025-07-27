@@ -140,157 +140,6 @@ class ResourceManager {
   }
 }
 
-// ========== API KEY MANAGER ==========
-class ApiKeyManager {
-  constructor() {
-    this.apiKey = null;
-    this.isValidated = false;
-    this.storageKey = 'groq_api_key_encrypted';
-  }
-
-  // 簡易暗号化（本番環境では適切な暗号化ライブラリを使用推奨）
-  encrypt(text) {
-    // Base64エンコード + 簡易難読化
-    const encoded = btoa(text);
-    return encoded.split('').reverse().join('');
-  }
-
-  decrypt(encrypted) {
-    try {
-      const decoded = encrypted.split('').reverse().join('');
-      return atob(decoded);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  setApiKey(key) {
-    this.apiKey = key;
-    // localStorageに暗号化して永続保存
-    if (key) {
-      try {
-        const encrypted = this.encrypt(key);
-        localStorage.setItem(this.storageKey, encrypted);
-        // セッションストレージにも暗号化保存（セキュリティ強化）
-        const encryptedBackup = this.encrypt(key + '_backup_' + Date.now());
-        sessionStorage.setItem('groq_api_key_backup', encryptedBackup);
-      } catch (e) {
-        logger.warn('Failed to save API key:', e);
-      }
-    } else {
-      localStorage.removeItem(this.storageKey);
-      sessionStorage.removeItem('groq_api_key');
-    }
-  }
-
-  getApiKey() {
-    if (this.apiKey) return this.apiKey;
-    
-    // まずlocalStorageから復元を試みる
-    try {
-      const encrypted = localStorage.getItem(this.storageKey);
-      if (encrypted) {
-        const decrypted = this.decrypt(encrypted);
-        if (decrypted) {
-          this.apiKey = decrypted;
-          return this.apiKey;
-        }
-      }
-    } catch (e) {
-      logger.warn('Failed to retrieve API key from localStorage:', e);
-    }
-    
-    // フォールバック：暗号化セッションストレージから復元
-    const encryptedBackup = sessionStorage.getItem('groq_api_key_backup');
-    if (encryptedBackup) {
-      try {
-        const decryptedBackup = this.decrypt(encryptedBackup);
-        if (decryptedBackup) {
-          // バックアップフォーマットから元のキーを抽出
-          const parts = decryptedBackup.split('_backup_');
-          if (parts.length === 2 && parts[0].startsWith('gsk_')) {
-            this.apiKey = parts[0];
-            // localStorageにも保存
-            this.setApiKey(this.apiKey);
-            return this.apiKey;
-          }
-        }
-      } catch (e) {
-        logger.warn('Failed to decrypt API key from session backup:', e);
-      }
-    }
-    
-    // 古いフォーマットの削除（セキュリティ改善）
-    const oldStored = sessionStorage.getItem('groq_api_key');
-    if (oldStored) {
-      sessionStorage.removeItem('groq_api_key');
-      logger.info('古い平文APIキーを削除しました');
-    }
-    
-    return null;
-  }
-
-  async validateApiKey(key) {
-    try {
-      const response = await fetch('/api/validate-api-key', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ apiKey: key })
-      });
-
-      if (!response.ok) {
-        // HTTPエラーレスポンスの場合
-        let errorMessage = 'APIキーの検証に失敗しました';
-        try {
-          const errorResult = await response.json();
-          errorMessage = errorResult.error || errorMessage;
-        } catch (jsonError) {
-          // JSONパースエラーの場合、HTTPステータスをチェック
-          if (response.status === 400) {
-            errorMessage = 'APIキーの形式が正しくありません';
-          } else if (response.status === 500) {
-            errorMessage = 'サーバーエラーが発生しました';
-          }
-        }
-        
-        this.isValidated = false;
-        return { success: false, error: errorMessage };
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        this.setApiKey(key);
-        this.isValidated = true;
-        return { success: true, message: result.message };
-      } else {
-        this.isValidated = false;
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      // 本番環境では詳細なエラー情報を隠す
-      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        console.error('API validation error:', error);
-      } else {
-        console.warn('API validation failed');
-      }
-      this.isValidated = false;
-      return { 
-        success: false, 
-        error: 'ネットワークエラーが発生しました。接続を確認してください。' 
-      };
-    }
-  }
-
-  clearApiKey() {
-    this.apiKey = null;
-    this.isValidated = false;
-    localStorage.removeItem(this.storageKey);
-    sessionStorage.removeItem('groq_api_key');
-  }
-}
 
 // ========== MAIN APPLICATION ==========
 class CoreApp {
@@ -306,7 +155,6 @@ class CoreApp {
     };
     
     this.elements = {};
-    this.apiKeyManager = new ApiKeyManager();
     
     // デバウンス/スロットル用
     this._debounceTimers = new Map();
@@ -337,19 +185,8 @@ class CoreApp {
       
       // DOM要素取得
       this.elements = {
-        // APIキー関連
-        apiSetupCard: document.getElementById('api-setup-card'),
-        apiSetupForm: document.getElementById('api-setup-form'),
-        mainCard: document.getElementById('main-card'),
-        groqApiKeyInput: document.getElementById('groq-api-key'),
-        validateApiBtn: document.getElementById('validate-api-btn'),
-        clearApiBtn: document.getElementById('clear-api-btn'),
-        apiKeyError: document.getElementById('api-key-error'),
-        apiValidationStatus: document.getElementById('api-validation-status'),
-        changeApiBtn: document.getElementById('change-api-btn'),
-        apiStatusText: document.getElementById('api-status-text'),
-        
         // メインフォーム関連
+        mainCard: document.getElementById('main-card'),
         form: document.getElementById('scenario-form'),
         generateBtn: document.getElementById('generate-btn'),
         randomGenerateBtn: document.getElementById('random-generate-btn'),
@@ -366,9 +203,6 @@ class CoreApp {
         throw new Error(`必須要素が見つかりません: ${missingElements.join(', ')}`);
       }
       
-      // APIキー初期化
-      await this.initializeApiKey();
-      
       // イベントリスナー設定
       this.setupEventListeners();
       
@@ -380,202 +214,10 @@ class CoreApp {
     }
   }
 
-  async initializeApiKey() {
-    // 保存されたAPIキーがあるかチェック
-    const savedApiKey = this.apiKeyManager.getApiKey();
-    
-    if (savedApiKey) {
-      // 削除ボタンを表示
-      if (this.elements.clearApiBtn) {
-        this.elements.clearApiBtn.style.display = 'inline-block';
-      }
-      
-      // フォームに既存のキーを表示（マスク表示）
-      if (this.elements.groqApiKeyInput) {
-        const maskedKey = savedApiKey.substring(0, 8) + '...' + savedApiKey.substring(savedApiKey.length - 4);
-        this.elements.groqApiKeyInput.placeholder = `保存済み: ${maskedKey}`;
-      }
-      
-      // 保存されたキーを自動検証
-      this.showValidationStatus('保存されたAPIキーを検証中...', 'info');
-      const result = await this.apiKeyManager.validateApiKey(savedApiKey);
-      if (result.success) {
-        this.showValidationStatus('保存されたAPIキーで認証成功', 'success');
-        setTimeout(() => {
-          this.showMainInterface();
-        }, 1000);
-        return;
-      } else {
-        // 無効なキーは削除
-        this.apiKeyManager.clearApiKey();
-        this.showValidationStatus('保存されたAPIキーが無効です。新しいキーを入力してください。', 'error');
-        if (this.elements.clearApiBtn) {
-          this.elements.clearApiBtn.style.display = 'none';
-        }
-      }
-    }
-    
-    // APIキー設定画面を表示
-    this.showApiSetup();
-  }
 
-  showApiSetup() {
-    this.elements.apiSetupCard.classList.remove('hidden');
-    this.elements.mainCard.classList.add('hidden');
-  }
 
-  showMainInterface() {
-    this.elements.apiSetupCard.classList.add('hidden');
-    this.elements.mainCard.classList.remove('hidden');
-  }
-
-  async handleApiKeyValidation() {
-    const apiKey = this.elements.groqApiKeyInput.value.trim();
-    
-    // エラー表示をクリア
-    this.hideApiKeyError();
-    this.hideValidationStatus();
-    
-    if (!apiKey) {
-      this.showApiKeyError('❌ APIキーを入力してください');
-      this.showValidationStatus('APIキーが入力されていません', 'error');
-      return;
-    }
-
-    // キー形式の詳細チェック
-    if (!apiKey.startsWith('gsk_')) {
-      this.showApiKeyError('❌ GROQ APIキーは "gsk_" で始まる必要があります');
-      this.showValidationStatus('無効なAPIキー形式', 'error');
-      return;
-    }
-
-    if (apiKey.length < 56) {
-      this.showApiKeyError('❌ APIキーが短すぎます。完全なキーを入力してください');
-      this.showValidationStatus('APIキーの長さが不足しています', 'error');
-      return;
-    }
-
-    // デバッグ情報
-    logger.info('Validating API key format:', { 
-      keyLength: apiKey.length, 
-      prefix: apiKey.substring(0, 4) 
-    });
-
-    // 検証ボタンを無効化
-    this.elements.validateApiBtn.disabled = true;
-    this.elements.validateApiBtn.textContent = '🔍 検証中...';
-    this.showValidationStatus('🔍 APIキーを検証しています...', 'info');
-
-    try {
-      const result = await this.apiKeyManager.validateApiKey(apiKey);
-      
-      if (result.success) {
-        this.showValidationStatus('✅ ' + (result.message || 'APIキーの検証に成功しました'), 'success');
-        this.hideApiKeyError();
-        // 1秒後にメインインターフェースに移動
-        setTimeout(() => {
-          this.showMainInterface();
-        }, 1000);
-      } else {
-        const errorMsg = result.error || 'APIキーの検証に失敗しました';
-        this.showValidationStatus('❌ ' + errorMsg, 'error');
-        this.showDetailedApiError(result);
-        logger.warn('API key validation failed:', result.error);
-      }
-    } catch (error) {
-      logger.error('API key validation error:', error);
-      const errorMsg = `検証中にエラーが発生しました: ${error.message}`;
-      this.showValidationStatus('❌ ' + errorMsg, 'error');
-      this.showApiKeyError(`❌ ${errorMsg}\n\n対処方法:\n• ネットワーク接続を確認\n• しばらく待ってから再試行`);
-    } finally {
-      // 検証ボタンを再有効化
-      this.elements.validateApiBtn.disabled = false;
-      this.elements.validateApiBtn.textContent = '🔍 APIキー検証';
-    }
-  }
-  
-  showDetailedApiError(result) {
-    let errorMessage = '❌ 検証に失敗しました\n\n';
-    
-    if (result.error && result.error.includes('unauthorized')) {
-      errorMessage += '【認証エラー】\nAPIキーが無効または期限切れです。\n\n対処方法:\n• GROQ Console (console.groq.com) でAPIキーを確認\n• 新しいAPIキーを生成して再試行';
-    } else if (result.error && result.error.includes('rate limit')) {
-      errorMessage += '【レート制限エラー】\nAPI使用量の上限に達しました。\n\n対処方法:\n• しばらく待ってから再試行\n• アカウントのプランを確認';
-    } else if (result.error && result.error.includes('network')) {
-      errorMessage += '【ネットワークエラー】\nサーバーに接続できませんでした。\n\n対処方法:\n• インターネット接続を確認\n• VPNを無効にして再試行';
-    } else {
-      errorMessage += `【検証エラー】\n${result.error || '不明なエラー'}\n\n対処方法:\n• APIキーをコピー&ペーストで再入力\n• GROQ Consoleで新しいキーを生成`;
-    }
-    
-    this.showApiKeyError(errorMessage);
-  }
-
-  handleChangeApiKey() {
-    this.apiKeyManager.clearApiKey();
-    this.elements.groqApiKeyInput.value = '';
-    this.showApiSetup();
-  }
-
-  handleClearApiKey() {
-    if (confirm('保存されたAPIキーを削除しますか？')) {
-      this.apiKeyManager.clearApiKey();
-      this.elements.groqApiKeyInput.value = '';
-      this.elements.groqApiKeyInput.placeholder = 'gsk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-      this.elements.clearApiBtn.style.display = 'none';
-      this.showValidationStatus('保存されたAPIキーを削除しました', 'info');
-      setTimeout(() => this.hideValidationStatus(), 3000);
-    }
-  }
-
-  showApiKeyError(message) {
-    this.elements.apiKeyError.textContent = message;
-    this.elements.apiKeyError.classList.remove('hidden');
-  }
-
-  hideApiKeyError() {
-    this.elements.apiKeyError.classList.add('hidden');
-  }
-
-  showValidationStatus(message, type) {
-    this.elements.apiValidationStatus.textContent = message;
-    this.elements.apiValidationStatus.className = `validation-status ${type}`;
-    this.elements.apiValidationStatus.classList.remove('hidden');
-  }
-
-  hideValidationStatus() {
-    this.elements.apiValidationStatus.classList.add('hidden');
-  }
 
   setupEventListeners() {
-    // APIキー設定フォーム
-    if (this.elements.apiSetupForm) {
-      resourceManager.addEventListener(this.elements.apiSetupForm, 'submit', (e) => {
-        e.preventDefault();
-        this.handleApiKeyValidation();
-      });
-    }
-
-    // APIキー検証ボタン
-    if (this.elements.validateApiBtn) {
-      resourceManager.addEventListener(this.elements.validateApiBtn, 'click', (e) => {
-        e.preventDefault();
-        this.handleApiKeyValidation();
-      });
-    }
-
-    // APIキー変更ボタン
-    if (this.elements.changeApiBtn) {
-      resourceManager.addEventListener(this.elements.changeApiBtn, 'click', () => {
-        this.handleChangeApiKey();
-      });
-    }
-
-    // APIキー削除ボタン
-    if (this.elements.clearApiBtn) {
-      resourceManager.addEventListener(this.elements.clearApiBtn, 'click', () => {
-        this.handleClearApiKey();
-      });
-    }
 
     // フォーム送信
     if (this.elements.form) {
@@ -611,12 +253,6 @@ class CoreApp {
       return;
     }
 
-    // APIキーの検証
-    if (!this.apiKeyManager.isValidated || !this.apiKeyManager.getApiKey()) {
-      this.showError('APIキーが設定されていません。設定画面に戻ります。');
-      this.showApiSetup();
-      return;
-    }
     
     try {
       logger.info('🎯 シナリオ生成開始');
@@ -624,8 +260,6 @@ class CoreApp {
       // フォームデータ収集
       this.formData = this.collectFormData();
       
-      // APIキーを追加
-      this.formData.apiKey = this.apiKeyManager.getApiKey();
       
       // バリデーション
       const validation = this.validateFormData(this.formData);
