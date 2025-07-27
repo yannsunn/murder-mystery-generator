@@ -118,6 +118,17 @@ async function saveScenarioToSupabase(sessionId, scenarioData) {
   // Supabaseが初期化されていない場合はスキップ
   if (!supabase) {
     logger.warn('⚠️ Supabase not initialized, skipping save');
+    
+    // デモモードの場合はメモリ内に保存（実際には保存されない）
+    if (scenarioData.mockGenerated || scenarioData.demoMode) {
+      logger.info('🎭 Demo mode: Scenario would be saved to database in production');
+      return { 
+        success: true, 
+        data: { id: sessionId, demo: true },
+        message: 'Demo mode - データは保存されません' 
+      };
+    }
+    
     return { success: false, error: 'Supabase not initialized' };
   }
   
@@ -158,6 +169,16 @@ async function getScenarioFromSupabase(sessionId) {
   // Supabaseが初期化されていない場合はスキップ
   if (!supabase) {
     logger.warn('⚠️ Supabase not initialized, skipping read');
+    
+    // デモモードメッセージ
+    if (sessionId && sessionId.includes('mock')) {
+      return { 
+        success: false, 
+        error: 'Demo mode - データベースは利用できません',
+        demo: true 
+      };
+    }
+    
     return { success: false, error: 'Supabase not initialized' };
   }
   

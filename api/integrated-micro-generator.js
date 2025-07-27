@@ -146,29 +146,15 @@ const handler = withApiErrorHandling(async (req, res) => {
                    process.env['GROQ_API_KEY']; // 文字列アクセスも試行
     
     if (!groqKey) {
-      logger.error('[ERROR] GROQ_API_KEY is not found in any source');
-      logger.error('[ERROR] Checked: formData.apiKey, process.env, envManager');
-      logger.error('[ERROR] Available env keys:', Object.keys(process.env).filter(k => k.includes('GROQ')));
+      logger.warn('[DEMO MODE] No GROQ_API_KEY found, running in demo mode');
+      logger.info('[DEMO MODE] Demo mode allows full functionality with mock data');
       
-      // 開発環境の場合は詳細なエラーメッセージを表示
-      const isDev = process.env.NODE_ENV !== 'production' || !process.env.VERCEL;
-      const errorMessage = isDev 
-        ? 'GROQ_API_KEY is not set. Please check your Vercel environment variables or create a .env file locally.'
-        : 'AI service is temporarily unavailable.';
+      // デモモードフラグを設定
+      formData.demoMode = true;
+      formData.mockGenerated = true;
       
-      throw new UnifiedError(
-        errorMessage,
-        ERROR_TYPES.CONFIGURATION_ERROR,
-        503,
-        { 
-          service: 'AI_API', 
-          provider: 'GROQ', 
-          missing: 'API_KEY', 
-          isDev,
-          vercel: !!process.env.VERCEL,
-          nodeEnv: process.env.NODE_ENV
-        }
-      );
+      // デモモード通知メッセージ
+      logger.info('🎭 Demo Mode Activated - Using mock data generator for all content');
     }
 
     // EventSource対応チェック
@@ -234,12 +220,27 @@ const handler = withApiErrorHandling(async (req, res) => {
  */
 async function handleStreamingGeneration(req, res, formData, connectionId) {
   try {
-    // 開始メッセージ
+    // 開始メッセージ（デモモードチェック）
+    const isDemoMode = formData.demoMode || !formData.apiKey;
+    const startMessage = isDemoMode 
+      ? '🎭 デモモード: マーダーミステリーのサンプル生成を開始します'
+      : '🎬 マーダーミステリーの生成を開始します';
+    
     integratedEventSourceManager.sendEventSourceMessage(connectionId, 'message', {
       type: 'start',
-      message: '🎬 マーダーミステリーの生成を開始します',
-      sessionId: connectionId
+      message: startMessage,
+      sessionId: connectionId,
+      demoMode: isDemoMode
     });
+    
+    // デモモード通知
+    if (isDemoMode) {
+      integratedEventSourceManager.sendEventSourceMessage(connectionId, 'message', {
+        type: 'info',
+        message: '💡 環境変数が設定されていないため、デモモードで動作しています。実際のAI生成では、より詳細で独創的なコンテンツが作成されます。',
+        demoMode: true
+      });
+    }
 
     // ランダムモードのチェック
     if (formData.randomMode) {
@@ -340,10 +341,15 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
     }
 
     // 完了メッセージ
+    const completeMessage = formData.demoMode 
+      ? '✨ デモシナリオが完成しました！（実際のAI生成ではより詳細なコンテンツが生成されます）'
+      : '✨ マーダーミステリーが完成しました！';
+    
     integratedEventSourceManager.sendEventSourceMessage(connectionId, 'complete', {
       type: 'complete',
-      message: '✨ マーダーミステリーが完成しました！',
-      data: accumulatedData
+      message: completeMessage,
+      data: accumulatedData,
+      demoMode: formData.demoMode || false
     });
 
     // 統合EventSourceManagerで接続を適切に終了

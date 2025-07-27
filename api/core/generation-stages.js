@@ -5,6 +5,7 @@
 
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
+const { MockDataGenerator } = require('../utils/mock-data-generator.js');
 
 // プレイ時間取得ユーティリティ
 function getPlayTime(complexity) {
@@ -14,6 +15,57 @@ function getPlayTime(complexity) {
     'complex': '60分'
   };
   return timeMap[complexity] || '45分';
+}
+
+// デモモード用ヘルパー関数
+async function handleStageGeneration(stageNumber, formData, systemPrompt, userPrompt, previousData = {}) {
+  // デモモードチェック
+  if (formData.demoMode || !formData.apiKey) {
+    logger.info(`🎭 Demo mode: Generating mock content for Stage ${stageNumber}`);
+    const generator = new MockDataGenerator();
+    
+    let mockContent;
+    switch(stageNumber) {
+      case 0:
+        mockContent = generator.generateStage0(formData);
+        break;
+      case 1:
+        mockContent = generator.generateStage1(formData, previousData);
+        break;
+      case 2:
+        mockContent = generator.generateStage2(formData, previousData);
+        break;
+      case 3:
+        mockContent = generator.generateStage3(formData, previousData);
+        break;
+      case 4:
+        mockContent = generator.generateStage4(formData, previousData);
+        break;
+      case 5:
+        mockContent = generator.generateStage5(formData, previousData);
+        break;
+      case 6:
+        mockContent = generator.generateStage6(formData, previousData);
+        break;
+      case 7:
+        mockContent = generator.generateStage7(formData, previousData);
+        break;
+      case 8:
+        mockContent = generator.generateStage8(formData, previousData);
+        break;
+      default:
+        mockContent = '【デモモード】コンテンツ生成中...';
+    }
+    
+    return { content: mockContent, mockGenerated: true };
+  }
+  
+  // 通常のAI生成
+  const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+    apiKey: formData.apiKey
+  });
+  
+  return result;
 }
 
 // フォールバックキャラクター生成
@@ -107,11 +159,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(0, formData, systemPrompt, userPrompt);
       logger.debug('✅ 段階0: ランダム全体構造完成');
-      return { random_outline: result.content };
+      return { random_outline: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -202,11 +252,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - タイムスタンプ${Date.now()}を考慮した完全にユニークな創作
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(1, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階1: 基本コンセプト完成');
-      return { concept: result.content };
+      return { concept: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -265,11 +313,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(2, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階2: 事件核心部完成');
-      return { incident_core: result.content };
+      return { incident_core: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -341,11 +387,9 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(3, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階3: 事件詳細・タイムライン完成');
-      return { incident_details: result.content };
+      return { incident_details: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -370,15 +414,30 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         // 段階1: 各キャラクターを並列で生成（パフォーマンス最適化）
         logger.debug(`🚀 並列キャラクター生成開始: ${participantCount}人`);
         
-        // 並列処理用のプロミス配列を作成
-        const characterPromises = Array.from({length: participantCount}, (_, i) => {
-          const playerId = i + 1;
-          logger.debug(`🎭 プレイヤー${playerId}のキャラクター生成開始...`);
+        // デモモードの場合は並列処理せずに直接生成
+        if (formData.demoMode || !formData.apiKey) {
+          logger.info('🎭 Demo mode: Generating all characters at once');
+          const generator = new MockDataGenerator();
+          const mockCharacters = generator.generateStage4(formData, accumulatedData);
           
-          const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
+          // モックキャラクターを配列形式に変換
+          const characterArray = mockCharacters.split('\n\n---\n\n').map((handout, i) => ({
+            playerId: i + 1,
+            name: `プレイヤー${i + 1}`,
+            handout: handout
+          }));
+          
+          allCharacters = characterArray;
+        } else {
+          // 通常の並列処理
+          const characterPromises = Array.from({length: participantCount}, (_, i) => {
+            const playerId = i + 1;
+            logger.debug(`🎭 プレイヤー${playerId}のキャラクター生成開始...`);
+            
+            const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
 30分-1時間セッション用の魅力的で複雑なキャラクターを一人ずつ丁寧に作成してください。`;
-          
-          const userPrompt = `
+            
+            const userPrompt = `
 【プレイヤー${playerId}専用キャラクター作成】
 
 ランダム全体構造: ${randomOutline}
@@ -425,25 +484,27 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
 - 全ての文章を完結させる
 `;
 
-          return aiClient.generateWithRetry(systemPrompt, userPrompt, {
-            apiKey: formData.apiKey
-          }).then(result => {
-            // キャラクター情報を抽出して保存
-            const nameMatch = result.content.match(/\*\*氏名\*\*:\s*([^\n]+)/);
-            const character = {
-              playerId: playerId,
-              name: nameMatch ? nameMatch[1].replace(/\[|\]/g, '').trim() : `プレイヤー${playerId}`,
-              handout: result.content
-            };
-            
-            logger.debug(`✅ プレイヤー${playerId} (${character.name}) 生成完了`);
-            return character;
+            return aiClient.generateWithRetry(systemPrompt, userPrompt, {
+              apiKey: formData.apiKey
+            }).then(result => {
+              // キャラクター情報を抽出して保存
+              const nameMatch = result.content.match(/\*\*氏名\*\*:\s*([^\n]+)/);
+              const character = {
+                playerId: playerId,
+                name: nameMatch ? nameMatch[1].replace(/\[|\]/g, '').trim() : `プレイヤー${playerId}`,
+                handout: result.content
+              };
+              
+              logger.debug(`✅ プレイヤー${playerId} (${character.name}) 生成完了`);
+              return character;
+            });
           });
-        });
         
-        // 全キャラクターの生成を並列実行
-        allCharacters = await Promise.all(characterPromises);
-        logger.debug(`🎉 並列キャラクター生成完了: ${allCharacters.length}人`);
+          // 全キャラクターの生成を並列実行
+          allCharacters = await Promise.all(characterPromises);
+        }
+        
+        logger.debug(`🎉 キャラクター生成完了: ${allCharacters.length}人`);
         
         // 名前重複チェック
         const nameSet = new Set();
@@ -499,10 +560,15 @@ ${allCharacters.map((c1, i) =>
 【重要】事件の複雑さと謎解きに適した絶妙なバランスを保つこと。
 `;
 
-        const relationshipResult = await aiClient.generateWithRetry(relationshipSystemPrompt, relationshipUserPrompt, {
-          apiKey: formData.apiKey
-        });
-        characterRelationships = relationshipResult.content;
+        // デモモードチェック for relationships
+        if (formData.demoMode || !formData.apiKey) {
+          characterRelationships = `## キャラクター関係図\n\n${allCharacters.map(c => `### ${c.name}\n他のキャラクターとは知人または関係者として接点があります。`).join('\n\n')}`;
+        } else {
+          const relationshipResult = await aiClient.generateWithRetry(relationshipSystemPrompt, relationshipUserPrompt, {
+            apiKey: formData.apiKey
+          });
+          characterRelationships = relationshipResult.content;
+        }
         
         // 段階3: 各キャラクターのハンドアウトを関係性情報で更新
         logger.debug('🔄 ハンドアウトの関係性情報更新中...');
@@ -532,10 +598,16 @@ ${characterRelationships}
 - 元のハンドアウトの品質を維持
 `;
 
-          const updatedHandout = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-            apiKey: formData.apiKey
-          });
-          allCharacters[i].handout = updatedHandout.content;
+          // デモモードではハンドアウトをそのまま保持
+          if (formData.demoMode || !formData.apiKey) {
+            // モックではすでに関係性が含まれているのでスキップ
+            logger.debug(`✅ ${character.name}のハンドアウト（デモモード）`);
+          } else {
+            const updatedHandout = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+              apiKey: formData.apiKey
+            });
+            allCharacters[i].handout = updatedHandout.content;
+          }
           logger.debug(`✅ ${character.name}のハンドアウト更新完了`);
         }
         
@@ -647,11 +719,9 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(5, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階5: 証拠配置・手がかり体系化完成');
-      return { evidence_system: result.content };
+      return { evidence_system: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -749,10 +819,8 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
-      return { timeline: result.content };
+      const result = await handleStageGeneration(6, formData, systemPrompt, userPrompt, accumulatedData);
+      return { timeline: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -896,11 +964,9 @@ ${characterRelationships}
 【絶対要求】全ての文章は完結し、中途半端や不完全な表現は一切使用しないこと。
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(6, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階6: GM進行ガイド完成');
-      return { gamemaster_guide: result.content };
+      return { gamemaster_guide: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -973,11 +1039,9 @@ ${characterRelationships}
 【最終確認】このマーダーミステリーは30分-1時間セッションとして完璧に機能しますか？
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(7, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('✅ 段階7: 最終統合・全体調整完成');
-      return { final_integration: result.content };
+      return { final_integration: result.content, mockGenerated: result.mockGenerated };
     }
   },
 
@@ -1062,11 +1126,9 @@ ${characterRelationships}
 【最終判定】このマーダーミステリーは理想的な生成フローを経て、プロフェッショナル品質に達しましたか？
 `;
 
-      const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey: formData.apiKey
-      });
+      const result = await handleStageGeneration(8, formData, systemPrompt, userPrompt, accumulatedData);
       logger.debug('🎉 段階8: 最終総合レビュー完了 - プロ品質保証済み');
-      return { comprehensive_review: result.content };
+      return { comprehensive_review: result.content, mockGenerated: result.mockGenerated };
     }
   }
 ];

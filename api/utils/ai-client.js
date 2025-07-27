@@ -249,14 +249,27 @@ class UnifiedAIClient {
     }
     
     if (availableProviders.length === 0) {
-      logger.warn('⚠️ No AI providers configured. Returning mock response for development.');
-      // 開発環境用のモックレスポンスを返す
-      return {
-        content: '【開発モード】APIキーが設定されていないため、モックレスポンスを返しています。本番環境ではGROQ_API_KEYまたはOPENAI_API_KEYを設定してください。',
-        provider: 'mock',
-        model: 'mock-model',
-        executionTime: 0
-      };
+      logger.warn('⚠️ No AI providers configured. Using mock data generator.');
+      
+      // モックデータジェネレーターを使用してリアルなレスポンスを生成
+      try {
+        const mockResponse = await this.generateMockResponse(systemPrompt, userPrompt);
+        return {
+          content: mockResponse,
+          provider: 'mock',
+          model: 'mock-generator',
+          executionTime: Math.floor(Math.random() * 200 + 100), // 100-300ms
+          mockGenerated: true
+        };
+      } catch (error) {
+        logger.error('Mock generation failed:', error);
+        return {
+          content: '【デモモード】環境変数が設定されていないため、簡易的なシナリオを生成しました。',
+          provider: 'mock',
+          model: 'fallback',
+          executionTime: 0
+        };
+      }
     }
     
     // 優先順位を設定
@@ -339,6 +352,112 @@ class UnifiedAIClient {
       content: response.choices[0].message.content,
       usage: response.usage
     });
+  }
+
+  /**
+   * モックレスポンス生成
+   */
+  async generateMockResponse(systemPrompt, userPrompt) {
+    const { MockDataGenerator } = require('./mock-data-generator.js');
+    
+    // プロンプトから段階を識別
+    if (userPrompt.includes('段階0') || userPrompt.includes('ランダム全体構造')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage0(formData);
+    }
+    
+    if (userPrompt.includes('段階1') || userPrompt.includes('コンセプト精密化')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage1(formData, {});
+    }
+    
+    if (userPrompt.includes('段階2') || userPrompt.includes('事件核心')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage2(formData, {});
+    }
+    
+    if (userPrompt.includes('段階3') || userPrompt.includes('タイムライン')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage3(formData, {});
+    }
+    
+    if (userPrompt.includes('段階4') || userPrompt.includes('キャラクター生成')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage4(formData, {});
+    }
+    
+    if (userPrompt.includes('段階5') || userPrompt.includes('証拠配置')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage5(formData, {});
+    }
+    
+    if (userPrompt.includes('段階6') || userPrompt.includes('GM進行')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage6(formData, {});
+    }
+    
+    if (userPrompt.includes('段階7') || userPrompt.includes('最終統合')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage7(formData, {});
+    }
+    
+    if (userPrompt.includes('段階8') || userPrompt.includes('最終レビュー')) {
+      const generator = new MockDataGenerator();
+      const formData = this.extractFormDataFromPrompt(userPrompt);
+      return generator.generateStage8(formData, {});
+    }
+    
+    // デフォルトレスポンス
+    return `【デモモード】このセクションのコンテンツは環境変数設定後に生成されます。
+
+現在はデモモードで動作しています。実際のAI生成では、より詳細で独創的なコンテンツが作成されます。
+
+プロンプト内容: ${userPrompt.substring(0, 100)}...`;
+  }
+
+  /**
+   * プロンプトからフォームデータを抽出
+   */
+  extractFormDataFromPrompt(prompt) {
+    const formData = {
+      participants: '5',
+      complexity: 'standard',
+      tone: 'balanced',
+      era: '現代',
+      setting: '洋館',
+      worldview: 'リアル',
+      incident_type: '殺人'
+    };
+    
+    // 参加人数を抽出
+    const participantsMatch = prompt.match(/参加人数:\s*(\d+)人/);
+    if (participantsMatch) {
+      formData.participants = participantsMatch[1];
+    }
+    
+    // 複雑さを抽出
+    if (prompt.includes('simple') || prompt.includes('シンプル')) {
+      formData.complexity = 'simple';
+    } else if (prompt.includes('complex') || prompt.includes('複雑')) {
+      formData.complexity = 'complex';
+    }
+    
+    // トーンを抽出
+    if (prompt.includes('serious') || prompt.includes('シリアス')) {
+      formData.tone = 'serious';
+    } else if (prompt.includes('comedic') || prompt.includes('コメディ')) {
+      formData.tone = 'comedic';
+    }
+    
+    return formData;
   }
 }
 
