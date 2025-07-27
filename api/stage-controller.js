@@ -353,12 +353,13 @@ async function forceAdvanceStage(req, res) {
     sessionData.status = targetStage >= 9 ? 'completed' : 'generating';
     sessionData.lastUpdate = new Date().toISOString();
     
-    // モックデータを生成して埋める（必要な場合）
+    // 強制進行は行わない - エラーを返す
     if (!sessionData[`stage${targetStage - 1}_result`]) {
-      sessionData[`stage${targetStage - 1}_result`] = {
-        content: `【デモモード】段階${targetStage - 1}のデータ`,
-        usedMockData: true
-      };
+      return res.status(400).json({
+        success: false,
+        error: `ステージ${targetStage - 1}のデータが存在しません`,
+        sessionId: sessionId
+      });
     }
 
     await saveSessionData(sessionId, sessionData);
@@ -456,28 +457,28 @@ function getNextActionForStage(nextStageIndex) {
 }
 
 function formatFinalScenario(sessionData) {
-  // 各ステージの結果を取得（存在しない場合はデモデータを使用）
+  // 各ステージの結果を取得
   const getStageContent = (stageName, fallbackContent) => {
     const stageResult = sessionData[`${stageName}_result`];
     if (stageResult) {
       return typeof stageResult === 'object' ? stageResult.content : stageResult;
     }
-    return sessionData[stageName] || fallbackContent;
+    return sessionData[stageName] || fallbackContent || '';
   };
 
   return {
     title: extractTitle(sessionData.random_outline || sessionData.stage0_result?.content),
-    outline: getStageContent('stage0', '【デモモード】基本構想'),
-    concept: getStageContent('stage1', '【デモモード】コンセプト詳細'),
-    incident: getStageContent('stage2', '【デモモード】事件の核心'),
-    details: getStageContent('stage3', '【デモモード】状況詳細'),
-    characters: getStageContent('stage4', '【デモモード】キャラクター設定'),
-    evidence: getStageContent('stage5', '【デモモード】証拠システム'),
-    gmGuide: getStageContent('stage6', '【デモモード】GM進行ガイド'),
-    integration: getStageContent('stage7', '【デモモード】統合チェック'),
-    qualityCheck: getStageContent('stage8', '【デモモード】品質確認'),
+    outline: getStageContent('stage0', null),
+    concept: getStageContent('stage1', null),
+    incident: getStageContent('stage2', null),
+    details: getStageContent('stage3', null),
+    characters: getStageContent('stage4', null),
+    evidence: getStageContent('stage5', null),
+    gmGuide: getStageContent('stage6', null),
+    integration: getStageContent('stage7', null),
+    qualityCheck: getStageContent('stage8', null),
     completedAt: sessionData.completion_timestamp || new Date().toISOString(),
-    isDemo: sessionData.usedMockData || sessionData.formData?.demoMode || false
+    isGeneratedByAI: true
   };
 }
 

@@ -173,23 +173,12 @@ async function pollProgress(req, res) {
         });
       } catch (error) {
         console.error('[POLL-PROGRESS] Failed to get final result:', error);
-        // エラー時はモックの完成シナリオを返す
-        finalResult = {
-          success: true,
-          scenario: {
-            title: 'マーダーミステリー【デモモード】',
-            outline: '豪華な洋館で起きた殺人事件',
-            concept: '全員が秘密を抱える中での真実の探求',
-            incident: '晩餐会での毒殺事件',
-            details: '嵐の夜、外部との連絡が断たれた状況',
-            characters: `${statusResponse.formData?.participants || 5}人の個性的なキャラクター`,
-            evidence: '巧妙に配置された手がかり',
-            gmGuide: 'スムーズな進行のためのガイド',
-            integration: '一貫性のあるストーリー',
-            qualityCheck: 'プレイテスト済み',
-            isDemo: true
-          }
-        };
+        // エラー時は失敗を返す
+        return res.status(500).json({
+          success: false,
+          error: '最終結果の取得に失敗しました',
+          sessionId: sessionId
+        });
       }
 
       return res.status(200).json({
@@ -225,8 +214,13 @@ async function pollProgress(req, res) {
         console.log(`[POLL-PROGRESS] Stage ${stageToExecute} execution result:`, stageResponse.success);
       } catch (error) {
         console.error(`[POLL-PROGRESS] Stage ${stageToExecute} execution failed:`, error);
-        // エラーでも進行を続ける
-        stageResponse = { success: false, error: error.message };
+        // ステージ実行失敗
+        return res.status(500).json({
+          success: false,
+          error: `ステージ${stageToExecute}の実行に失敗しました: ${error.message}`,
+          sessionId: sessionId,
+          currentStage: stageToExecute
+        });
       }
 
       // ステージ実行後、最新のステータスを再取得
@@ -238,29 +232,24 @@ async function pollProgress(req, res) {
         });
       } catch (error) {
         console.error(`[POLL-PROGRESS] Status update failed:`, error);
-        // ステータス取得失敗時は強制的に進める
-        updatedStatus = {
-          currentStageIndex: stageToExecute + 1,
-          stages_completed: [...(stages_completed || []), stageToExecute]
-        };
+        // ステータス取得失敗
+        return res.status(500).json({
+          success: false,
+          error: 'ステータスの更新に失敗しました',
+          sessionId: sessionId
+        });
       }
 
-      // 進行が止まっている場合は強制的に進める
+      // 進行チェック
       let newCurrentStage = updatedStatus.currentStageIndex;
       if (newCurrentStage === currentStageIndex && stageRetryCount >= 2) {
-        console.warn(`[POLL-PROGRESS] Force advancing from stage ${currentStageIndex} to ${currentStageIndex + 1}`);
-        newCurrentStage = currentStageIndex + 1;
-        
-        // セッションを強制的に更新
-        try {
-          await callStageController({
-            action: 'force_advance',
-            sessionId: sessionId,
-            targetStage: newCurrentStage
-          });
-        } catch (e) {
-          // force_advanceが実装されていない場合は無視
-        }
+        // 最大リトライ回数に達した
+        return res.status(500).json({
+          success: false,
+          error: `ステージ${currentStageIndex}が進行しません。APIキーを確認してください。`,
+          sessionId: sessionId,
+          currentStage: currentStageIndex
+        });
       }
       
       const newProgress = calculateProgress(newCurrentStage);
@@ -286,22 +275,15 @@ async function pollProgress(req, res) {
     console.log(`[POLL-PROGRESS] - stageRetryCount: ${stageRetryCount}`);
     console.log(`[POLL-PROGRESS] - stages_completed:`, stages_completed);
     
-    // 最大リトライ回数に達した場合は強制的に次へ進める
+    // 最大リトライ回数に達した場合はエラー
     if (stageRetryCount >= maxRetries) {
-      console.warn(`[POLL-PROGRESS] Max retries reached for stage ${stageToExecute}, forcing advance`);
-      const forcedNextStage = currentStageIndex + 1;
+      console.error(`[POLL-PROGRESS] Max retries reached for stage ${stageToExecute}`);
       
-      return res.status(200).json({
-        success: true,
+      return res.status(500).json({
+        success: false,
+        error: `ステージ${stageToExecute}の最大リトライ回数に達しました。APIキーを確認してください。`,
         sessionId: sessionId,
-        status: forcedNextStage >= totalStages ? 'completed' : 'generating',
-        progress: calculateProgress(forcedNextStage),
-        currentStage: forcedNextStage,
-        totalStages: totalStages,
-        message: forcedNextStage >= totalStages ? '生成完了！' : getStageMessage(forcedNextStage - 1),
-        nextPollIn: 3000,
-        freePlanOptimized: true,
-        forcedAdvance: true
+        currentStage: stageToExecute
       });
     }
     

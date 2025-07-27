@@ -906,11 +906,13 @@ class CoreApp {
           console.warn(`⚠️ Stuck at stage ${data.currentStage} (${stuckCount}/${maxStuckCount})`);
           
           if (stuckCount >= maxStuckCount) {
-            // エラーを投げる代わりにデモモードメッセージを表示
-            console.warn(`🎭 ステージ${data.currentStage}で処理が停滞していますが、デモモードで継続します`);
-            // 強制的に次のステージへ進める
-            data.currentStage = lastStage + 1;
-            data.progress = Math.min(100, lastProgress + 10);
+            // タイムアウトエラー
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
+            const errorMsg = `ステージ${data.currentStage}でタイムアウトしました。APIキーを確認してください。`;
+            console.error(errorMsg);
+            this.handleError(errorMsg);
+            return;
           }
         } else {
           // 進行があった場合はカウントをリセット

@@ -227,40 +227,19 @@ class StageBase {
       ...options
     };
 
+    // APIキーが必須
+    if (!apiKey) {
+      throw new Error('APIキーが設定されていません');
+    }
+
     try {
-      // APIキーがある場合は通常のAI生成を試みる
-      if (apiKey) {
-        return await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-          apiKey,
-          ...config
-        });
-      } else {
-        // APIキーがない場合は直接モック生成
-        logger.warn('No API key provided, using mock generation');
-        throw new Error('No API key');
-      }
+      return await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+        apiKey,
+        ...config
+      });
     } catch (error) {
-      logger.warn(`AI generation failed in ${this.stageName}:`, error.message);
-      
-      // モックデータ生成にフォールバック
-      try {
-        const mockResponse = await aiClient.generateMockResponse(systemPrompt, userPrompt);
-        return {
-          content: mockResponse,
-          provider: 'mock',
-          model: 'mock-generator',
-          executionTime: 100
-        };
-      } catch (mockError) {
-        logger.error('Mock generation also failed:', mockError);
-        // 最終フォールバック
-        return {
-          content: `【デモモード】${this.stageName}の生成に失敗しました。APIキーを確認してください。`,
-          provider: 'fallback',
-          model: 'static',
-          executionTime: 0
-        };
-      }
+      logger.error(`AI generation failed for ${this.stageName}:`, error);
+      throw new Error(`AI生成に失敗しました: ${error.message}`);
     }
   }
 }

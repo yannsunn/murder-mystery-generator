@@ -249,27 +249,7 @@ class UnifiedAIClient {
     }
     
     if (availableProviders.length === 0) {
-      logger.warn('⚠️ No AI providers configured. Using mock data generator.');
-      
-      // モックデータジェネレーターを使用してリアルなレスポンスを生成
-      try {
-        const mockResponse = await this.generateMockResponse(systemPrompt, userPrompt);
-        return {
-          content: mockResponse,
-          provider: 'mock',
-          model: 'mock-generator',
-          executionTime: Math.floor(Math.random() * 200 + 100), // 100-300ms
-          mockGenerated: true
-        };
-      } catch (error) {
-        logger.error('Mock generation failed:', error);
-        return {
-          content: '【デモモード】環境変数が設定されていないため、簡易的なシナリオを生成しました。',
-          provider: 'mock',
-          model: 'fallback',
-          executionTime: 0
-        };
-      }
+      throw new Error('AIプロバイダーが設定されていません。APIキーを確認してください。');
     }
     
     // 優先順位を設定
@@ -392,47 +372,6 @@ class UnifiedAIClient {
     return formData;
   }
   
-  /**
-   * モックレスポンス生成
-   */
-  async generateMockResponse(systemPrompt, userPrompt) {
-    try {
-      const { generateMockResponse } = require('./mock-data-generator.js');
-      
-      // コンテキスト情報を抽出
-      const context = {};
-      
-      // formDataを抽出（userPromptに含まれる場合）
-      const formDataMatch = userPrompt.match(/フォームデータ[:：]\s*({[^}]+})/s);
-      if (formDataMatch) {
-        try {
-          context.formData = JSON.parse(formDataMatch[1]);
-        } catch (e) {
-          // JSONパースエラーは無視
-        }
-      }
-      
-      // セッションデータを抽出
-      const sessionMatch = userPrompt.match(/現在のセッションデータ[:：]\s*({[^}]+})/s);
-      if (sessionMatch) {
-        try {
-          Object.assign(context, JSON.parse(sessionMatch[1]));
-        } catch (e) {
-          // JSONパースエラーは無視
-        }
-      }
-      
-      // formDataがない場合はプロンプトから抽出
-      if (!context.formData) {
-        context.formData = this.extractFormDataFromPrompt(userPrompt);
-      }
-      
-      return generateMockResponse(systemPrompt, userPrompt, context);
-    } catch (error) {
-      logger.error('Failed to load mock generator:', error);
-      throw error;
-    }
-  }
 }
 
 // シングルトンインスタンス
