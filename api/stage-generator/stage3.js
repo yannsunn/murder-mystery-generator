@@ -5,6 +5,10 @@
 
 const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
+const { envManager } = require('../config/env-manager.js');
+
+// 環境変数を初期化
+envManager.initialize();
 
 class Stage3Generator extends StageBase {
   constructor() {
@@ -55,7 +59,7 @@ class Stage3Generator extends StageBase {
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      formData.apiKey,
+      envManager.get('GROQ_API_KEY') || sessionData.apiKey,
       { 
         maxTokens: 2200,
         timeout: 6000,
