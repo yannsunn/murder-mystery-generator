@@ -354,74 +354,6 @@ class UnifiedAIClient {
     });
   }
 
-  /**
-   * モックレスポンス生成
-   */
-  async generateMockResponse(systemPrompt, userPrompt) {
-    const { MockDataGenerator } = require('./mock-data-generator.js');
-    
-    // プロンプトから段階を識別
-    if (userPrompt.includes('段階0') || userPrompt.includes('ランダム全体構造')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage0(formData);
-    }
-    
-    if (userPrompt.includes('段階1') || userPrompt.includes('コンセプト精密化')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage1(formData, {});
-    }
-    
-    if (userPrompt.includes('段階2') || userPrompt.includes('事件核心')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage2(formData, {});
-    }
-    
-    if (userPrompt.includes('段階3') || userPrompt.includes('タイムライン')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage3(formData, {});
-    }
-    
-    if (userPrompt.includes('段階4') || userPrompt.includes('キャラクター生成')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage4(formData, {});
-    }
-    
-    if (userPrompt.includes('段階5') || userPrompt.includes('証拠配置')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage5(formData, {});
-    }
-    
-    if (userPrompt.includes('段階6') || userPrompt.includes('GM進行')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage6(formData, {});
-    }
-    
-    if (userPrompt.includes('段階7') || userPrompt.includes('最終統合')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage7(formData, {});
-    }
-    
-    if (userPrompt.includes('段階8') || userPrompt.includes('最終レビュー')) {
-      const generator = new MockDataGenerator();
-      const formData = this.extractFormDataFromPrompt(userPrompt);
-      return generator.generateStage8(formData, {});
-    }
-    
-    // デフォルトレスポンス
-    return `【デモモード】このセクションのコンテンツは環境変数設定後に生成されます。
-
-現在はデモモードで動作しています。実際のAI生成では、より詳細で独創的なコンテンツが作成されます。
-
-プロンプト内容: ${userPrompt.substring(0, 100)}...`;
-  }
 
   /**
    * プロンプトからフォームデータを抽出
@@ -458,6 +390,48 @@ class UnifiedAIClient {
     }
     
     return formData;
+  }
+  
+  /**
+   * モックレスポンス生成
+   */
+  async generateMockResponse(systemPrompt, userPrompt) {
+    try {
+      const { generateMockResponse } = require('./mock-data-generator.js');
+      
+      // コンテキスト情報を抽出
+      const context = {};
+      
+      // formDataを抽出（userPromptに含まれる場合）
+      const formDataMatch = userPrompt.match(/フォームデータ[:：]\s*({[^}]+})/s);
+      if (formDataMatch) {
+        try {
+          context.formData = JSON.parse(formDataMatch[1]);
+        } catch (e) {
+          // JSONパースエラーは無視
+        }
+      }
+      
+      // セッションデータを抽出
+      const sessionMatch = userPrompt.match(/現在のセッションデータ[:：]\s*({[^}]+})/s);
+      if (sessionMatch) {
+        try {
+          Object.assign(context, JSON.parse(sessionMatch[1]));
+        } catch (e) {
+          // JSONパースエラーは無視
+        }
+      }
+      
+      // formDataがない場合はプロンプトから抽出
+      if (!context.formData) {
+        context.formData = this.extractFormDataFromPrompt(userPrompt);
+      }
+      
+      return generateMockResponse(systemPrompt, userPrompt, context);
+    } catch (error) {
+      logger.error('Failed to load mock generator:', error);
+      throw error;
+    }
   }
 }
 

@@ -221,7 +221,9 @@ const handler = withApiErrorHandling(async (req, res) => {
 async function handleStreamingGeneration(req, res, formData, connectionId) {
   try {
     // 開始メッセージ（デモモードチェック）
-    const isDemoMode = formData.demoMode || !formData.apiKey;
+    // AIプロバイダーの設定状態を確認
+    const hasAIProvider = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || formData.apiKey;
+    const isDemoMode = !hasAIProvider;
     const startMessage = isDemoMode 
       ? '🎭 デモモード: マーダーミステリーのサンプル生成を開始します'
       : '🎬 マーダーミステリーの生成を開始します';
@@ -341,7 +343,7 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
     }
 
     // 完了メッセージ
-    const completeMessage = formData.demoMode 
+    const completeMessage = isDemoMode 
       ? '✨ デモシナリオが完成しました！（実際のAI生成ではより詳細なコンテンツが生成されます）'
       : '✨ マーダーミステリーが完成しました！';
     
@@ -349,7 +351,7 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
       type: 'complete',
       message: completeMessage,
       data: accumulatedData,
-      demoMode: formData.demoMode || false
+      demoMode: isDemoMode
     });
 
     // 統合EventSourceManagerで接続を適切に終了

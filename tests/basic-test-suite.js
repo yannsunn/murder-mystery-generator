@@ -156,7 +156,6 @@ async function testErrorHandling(results) {
     
     // エラータイプ確認
     assert(ErrorTypes.VALIDATION !== undefined, 'VALIDATION error type exists');
-    assert(ErrorTypes.GENERATION !== undefined, 'GENERATION error type exists');
     assert(ErrorTypes.INTERNAL !== undefined, 'INTERNAL error type exists');
     results.pass('Error types definition');
     

@@ -5,7 +5,33 @@
 
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
-const { MockDataGenerator } = require('../utils/mock-data-generator.js');
+const mockGenerator = require('../utils/mock-data-generator.js');
+
+// ハンドアウト生成ヘルパー
+function generateCharacterHandout(character) {
+  return `## 【プレイヤー${character.id}専用ハンドアウト】
+
+### あなたのキャラクター
+**氏名**: ${character.name}
+**年齢**: ${character.age}歳
+**職業**: ${character.role}
+**性格**: ${character.traits.join('、')}
+
+### あなたの背景と動機
+${character.publicInfo}
+
+### あなただけが知っている秘密
+**重要な秘密**: ${character.secretInfo}
+**隠したいこと**: ${character.motive}
+
+### あなたの目標と行動指針
+**主目標**: 事件の真相を解明する
+**秘密の目標**: 自分の秘密を守る
+**行動指針**: ${character.alibi}
+
+### 他のプレイヤーとの関係性
+${character.relationships.map(rel => `- ${rel.targetId}: ${rel.relationship}`).join('\n')}`;
+}
 
 // プレイ時間取得ユーティリティ
 function getPlayTime(complexity) {
@@ -19,53 +45,20 @@ function getPlayTime(complexity) {
 
 // デモモード用ヘルパー関数
 async function handleStageGeneration(stageNumber, formData, systemPrompt, userPrompt, previousData = {}) {
-  // デモモードチェック
-  if (formData.demoMode || !formData.apiKey) {
-    logger.info(`🎭 Demo mode: Generating mock content for Stage ${stageNumber}`);
-    const generator = new MockDataGenerator();
+  try {
+    // AIクライアントを使用して生成
+    const result = await aiClient.generateContent(systemPrompt, userPrompt);
     
-    let mockContent;
-    switch(stageNumber) {
-      case 0:
-        mockContent = generator.generateStage0(formData);
-        break;
-      case 1:
-        mockContent = generator.generateStage1(formData, previousData);
-        break;
-      case 2:
-        mockContent = generator.generateStage2(formData, previousData);
-        break;
-      case 3:
-        mockContent = generator.generateStage3(formData, previousData);
-        break;
-      case 4:
-        mockContent = generator.generateStage4(formData, previousData);
-        break;
-      case 5:
-        mockContent = generator.generateStage5(formData, previousData);
-        break;
-      case 6:
-        mockContent = generator.generateStage6(formData, previousData);
-        break;
-      case 7:
-        mockContent = generator.generateStage7(formData, previousData);
-        break;
-      case 8:
-        mockContent = generator.generateStage8(formData, previousData);
-        break;
-      default:
-        mockContent = '【デモモード】コンテンツ生成中...';
+    // モックが生成されたか確認
+    if (result.mockGenerated) {
+      logger.info(`🎭 Stage ${stageNumber}: Mock content generated`);
     }
     
-    return { content: mockContent, mockGenerated: true };
+    return result;
+  } catch (error) {
+    logger.error(`Stage ${stageNumber} generation failed:`, error);
+    throw error;
   }
-  
-  // 通常のAI生成
-  const result = await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-    apiKey: formData.apiKey
-  });
-  
-  return result;
 }
 
 // フォールバックキャラクター生成
@@ -417,15 +410,20 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         // デモモードの場合は並列処理せずに直接生成
         if (formData.demoMode || !formData.apiKey) {
           logger.info('🎭 Demo mode: Generating all characters at once');
-          const generator = new MockDataGenerator();
-          const mockCharacters = generator.generateStage4(formData, accumulatedData);
+          const mockResult = mockGenerator.generateStage4Mock({ formData, ...accumulatedData });
+          const mockCharacters = typeof mockResult === 'object' && mockResult.characters ? 
+            mockResult.characters.map(char => generateCharacterHandout(char)).join('\n\n---\n\n') : 
+            generateFallbackCharacters(participantCount);
           
           // モックキャラクターを配列形式に変換
-          const characterArray = mockCharacters.split('\n\n---\n\n').map((handout, i) => ({
-            playerId: i + 1,
-            name: `プレイヤー${i + 1}`,
-            handout: handout
-          }));
+          const characterArray = mockCharacters.split('\n\n---\n\n').map((handout, i) => {
+            const nameMatch = handout.match(/氏名:\s*([^\n]+)/);
+            return {
+              playerId: i + 1,
+              name: nameMatch ? nameMatch[1].trim() : `プレイヤー${i + 1}`,
+              handout: handout
+            };
+          });
           
           allCharacters = characterArray;
         } else {
