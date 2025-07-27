@@ -81,12 +81,13 @@ async function startGeneration(req, res) {
 
   try {
     // Stage Controller経由でセッション初期化
+    console.log('[START-GENERATION] Initializing session with formData:', parsedFormData);
     const initResponse = await callStageController({
       action: 'initialize',
       formData: parsedFormData
     });
 
-    console.log('[START-GENERATION] initResponse:', initResponse);
+    console.log('[START-GENERATION] initResponse:', JSON.stringify(initResponse, null, 2));
     
     if (!initResponse || !initResponse.success) {
       console.error('[START-GENERATION] Init failed:', initResponse);

@@ -859,6 +859,12 @@ class CoreApp {
     
     let retryCount = 0;
     const maxRetries = 3;
+    let stuckCount = 0;
+    const maxStuckCount = 5; // 同じステージに5回以上いたら停止
+    let lastStage = -1;
+    let lastProgress = -1;
+    const startTime = Date.now();
+    const maxPollingTime = 5 * 60 * 1000; // 最大5分
     
     this.pollInterval = setInterval(async () => {
       try {
@@ -886,6 +892,27 @@ class CoreApp {
         
         if (!data.success) {
           throw new Error(data.error || 'ポーリング失敗');
+        }
+        
+        // タイムアウトチェック
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime > maxPollingTime) {
+          throw new Error('生成タイムアウト: 5分以上経過しました');
+        }
+        
+        // スタックチェック（同じステージに停滞している場合）
+        if (data.currentStage === lastStage && data.progress === lastProgress) {
+          stuckCount++;
+          console.warn(`⚠️ Stuck at stage ${data.currentStage} (${stuckCount}/${maxStuckCount})`);
+          
+          if (stuckCount >= maxStuckCount) {
+            throw new Error(`ステージ${data.currentStage}で進行が停止しました。APIキーを確認するか、しばらく待ってから再試行してください。`);
+          }
+        } else {
+          // 進行があった場合はカウントをリセット
+          stuckCount = 0;
+          lastStage = data.currentStage;
+          lastProgress = data.progress;
         }
         
         // リトライカウントをリセット
