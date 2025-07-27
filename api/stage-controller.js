@@ -215,6 +215,28 @@ async function executeStage(req, res) {
       throw new Error(`Stage ${stageIndex} execution failed: ${stageResponse.error}`);
     }
 
+    // セッションデータを更新
+    sessionData.currentStageIndex = stageIndex + 1;
+    sessionData.stages_completed = sessionData.stages_completed || [];
+    if (!sessionData.stages_completed.includes(stageIndex)) {
+      sessionData.stages_completed.push(stageIndex);
+    }
+    sessionData[`stage${stageIndex}_result`] = stageResponse.result;
+    sessionData.lastUpdate = new Date().toISOString();
+    
+    // 全ステージ完了チェック
+    if (stageIndex >= 8) {
+      sessionData.status = 'completed';
+      sessionData.scenario_completed = true;
+      sessionData.completion_timestamp = new Date().toISOString();
+    } else {
+      sessionData.status = 'generating';
+    }
+    
+    // 更新したセッションデータを保存
+    await saveSessionData(sessionId, sessionData);
+    logger.info(`✅ Stage ${stageIndex} completed and session updated for ${sessionId}`);
+
     // 進捗計算
     const progress = calculateProgress(stageIndex + 1, sessionData.totalStages);
 
@@ -313,24 +335,40 @@ function getStageUrl(stageIndex) {
 }
 
 async function callStageFunction(url, payload) {
-  // 内部API呼び出しの実装
-  // 実際の環境では fetch または直接関数呼び出し
-  const stageModule = require(`./stage-generator/stage${payload.stageIndex}.js`);
-  
-  // モックリクエスト・レスポンスオブジェクト作成
-  const mockReq = {
-    method: 'POST',
-    body: payload
-  };
-  
-  let mockRes = {
-    status: (code) => ({
-      json: (data) => ({ statusCode: code, ...data })
-    })
-  };
+  try {
+    // 内部API呼び出しの実装
+    // 実際の環境では fetch または直接関数呼び出し
+    logger.info(`📞 Calling stage${payload.stageIndex} function`);
+    const stageModule = require(`./stage-generator/stage${payload.stageIndex}.js`);
+    
+    // モックリクエスト・レスポンスオブジェクト作成
+    const mockReq = {
+      method: 'POST',
+      body: payload
+    };
+    
+    let result = null;
+    const mockRes = {
+      status: (code) => ({
+        json: (data) => {
+          result = { statusCode: code, ...data };
+          return result;
+        }
+      })
+    };
 
-  const result = await stageModule(mockReq, mockRes);
-  return result;
+    await stageModule(mockReq, mockRes);
+    
+    if (!result) {
+      throw new Error('No response from stage function');
+    }
+    
+    logger.info(`✅ Stage${payload.stageIndex} completed with status: ${result.statusCode}`);
+    return result;
+  } catch (error) {
+    logger.error(`❌ Stage${payload.stageIndex} function error:`, error);
+    throw error;
+  }
 }
 
 function calculateProgress(currentStage, totalStages) {
@@ -380,9 +418,18 @@ function formatFinalScenario(sessionData) {
 }
 
 function extractTitle(outline) {
-  const match = outline?.match(/##?\s*📖?\s*シナリオタイトル\s*\n([^\n]+)/);
-  return match ? match[1].trim() : 'マーダーミステリーシナリオ';
+  if (!outline) return 'マーダーミステリー';
+  const match = outline.match(/タイトル[:：]?\s*(.+)|title[:：]?\s*(.+)/i);
+  return match ? (match[1] || match[2]).trim() : 'マーダーミステリー';
 }
+
+function getNextActionForStage(nextStageIndex) {
+  if (nextStageIndex >= 9) {
+    return 'complete';
+  }
+  return `execute_stage_${nextStageIndex}`;
+}
+
 
 // 内部呼び出し用に生の関数もエクスポート
 module.exports = withSecurity(stageController, 'stage-control');

@@ -179,40 +179,55 @@ async function pollProgress(req, res) {
       });
     }
 
-    // 次の段階実行
-    if (currentStageIndex < totalStages && !stages_completed.includes(currentStageIndex)) {
+    // 次の段階実行（実際は現在のインデックスのステージを実行）
+    const stageToExecute = currentStageIndex < totalStages ? currentStageIndex : totalStages - 1;
+    
+    if (stageToExecute < totalStages && (!stages_completed || !stages_completed.includes(stageToExecute))) {
+      console.log(`[POLL-PROGRESS] Executing stage ${stageToExecute} for session ${sessionId}`);
       const stageResponse = await callStageController({
         action: 'execute_stage',
         sessionId: sessionId,
-        stageIndex: currentStageIndex
+        stageIndex: stageToExecute
       });
 
-      const newProgress = calculateProgress(currentStageIndex + 1);
+      console.log(`[POLL-PROGRESS] Stage ${stageToExecute} execution result:`, stageResponse.success);
+
+      // ステージ実行後、最新のステータスを再取得
+      const updatedStatus = await callStageController({
+        action: 'get_status',
+        sessionId: sessionId
+      });
+
+      const newCurrentStage = updatedStatus.currentStageIndex || (stageToExecute + 1);
+      const newProgress = calculateProgress(newCurrentStage);
       
       return res.status(200).json({
         success: true,
         sessionId: sessionId,
         status: 'generating',
         progress: newProgress,
-        currentStage: currentStageIndex + 1,
+        currentStage: newCurrentStage,
         totalStages: totalStages,
-        stageName: `段階${currentStageIndex}`,
+        stageName: `段階${stageToExecute}`,
         stageResult: stageResponse.success,
-        message: getStageMessage(currentStageIndex),
-        nextPollIn: getNextPollInterval(currentStageIndex),
+        message: getStageMessage(stageToExecute),
+        nextPollIn: getNextPollInterval(stageToExecute),
         freePlanOptimized: true
       });
     }
 
-    // 進行中の場合
+    // 進行中の場合（すでにステージが実行されている）
+    console.log(`[POLL-PROGRESS] Stage ${currentStageIndex} already in progress or completed`);
+    console.log(`[POLL-PROGRESS] stages_completed:`, stages_completed);
+    
     return res.status(200).json({
       success: true,
       sessionId: sessionId,
-      status: 'processing',
+      status: 'generating',
       progress: calculateProgress(currentStageIndex),
       currentStage: currentStageIndex,
       totalStages: totalStages,
-      message: 'Processing...',
+      message: getStageMessage(currentStageIndex - 1) || 'シナリオ生成中...',
       nextPollIn: 3000,
       freePlanOptimized: true
     });
