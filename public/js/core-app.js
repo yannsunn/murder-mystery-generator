@@ -705,14 +705,18 @@ class CoreApp {
       
       const isVercel = envResult.status === 'fulfilled' ? envResult.value : this.detectVercelFallback();
       
-      if (isVercel) {
-        // Vercel環境ではPolling方式を使用
-        logger.info('Vercel環境検出 - Polling方式に切り替えます');
+      // Vercel環境または本番環境では常にPolling方式を使用
+      if (isVercel || window.location.hostname !== 'localhost') {
+        logger.info('🔄 Production/Vercel環境検出 - Polling方式を使用します');
+        console.log('🚀 Switching to Polling mode for production environment');
         await this.connectPolling(sessionId);
         return;
       }
     } catch (error) {
-      logger.warn('環境チェック失敗、フォールバック使用:', error);
+      logger.warn('環境チェック失敗、Polling方式にフォールバック:', error);
+      console.log('⚠️ Environment check failed, falling back to polling');
+      await this.connectPolling(sessionId);
+      return;
     }
     
     // ローカル環境ではEventSource使用
@@ -813,26 +817,53 @@ class CoreApp {
    * 無料プラン用生成開始
    */
   async startFreePlanGeneration() {
-    const response = await fetch('/api/free-plan-generator', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        action: 'start',
-        formData: this.formData
-      })
-    });
-    
-    return await response.json();
+    try {
+      console.log('🚀 Starting Free Plan Generation with formData:', this.formData);
+      
+      const response = await fetch('/api/free-plan-generator', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action: 'start',
+          formData: this.formData
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Free Plan Generation start failed:', response.status, errorText);
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Free Plan Generation started:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Free Plan Generation error:', error);
+      throw error;
+    }
   }
   
   /**
    * 無料プラン用ポーリング
    */
   async startFreePlanPolling(sessionId, pollInterval = 3000) {
+    console.log(`📊 Starting polling for session: ${sessionId}, interval: ${pollInterval}ms`);
+    
+    // 既存のポーリングをクリア
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+    }
+    
+    let retryCount = 0;
+    const maxRetries = 3;
+    
     this.pollInterval = setInterval(async () => {
       try {
+        console.log(`🔄 Polling attempt for session: ${sessionId}`);
+        
         const response = await fetch('/api/free-plan-generator', {
           method: 'POST',
           headers: {
@@ -844,29 +875,48 @@ class CoreApp {
           })
         });
         
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Polling response error:', response.status, errorText);
+          throw new Error(`Polling failed: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('📈 Polling response:', data);
         
         if (!data.success) {
           throw new Error(data.error || 'ポーリング失敗');
         }
+        
+        // リトライカウントをリセット
+        retryCount = 0;
         
         // 進捗更新
         this.handleFreePlanProgress(data);
         
         // 完了チェック
         if (data.status === 'completed') {
+          console.log('🎉 Generation completed!');
           clearInterval(this.pollInterval);
+          this.pollInterval = null;
           this.handleFreePlanComplete(data);
-        } else if (data.nextPollIn) {
+        } else if (data.nextPollIn && data.nextPollIn !== pollInterval) {
           // 動的ポーリング間隔調整
+          console.log(`⏱️ Adjusting poll interval to: ${data.nextPollIn}ms`);
           clearInterval(this.pollInterval);
           this.startFreePlanPolling(sessionId, data.nextPollIn);
         }
         
       } catch (error) {
-        logger.error('Free Plan Polling Error:', error);
-        clearInterval(this.pollInterval);
-        this.handleError(error.message || 'ポーリング中にエラーが発生しました');
+        retryCount++;
+        console.error(`❌ Polling error (retry ${retryCount}/${maxRetries}):`, error);
+        
+        if (retryCount >= maxRetries) {
+          logger.error('Max polling retries exceeded:', error);
+          clearInterval(this.pollInterval);
+          this.pollInterval = null;
+          this.handleError(error.message || 'ポーリング中にエラーが発生しました');
+        }
       }
     }, pollInterval);
   }
@@ -875,15 +925,18 @@ class CoreApp {
    * 無料プラン進捗処理
    */
   handleFreePlanProgress(data) {
+    console.log('📊 Handling Free Plan Progress:', data);
+    
     const normalizedData = {
-      currentStep: data.currentStage,
-      totalSteps: data.totalStages,
-      progress: data.progress,
+      currentStep: data.currentStage || 0,
+      totalSteps: data.totalStages || 9,
+      progress: data.progress || 0,
       statusMessage: data.message || data.stageName || '処理中...',
       estimatedTimeRemaining: 0,
       source: 'free-plan'
     };
     
+    console.log('📈 Normalized progress data:', normalizedData);
     logger.info(`🔄 Free Plan Progress [${data.currentStage}/${data.totalStages}]: ${data.progress}%`);
     this.updateProgressDisplay(normalizedData);
   }
@@ -1339,9 +1392,12 @@ class CoreApp {
   // 環境チェックメソッド（並列処理用）
   async checkEnvironment() {
     return new Promise((resolve) => {
+      console.log('🔍 Checking environment - hostname:', window.location.hostname);
       const isVercel = window.location.hostname.includes('vercel.app') || 
                       window.location.hostname === 'murder-mystery-generator.vercel.app' ||
-                      window.location.hostname.includes('murder-mystery-generator');
+                      window.location.hostname.includes('murder-mystery-generator') ||
+                      window.location.hostname !== 'localhost';
+      console.log('📍 Environment detected:', isVercel ? 'Production/Vercel' : 'Local');
       resolve(isVercel);
     });
   }
