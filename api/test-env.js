@@ -17,6 +17,15 @@ module.exports = async (req, res) => {
     const groqFromEnv = process.env.GROQ_API_KEY;
     const groqFromVercel = process.env['GROQ_API_KEY'];
     
+    // Vercel固有の環境変数も確認
+    const vercelUrl = process.env.VERCEL_URL;
+    const vercelEnv = process.env.VERCEL_ENV;
+    
+    // すべての環境変数のキーを取得（セキュリティのため値は表示しない）
+    const allKeys = Object.keys(process.env);
+    const groqRelatedKeys = allKeys.filter(k => k.toUpperCase().includes('GROQ'));
+    const apiRelatedKeys = allKeys.filter(k => k.toUpperCase().includes('API'));
+    
     const envInfo = {
       GROQ_API_KEY: {
         exists: process.env.GROQ_API_KEY !== undefined,
@@ -24,11 +33,15 @@ module.exports = async (req, res) => {
         length: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.length : 0,
         prefix: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.substring(0, 10) + '...' : 'NOT SET',
         directAccess: groqFromEnv ? 'FOUND' : 'NOT FOUND',
-        bracketAccess: groqFromVercel ? 'FOUND' : 'NOT FOUND'
+        bracketAccess: groqFromVercel ? 'FOUND' : 'NOT FOUND',
+        type: process.env.GROQ_API_KEY ? typeof process.env.GROQ_API_KEY : 'undefined'
       },
       VERCEL: process.env.VERCEL || 'NOT SET',
       NODE_ENV: process.env.NODE_ENV || 'NOT SET',
-      VERCEL_ENV: process.env.VERCEL_ENV || 'NOT SET',
+      VERCEL_ENV: vercelEnv || 'NOT SET',
+      VERCEL_URL: vercelUrl || 'NOT SET',
+      groqRelatedKeys: groqRelatedKeys,
+      apiRelatedKeys: apiRelatedKeys,
       allEnvKeys: Object.keys(process.env).filter(k => 
         k.includes('API') || 
         k.includes('KEY') || 

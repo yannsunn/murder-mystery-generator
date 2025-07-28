@@ -1,7 +1,4 @@
 {
-  "env": {
-    "GROQ_API_KEY": "@groq-api-key"
-  },
   "functions": {
     "api/stage-generator/*.js": {
       "maxDuration": 10
