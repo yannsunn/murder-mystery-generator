@@ -431,7 +431,7 @@ class CoreApp {
       // 無料プラン用の生成開始
       const startResponse = await this.startFreePlanGeneration();
       
-      if (!startResponse.success) {
+      if (!startResponse || !startResponse.success) {
         throw new Error(startResponse.error || '生成開始に失敗しました');
       }
       
@@ -468,7 +468,17 @@ class CoreApp {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Free Plan Generation start failed:', response.status, errorText);
-        throw new Error(`Server error: ${response.status}`);
+        
+        // JSONレスポンスの場合、エラー詳細を取得
+        try {
+          const errorData = JSON.parse(errorText);
+          const errorMsg = `生成開始エラー\n\n${errorData.error || 'サーバーエラーが発生しました'}\n\nステータス: ${response.status}`;
+          this.handleError(errorMsg);
+          return null;
+        } catch (e) {
+          this.handleError(`生成開始エラー: ${response.status}`);
+          return null;
+        }
       }
       
       const result = await response.json();
@@ -538,7 +548,22 @@ class CoreApp {
         console.log('📈 Polling response:', data);
         
         if (!data.success) {
-          throw new Error(data.error || 'ポーリング失敗');
+          // エラーレスポンスの場合は即座に停止
+          clearInterval(this.pollInterval);
+          this.pollInterval = null;
+          
+          const errorDetails = [];
+          errorDetails.push(`エラー: ${data.error || 'シナリオ生成に失敗しました'}`);
+          if (data.currentStage !== undefined) errorDetails.push(`ステージ: ${data.currentStage}`);
+          if (data.sessionId) errorDetails.push(`セッションID: ${data.sessionId}`);
+          
+          const errorMsg = errorDetails.join('\n');
+          console.error('❌ Generation failed:', data);
+          if (data.debug) {
+            console.error('❌ Debug information:', data.debug);
+          }
+          this.handleError(errorMsg);
+          return;
         }
         
         // タイムアウトチェック
@@ -553,11 +578,16 @@ class CoreApp {
           console.warn(`⚠️ Stuck at stage ${data.currentStage} (${stuckCount}/${maxStuckCount})`);
           
           if (stuckCount >= maxStuckCount) {
-            // タイムアウトエラー
+            // タイムアウトエラー - 即座に停止
             clearInterval(this.pollInterval);
             this.pollInterval = null;
-            const errorMsg = `ステージ${data.currentStage}でタイムアウトしました。APIキーを確認してください。`;
-            console.error(errorMsg);
+            const errorMsg = `エラー: ステージ${data.currentStage}で処理が進まなくなりました\n\n可能性のある原因:\n1. Vercel環境変数にGROQ_API_KEYが設定されていない\n2. APIキーが無効\n3. APIのレート制限\n\n現在のステージ: ${data.currentStage}\n進捗: ${data.progress}%\nセッションID: ${sessionId}`;
+            console.error('❌ Stuck timeout:', {
+              stage: data.currentStage,
+              progress: data.progress,
+              stuckCount: stuckCount,
+              sessionId: sessionId
+            });
             this.handleError(errorMsg);
             return;
           }
@@ -588,8 +618,11 @@ class CoreApp {
         }
         
       } catch (error) {
-        retryCount++;
-        console.error(`❌ Polling error (retry ${retryCount}/${maxRetries}):`, error);
+        // エラーが発生したら即座に停止
+        console.error('❌ Polling error occurred - stopping immediately:', error);
+        
+        clearInterval(this.pollInterval);
+        this.pollInterval = null;
         
         // レスポンスがある場合、詳細なデバッグ情報を表示
         if (error.response) {
@@ -605,12 +638,11 @@ class CoreApp {
           }
         }
         
-        if (retryCount >= maxRetries) {
-          logger.error('Max polling retries exceeded:', error);
-          clearInterval(this.pollInterval);
-          this.pollInterval = null;
-          this.handleError(error.message || 'ポーリング中にエラーが発生しました');
-        }
+        // エラー内容を詳しく表示
+        const errorMessage = `エラーが発生しました\n\n${error.message || 'ポーリング中にエラーが発生しました'}\n\nコンソールで詳細を確認してください。`;
+        this.handleError(errorMessage);
+        logger.error('Polling stopped due to error:', error);
+        return;
       }
     }, pollInterval);
   }
