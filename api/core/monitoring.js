@@ -777,6 +777,11 @@ class UnifiedPerformanceMonitor {
   getClientIP(req) {
     if (!this.isServer) return 'unknown';
     
+    // Vercel環境ではreq.headersが未定義の場合があるため安全にアクセス
+    if (!req || !req.headers) {
+      return 'unknown';
+    }
+    
     return req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
            req.headers['x-real-ip'] ||
            req.connection?.remoteAddress ||

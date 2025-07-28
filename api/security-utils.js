@@ -265,6 +265,11 @@ function validateRequest(req) {
  * IPアドレスの取得
  */
 function getClientIP(req) {
+  // Vercel環境ではreq.headersが未定義の場合があるため安全にアクセス
+  if (!req || !req.headers) {
+    return '0.0.0.0';
+  }
+  
   return req.headers['x-forwarded-for'] || 
          req.headers['x-real-ip'] || 
          req.connection?.remoteAddress || 
