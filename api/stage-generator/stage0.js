@@ -18,6 +18,10 @@ class Stage0Generator extends StageBase {
   async processStage(sessionData, stageData) {
     const { formData } = sessionData;
     
+    // 詳細なログを追加
+    console.log('[STAGE0] Processing stage with formData:', formData);
+    console.log('[STAGE0] envManager initialized:', envManager.initialized);
+    
     const systemPrompt = `あなたは商業レベルのマーダーミステリー企画者です。
 30分-60分で完結する高品質なシナリオの基本構造を作成してください。
 制限時間: 8秒以内で完了してください。`;
@@ -55,7 +59,21 @@ class Stage0Generator extends StageBase {
 `;
 
     // 環境変数からAPIキーを取得
-    const apiKey = envManager.get('GROQ_API_KEY') || sessionData.apiKey;
+    if (!envManager.initialized) {
+      console.log('[STAGE0] envManager not initialized, initializing now...');
+      envManager.initialize();
+    }
+    
+    const apiKey = process.env.GROQ_API_KEY || sessionData.apiKey;
+    console.log('[STAGE0] API Key found:', apiKey ? 'YES' : 'NO');
+    console.log('[STAGE0] API Key prefix:', apiKey ? apiKey.substring(0, 8) + '...' : 'NONE');
+    console.log('[STAGE0] process.env.GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? 'YES' : 'NO');
+    
+    if (!apiKey) {
+      console.error('[STAGE0] No API key available! process.env.GROQ_API_KEY:', process.env.GROQ_API_KEY);
+      console.error('[STAGE0] Environment variables:', Object.keys(process.env).filter(k => k.includes('API')));
+      throw new Error('GROQ API key not found in environment variables');
+    }
     
     const result = await this.generateWithAI(
       systemPrompt, 

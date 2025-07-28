@@ -57,7 +57,7 @@ ${random_outline || ''}
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      envManager.get('GROQ_API_KEY') || sessionData.apiKey,
+      process.env.GROQ_API_KEY || sessionData.apiKey,
       { 
         maxTokens: 1800,
         timeout: 6000,
