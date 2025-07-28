@@ -305,7 +305,7 @@ async function handleSecureError(error, req, res, operation = 'unknown') {
     timestamp,
     operation,
     clientIP,
-    userAgent: req.headers['user-agent'],
+    userAgent: req.headers?.['user-agent'] || 'unknown',
     error: error.message,
     stack: error.stack
   };

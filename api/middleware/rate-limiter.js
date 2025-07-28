@@ -46,6 +46,11 @@ class RateLimiter {
    * デフォルトキー生成（IP + User-Agent）
    */
   defaultKeyGenerator(req) {
+    // Vercel環境ではreq.headersが未定義の場合があるため安全にアクセス
+    if (!req || !req.headers) {
+      return 'unknown:unknown';
+    }
+    
     const ip = this.getClientIP(req);
     const userAgent = req.headers['user-agent'] || 'unknown';
     return `${ip}:${this.hashString(userAgent)}`;

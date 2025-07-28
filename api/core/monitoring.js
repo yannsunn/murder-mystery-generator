@@ -479,7 +479,7 @@ class UnifiedPerformanceMonitor {
       requestId,
       method: req.method,
       url: req.url,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.headers?.['user-agent'] || 'unknown',
       ip: this.getClientIP(req),
       startTime,
       memoryBefore: process.memoryUsage()

@@ -794,11 +794,11 @@ class UnifiedErrorHandler {
     if (req) {
       enriched.method = req.method;
       enriched.url = req.url;
-      enriched.userAgent = req.headers['user-agent'];
+      enriched.userAgent = req.headers?.['user-agent'] || 'unknown';
       enriched.ipAddress = this.getClientIP(req);
-      enriched.requestId = req.headers['x-request-id'] || this.generateRequestId();
-      enriched.sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
-      enriched.userId = req.headers['x-user-id'] || req.user?.id;
+      enriched.requestId = req.headers?.['x-request-id'] || this.generateRequestId();
+      enriched.sessionId = req.headers?.['x-session-id'] || req.cookies?.sessionId;
+      enriched.userId = req.headers?.['x-user-id'] || req.user?.id;
     }
     
     enriched.environment = process.env.NODE_ENV || 'development';
