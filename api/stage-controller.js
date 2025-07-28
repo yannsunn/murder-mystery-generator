@@ -219,7 +219,20 @@ async function executeStage(req, res) {
     const stageResponse = await callStageFunction(stageUrl, stagePayload);
 
     if (!stageResponse.success) {
-      throw new Error(`Stage ${stageIndex} execution failed: ${stageResponse.error}`);
+      console.error(`[STAGE-CONTROLLER] Stage ${stageIndex} failed:`, stageResponse);
+      const errorMessage = typeof stageResponse.error === 'object' 
+        ? JSON.stringify(stageResponse.error) 
+        : stageResponse.error || 'Unknown error';
+      
+      // エラーの詳細情報を返す
+      const errorDetails = {
+        stage: stageIndex,
+        error: errorMessage,
+        debug: stageResponse.debug || {},
+        timestamp: new Date().toISOString()
+      };
+      
+      throw new Error(`Stage ${stageIndex} execution failed: ${errorMessage}`);
     }
 
     // セッションデータを更新
@@ -422,7 +435,27 @@ async function callStageFunction(url, payload) {
     return result;
   } catch (error) {
     logger.error(`❌ Stage${payload.stageIndex} function error:`, error);
-    throw error;
+    console.error(`[CALL-STAGE-FUNCTION] Full error details:`, {
+      stage: payload.stageIndex,
+      error: error.message,
+      stack: error.stack,
+      payload: {
+        sessionId: payload.sessionId,
+        hasApiKey: !!payload.apiKey
+      }
+    });
+    
+    // エラーをより詳細な形式で返す
+    return {
+      success: false,
+      error: error.message || 'Unknown error',
+      debug: {
+        stage: payload.stageIndex,
+        errorType: error.constructor.name,
+        hasApiKey: !!payload.apiKey,
+        timestamp: new Date().toISOString()
+      }
+    };
   }
 }
 

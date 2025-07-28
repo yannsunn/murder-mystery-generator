@@ -557,11 +557,19 @@ class CoreApp {
           if (data.currentStage !== undefined) errorDetails.push(`ステージ: ${data.currentStage}`);
           if (data.sessionId) errorDetails.push(`セッションID: ${data.sessionId}`);
           
-          const errorMsg = errorDetails.join('\n');
-          console.error('❌ Generation failed:', data);
+          // デバッグ情報があれば追加
           if (data.debug) {
             console.error('❌ Debug information:', data.debug);
+            if (data.debug.apiKeyStatus) {
+              errorDetails.push(`\nAPIキー状態: ${JSON.stringify(data.debug.apiKeyStatus)}`);
+            }
+            if (data.debug.hasApiKey !== undefined) {
+              errorDetails.push(`APIキー設定: ${data.debug.hasApiKey ? '設定済み' : '未設定'}`);
+            }
           }
+          
+          const errorMsg = errorDetails.join('\n');
+          console.error('❌ Generation failed:', data);
           this.handleError(errorMsg);
           return;
         }

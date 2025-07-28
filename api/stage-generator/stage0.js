@@ -64,9 +64,23 @@ class Stage0Generator extends StageBase {
     console.log('[STAGE0] NODE_ENV:', process.env.NODE_ENV);
     
     if (!apiKey) {
-      console.error('[STAGE0] No API key available! process.env.GROQ_API_KEY:', process.env.GROQ_API_KEY);
-      console.error('[STAGE0] Environment variables:', Object.keys(process.env).filter(k => k.includes('API')));
-      throw new Error('GROQ API key not found in environment variables');
+      const errorInfo = {
+        message: 'GROQ API key not found',
+        envVarExists: process.env.GROQ_API_KEY !== undefined,
+        envVarEmpty: process.env.GROQ_API_KEY === '',
+        envVarValue: process.env.GROQ_API_KEY ? 'SET (hidden)' : 'NOT SET',
+        sessionApiKey: sessionData.apiKey ? 'EXISTS' : 'NOT EXISTS',
+        allEnvVars: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')).sort()
+      };
+      
+      console.error('[STAGE0] API Key Error Details:', errorInfo);
+      
+      // より詳細なエラーメッセージを生成
+      const errorMessage = `APIキーが見つかりません。Vercel環境変数にGROQ_API_KEYを設定してください。\n` +
+                          `環境変数の状態: ${errorInfo.envVarValue}\n` +
+                          `検出された関連変数: ${errorInfo.allEnvVars.join(', ') || 'なし'}`;
+      
+      throw new Error(errorMessage);
     }
     
     const result = await this.generateWithAI(

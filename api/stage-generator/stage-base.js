@@ -98,10 +98,16 @@ class StageBase {
       // APIキーの状態を確認
       const apiKeyStatus = {
         envGROQ: process.env.GROQ_API_KEY ? 'SET' : 'NOT_SET',
-        envKeys: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')),
-        stage: this.stageName
+        envGROQLength: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.length : 0,
+        envKeys: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')).sort(),
+        vercelEnv: process.env.VERCEL ? 'YES' : 'NO',
+        nodeEnv: process.env.NODE_ENV,
+        stage: this.stageName,
+        errorMessage: error.message,
+        errorType: error.constructor.name
       };
       console.error('[STAGE-BASE] API Key Status:', apiKeyStatus);
+      console.error('[STAGE-BASE] Full Error:', error);
 
       if (sessionId) {
         await this.updateSessionStatus(sessionId, 'error', {
