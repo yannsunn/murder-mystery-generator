@@ -16,7 +16,7 @@
   --bg-primary: #0f0f23;
   --bg-secondary: #1a1a2e;
   --bg-card: #252540;
-  --bg-input: #2a2a3e;
+  --bg-input: #1e1e32;
   
   /* テキスト色 */
   --text-primary: #ffffff;
@@ -123,6 +123,51 @@ select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--primary-color);
+}
+
+/* セレクトボックスのオプション */
+select option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 0.5rem;
+}
+
+/* セレクトボックスのホバー時のオプション */
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: var(--primary-color);
+  color: var(--text-primary);
+}
+
+/* セレクトボックスの矢印アイコン改善 */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M10.293 3.293L6 7.586 1.707 3.293A1 1 0 00.293 4.707l5 5a1 1 0 001.414 0l5-5a1 1 0 10-1.414-1.414z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+/* フォームヒント */
+.form-hint {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+/* フォームグループ */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
 }
 
 /* ========== 🎯 ボタン ========== */
