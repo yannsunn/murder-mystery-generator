@@ -430,6 +430,9 @@ async function callStageController(payload) {
         json: (data) => {
           result = { statusCode: code, ...data };
           console.log('[CALL-STAGE-CONTROLLER] Response:', code, data.success ? 'SUCCESS' : 'FAIL');
+          if (!data.success) {
+            console.error('[CALL-STAGE-CONTROLLER] Error response data:', JSON.stringify(data, null, 2));
+          }
           responsePromiseResolve(result);
           return result;
         }

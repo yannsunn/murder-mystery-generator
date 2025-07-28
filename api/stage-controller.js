@@ -274,10 +274,25 @@ async function executeStage(req, res) {
 
   } catch (error) {
     logger.error(`Stage ${stageIndex} execution failed:`, error);
+    console.error(`[EXECUTE-STAGE] Full error for stage ${stageIndex}:`, {
+      message: error.message,
+      stack: error.stack,
+      type: error.constructor.name
+    });
+    
+    // エラーメッセージを適切に文字列化
+    const errorMessage = typeof error === 'object' && error.message 
+      ? error.message 
+      : String(error);
+    
     return res.status(500).json({
       success: false,
-      error: error.message,
-      stageIndex: stageIndex
+      error: `Stage ${stageIndex} execution failed: ${errorMessage}`,
+      stageIndex: stageIndex,
+      debug: {
+        errorType: error.constructor.name,
+        errorStack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
+      }
     });
   }
 }
