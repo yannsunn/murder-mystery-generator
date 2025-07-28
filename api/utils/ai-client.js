@@ -128,6 +128,24 @@ class UnifiedAIClient {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // エラーレスポンスをパースしてみる
+        try {
+          const errorData = JSON.parse(errorText);
+          
+          // GROQ特有のエラー処理
+          if (errorData.type === 'SYSTEM_FAILURE') {
+            throw new Error(`GROQ APIシステムエラー: ${errorData.message || 'サービスが一時的に利用できません。しばらく待ってから再度お試しください。'}`);
+          }
+          
+          // その他の構造化エラー
+          if (errorData.error || errorData.message) {
+            throw new Error(`${provider} API エラー: ${errorData.error || errorData.message}`);
+          }
+        } catch (parseError) {
+          // JSONパースに失敗した場合は元のエラーテキストを使用
+        }
+        
         throw new Error(`${provider} API error: ${response.status} - ${errorText}`);
       }
 

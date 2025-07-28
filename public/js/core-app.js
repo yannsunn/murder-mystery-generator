@@ -553,18 +553,30 @@ class CoreApp {
           this.pollInterval = null;
           
           const errorDetails = [];
-          errorDetails.push(`エラー: ${data.error || 'シナリオ生成に失敗しました'}`);
-          if (data.currentStage !== undefined) errorDetails.push(`ステージ: ${data.currentStage}`);
-          if (data.sessionId) errorDetails.push(`セッションID: ${data.sessionId}`);
+          
+          // エラーメッセージの解析
+          let errorMessage = data.error || 'シナリオ生成に失敗しました';
+          
+          // GROQ APIシステムエラーの場合の特別処理
+          if (errorMessage.includes('SYSTEM_FAILURE') || errorMessage.includes('システムに一時的な問題')) {
+            errorDetails.push('⚠️ APIサービスに一時的な問題が発生しています');
+            errorDetails.push('');
+            errorDetails.push('【対処方法】');
+            errorDetails.push('1. 数分待ってから再度お試しください');
+            errorDetails.push('2. 問題が続く場合は、APIプロバイダーの状態を確認してください');
+            errorDetails.push('');
+            errorDetails.push(`エラー詳細: ${errorMessage.substring(0, 200)}...`);
+          } else {
+            errorDetails.push(`エラー: ${errorMessage}`);
+          }
+          
+          if (data.currentStage !== undefined) errorDetails.push(`\nステージ: ${data.currentStage}`);
           
           // デバッグ情報があれば追加
           if (data.debug) {
             console.error('❌ Debug information:', data.debug);
             if (data.debug.apiKeyStatus) {
-              errorDetails.push(`\nAPIキー状態: ${JSON.stringify(data.debug.apiKeyStatus)}`);
-            }
-            if (data.debug.hasApiKey !== undefined) {
-              errorDetails.push(`APIキー設定: ${data.debug.hasApiKey ? '設定済み' : '未設定'}`);
+              console.error('❌ API Key Status:', data.debug.apiKeyStatus);
             }
           }
           
