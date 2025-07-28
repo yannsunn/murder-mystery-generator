@@ -98,13 +98,25 @@ async function startGeneration(req, res) {
     logger.info(`🚀 Free Plan Generation Started: ${sessionId}`);
 
     // 段階0を即座に開始
-    const stage0Response = await callStageController({
-      action: 'execute_stage',
-      sessionId: sessionId,
-      stageIndex: 0
-    });
-    
-    console.log('[START-GENERATION] stage0Response:', stage0Response);
+    let stage0Response;
+    try {
+      stage0Response = await callStageController({
+        action: 'execute_stage',
+        sessionId: sessionId,
+        stageIndex: 0
+      });
+      
+      console.log('[START-GENERATION] stage0Response:', stage0Response);
+      
+      // エラーレスポンスの詳細をログ出力
+      if (!stage0Response.success && stage0Response.debug) {
+        console.error('[START-GENERATION] Stage 0 failed with debug info:', stage0Response.debug);
+        console.error('[START-GENERATION] API Key Status in Stage 0:', stage0Response.debug.apiKeyStatus);
+      }
+    } catch (stageError) {
+      console.error('[START-GENERATION] Stage 0 execution error:', stageError);
+      throw stageError;
+    }
 
     return res.status(200).json({
       success: true,
@@ -212,8 +224,27 @@ async function pollProgress(req, res) {
           stageIndex: stageToExecute
         });
         console.log(`[POLL-PROGRESS] Stage ${stageToExecute} execution result:`, stageResponse.success);
+        
+        // ステージ実行が失敗した場合
+        if (!stageResponse.success) {
+          console.error(`[POLL-PROGRESS] Stage ${stageToExecute} failed:`, stageResponse);
+          if (stageResponse.debug) {
+            console.error(`[POLL-PROGRESS] Debug info:`, stageResponse.debug);
+            console.error(`[POLL-PROGRESS] API Key Status:`, stageResponse.debug.apiKeyStatus);
+          }
+          
+          // エラーを返す
+          return res.status(500).json({
+            success: false,
+            error: stageResponse.error || `ステージ${stageToExecute}の実行に失敗しました`,
+            sessionId: sessionId,
+            currentStage: stageToExecute,
+            debug: stageResponse.debug
+          });
+        }
       } catch (error) {
-        console.error(`[POLL-PROGRESS] Stage ${stageToExecute} execution failed:`, error);
+        console.error(`[POLL-PROGRESS] Stage ${stageToExecute} execution error:`, error);
+        
         // ステージ実行失敗
         return res.status(500).json({
           success: false,

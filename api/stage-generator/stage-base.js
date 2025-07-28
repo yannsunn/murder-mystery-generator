@@ -92,11 +92,22 @@ class StageBase {
     } catch (error) {
       const executionTime = Date.now() - startTime;
       logger.error(`❌ ${this.stageName} エラー [${executionTime}ms]:`, error);
+      console.error(`[STAGE-BASE ERROR] ${this.stageName}:`, error);
+      console.error(`[STAGE-BASE] Stack trace:`, error.stack);
+
+      // APIキーの状態を確認
+      const apiKeyStatus = {
+        envGROQ: process.env.GROQ_API_KEY ? 'SET' : 'NOT_SET',
+        envKeys: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')),
+        stage: this.stageName
+      };
+      console.error('[STAGE-BASE] API Key Status:', apiKeyStatus);
 
       if (sessionId) {
         await this.updateSessionStatus(sessionId, 'error', {
           error: error.message,
-          stage: this.stageName
+          stage: this.stageName,
+          apiKeyStatus: apiKeyStatus
         });
       }
 
@@ -104,7 +115,12 @@ class StageBase {
         success: false,
         error: error.message,
         stageName: this.stageName,
-        executionTime: executionTime
+        executionTime: executionTime,
+        debug: {
+          apiKeyStatus: apiKeyStatus,
+          errorType: error.constructor.name,
+          errorStack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        }
       });
     }
   }

@@ -516,9 +516,22 @@ class CoreApp {
         });
         
         if (!response.ok) {
-          const errorText = await response.text();
+          let errorText = await response.text();
           console.error('Polling response error:', response.status, errorText);
-          throw new Error(`Polling failed: ${response.status}`);
+          
+          // JSONレスポンスの場合、デバッグ情報を表示
+          try {
+            const errorData = JSON.parse(errorText);
+            console.error('❌ Server error details:', errorData);
+            if (errorData.debug) {
+              console.error('❌ Debug info:', errorData.debug);
+              console.error('❌ API Key Status:', errorData.debug.apiKeyStatus);
+            }
+            throw new Error(errorData.error || `Polling failed: ${response.status}`);
+          } catch (e) {
+            // JSONパースエラーの場合はそのままエラーテキストを使用
+            throw new Error(`Polling failed: ${response.status}`);
+          }
         }
         
         const data = await response.json();
@@ -577,6 +590,20 @@ class CoreApp {
       } catch (error) {
         retryCount++;
         console.error(`❌ Polling error (retry ${retryCount}/${maxRetries}):`, error);
+        
+        // レスポンスがある場合、詳細なデバッグ情報を表示
+        if (error.response) {
+          try {
+            const errorData = await error.response.json();
+            console.error('❌ Server error response:', errorData);
+            if (errorData.debug) {
+              console.error('❌ Debug info:', errorData.debug);
+              console.error('❌ API Key Status:', errorData.debug.apiKeyStatus);
+            }
+          } catch (e) {
+            // JSONパースエラーは無視
+          }
+        }
         
         if (retryCount >= maxRetries) {
           logger.error('Max polling retries exceeded:', error);

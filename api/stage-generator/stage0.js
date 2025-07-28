@@ -5,10 +5,6 @@
 
 const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
-const { envManager } = require('../config/env-manager.js');
-
-// 環境変数を初期化
-envManager.initialize();
 
 class Stage0Generator extends StageBase {
   constructor() {
@@ -20,7 +16,7 @@ class Stage0Generator extends StageBase {
     
     // 詳細なログを追加
     console.log('[STAGE0] Processing stage with formData:', formData);
-    console.log('[STAGE0] envManager initialized:', envManager.initialized);
+    console.log('[STAGE0] Direct environment check, GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? 'YES' : 'NO');
     
     const systemPrompt = `あなたは商業レベルのマーダーミステリー企画者です。
 30分-60分で完結する高品質なシナリオの基本構造を作成してください。
@@ -58,16 +54,14 @@ class Stage0Generator extends StageBase {
 簡潔で効率的に生成してください。
 `;
 
-    // 環境変数からAPIキーを取得
-    if (!envManager.initialized) {
-      console.log('[STAGE0] envManager not initialized, initializing now...');
-      envManager.initialize();
-    }
-    
+    // 環境変数からAPIキーを取得（直接アクセス）
     const apiKey = process.env.GROQ_API_KEY || sessionData.apiKey;
     console.log('[STAGE0] API Key found:', apiKey ? 'YES' : 'NO');
     console.log('[STAGE0] API Key prefix:', apiKey ? apiKey.substring(0, 8) + '...' : 'NONE');
     console.log('[STAGE0] process.env.GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? 'YES' : 'NO');
+    console.log('[STAGE0] All env vars with API:', Object.keys(process.env).filter(k => k.includes('API')).join(', '));
+    console.log('[STAGE0] Vercel env detected:', process.env.VERCEL ? 'YES' : 'NO');
+    console.log('[STAGE0] NODE_ENV:', process.env.NODE_ENV);
     
     if (!apiKey) {
       console.error('[STAGE0] No API key available! process.env.GROQ_API_KEY:', process.env.GROQ_API_KEY);

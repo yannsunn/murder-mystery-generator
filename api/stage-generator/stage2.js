@@ -5,10 +5,9 @@
 
 const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
-const { envManager } = require('../config/env-manager.js');
+
 
 // 環境変数を初期化
-envManager.initialize();
 
 class Stage2Generator extends StageBase {
   constructor() {
