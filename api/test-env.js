@@ -13,21 +13,30 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // 複数の方法で環境変数を確認
+    const groqFromEnv = process.env.GROQ_API_KEY;
+    const groqFromVercel = process.env['GROQ_API_KEY'];
+    
     const envInfo = {
       GROQ_API_KEY: {
         exists: process.env.GROQ_API_KEY !== undefined,
         empty: process.env.GROQ_API_KEY === '',
         length: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.length : 0,
-        prefix: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.substring(0, 10) + '...' : 'NOT SET'
+        prefix: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.substring(0, 10) + '...' : 'NOT SET',
+        directAccess: groqFromEnv ? 'FOUND' : 'NOT FOUND',
+        bracketAccess: groqFromVercel ? 'FOUND' : 'NOT FOUND'
       },
       VERCEL: process.env.VERCEL || 'NOT SET',
       NODE_ENV: process.env.NODE_ENV || 'NOT SET',
+      VERCEL_ENV: process.env.VERCEL_ENV || 'NOT SET',
       allEnvKeys: Object.keys(process.env).filter(k => 
         k.includes('API') || 
         k.includes('KEY') || 
+        k.includes('GROQ') ||
         k.includes('VERCEL') || 
         k.includes('NODE')
       ).sort(),
+      totalEnvVars: Object.keys(process.env).length,
       timestamp: new Date().toISOString()
     };
 

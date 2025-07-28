@@ -5,6 +5,7 @@
 
 const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
+const { getGroqApiKey } = require('../config/api-key-fallback.js');
 
 class Stage0Generator extends StageBase {
   constructor() {
@@ -54,8 +55,8 @@ class Stage0Generator extends StageBase {
 簡潔で効率的に生成してください。
 `;
 
-    // 環境変数からAPIキーを取得（直接アクセス）
-    const apiKey = process.env.GROQ_API_KEY || sessionData.apiKey;
+    // 環境変数からAPIキーを取得（フォールバック付き）
+    const apiKey = getGroqApiKey() || sessionData.apiKey;
     console.log('[STAGE0] API Key found:', apiKey ? 'YES' : 'NO');
     console.log('[STAGE0] API Key prefix:', apiKey ? apiKey.substring(0, 8) + '...' : 'NONE');
     console.log('[STAGE0] process.env.GROQ_API_KEY exists:', process.env.GROQ_API_KEY ? 'YES' : 'NO');
