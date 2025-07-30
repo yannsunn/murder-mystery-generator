@@ -261,6 +261,17 @@ class StageBase {
       });
     } catch (error) {
       logger.error(`AI generation failed for ${this.stageName}:`, error);
+      
+      // 構造化されたエラーをチェック
+      try {
+        const errorObj = JSON.parse(error.message);
+        if (errorObj.type === 'SYSTEM_FAILURE' || errorObj.type === 'CONFIGURATION_ERROR') {
+          throw error; // 構造化されたエラーはそのまま伝播
+        }
+      } catch (e) {
+        // JSONパースできない場合は通常のエラー
+      }
+      
       throw new Error(`AI生成に失敗しました: ${error.message}`);
     }
   }

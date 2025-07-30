@@ -115,6 +115,11 @@ async function startGeneration(req, res) {
       }
     } catch (stageError) {
       console.error('[START-GENERATION] Stage 0 execution error:', stageError);
+      // より詳細なエラーメッセージを含める
+      const errorMessage = stageError.message || 'Unknown error';
+      if (errorMessage.includes('GROQ') || errorMessage.includes('API')) {
+        throw new Error(`${errorMessage}\n\nPlease set GROQ_API_KEY in Vercel Dashboard: Settings → Environment Variables`);
+      }
       throw stageError;
     }
 
@@ -236,10 +241,11 @@ async function pollProgress(req, res) {
           // エラーを返す
           return res.status(500).json({
             success: false,
-            error: stageResponse.error || `ステージ${stageToExecute}の実行に失敗しました`,
+            error: `Stage ${stageToExecute} execution failed: ${stageResponse.error || 'Unknown error'}`,
             sessionId: sessionId,
             currentStage: stageToExecute,
-            debug: stageResponse.debug
+            debug: stageResponse.debug,
+            help: 'Please ensure GROQ_API_KEY is set in Vercel Environment Variables. See: https://vercel.com/docs/environment-variables'
           });
         }
       } catch (error) {

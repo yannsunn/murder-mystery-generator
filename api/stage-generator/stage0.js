@@ -76,12 +76,19 @@ class Stage0Generator extends StageBase {
       
       console.error('[STAGE0] API Key Error Details:', errorInfo);
       
-      // より詳細なエラーメッセージを生成
-      const errorMessage = `APIキーが見つかりません。Vercel環境変数にGROQ_API_KEYを設定してください。\n` +
-                          `環境変数の状態: ${errorInfo.envVarValue}\n` +
-                          `検出された関連変数: ${errorInfo.allEnvVars.join(', ') || 'なし'}`;
+      // Vercel環境変数設定ページへのリンクを含むエラーメッセージ
+      const errorMessage = {
+        id: 'API_KEY_MISSING',
+        type: 'CONFIGURATION_ERROR',
+        message: 'GROQ APIキーが設定されていません。',
+        priority: 'CRITICAL',
+        retryable: false,
+        solution: 'Vercelダッシュボードから環境変数を設定してください: Settings → Environment Variables',
+        helpUrl: 'https://vercel.com/docs/environment-variables',
+        timestamp: new Date().toISOString()
+      };
       
-      throw new Error(errorMessage);
+      throw new Error(JSON.stringify(errorMessage));
     }
     
     const result = await this.generateWithAI(

@@ -135,7 +135,17 @@ class UnifiedAIClient {
           
           // GROQ特有のエラー処理
           if (errorData.type === 'SYSTEM_FAILURE') {
-            throw new Error(`GROQ APIシステムエラー: ${errorData.message || 'サービスが一時的に利用できません。しばらく待ってから再度お試しください。'}`);
+            const errorObj = {
+              id: errorData.id || 'SYSTEM_FAILURE',
+              type: 'SYSTEM_FAILURE',
+              message: errorData.message || 'システムに一時的な問題が発生しています。',
+              priority: 'CRITICAL',
+              retryable: errorData.retryable !== false,
+              retryAfter: errorData.retryAfter || null,
+              solution: 'GROQ APIキーがVercel環境変数に正しく設定されているか確認してください。',
+              timestamp: new Date().toISOString()
+            };
+            throw new Error(JSON.stringify(errorObj));
           }
           
           // その他の構造化エラー
@@ -144,6 +154,12 @@ class UnifiedAIClient {
           }
         } catch (parseError) {
           // JSONパースに失敗した場合は元のエラーテキストを使用
+          if (parseError.message.includes('JSON')) {
+            // パースエラーの場合はスキップ
+          } else {
+            // 意図的に投げたエラーは再スロー
+            throw parseError;
+          }
         }
         
         throw new Error(`${provider} API error: ${response.status} - ${errorText}`);
