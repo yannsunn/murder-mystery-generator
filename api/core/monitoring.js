@@ -768,9 +768,7 @@ class UnifiedPerformanceMonitor {
     
     if (url.includes('/api/ultra-integrated-generator')) return 'generation';
     if (url.includes('/api/micro-generation-system')) return 'micro';
-    if (url.includes('/api/export')) return 'export';
     if (url.includes('/api/health')) return 'health';
-    if (url.includes('/api/scenario-storage')) return 'storage';
     return 'other';
   }
 

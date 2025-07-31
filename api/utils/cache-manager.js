@@ -2,7 +2,34 @@
  * キャッシュマネージャー - 複数のキャッシュインスタンスを統合管理
  */
 
-const { DynamicLRUCache } = require('./dynamic-cache');
+// const { DynamicLRUCache } = require('./dynamic-cache'); // File removed
+// Simple in-memory cache implementation
+class DynamicLRUCache {
+  constructor(options = {}) {
+    this.maxSize = options.maxSize || 100;
+    this.cache = new Map();
+  }
+  
+  get(key) {
+    return this.cache.get(key);
+  }
+  
+  set(key, value) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    this.cache.set(key, value);
+  }
+  
+  clear() {
+    this.cache.clear();
+  }
+  
+  getStats() {
+    return { size: this.cache.size, maxSize: this.maxSize };
+  }
+}
 
 /**
  * キャッシュマネージャークラス

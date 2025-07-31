@@ -5,7 +5,7 @@
 
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
-const mockGenerator = require('../utils/mock-data-generator.js');
+// const mockGenerator = require('../utils/mock-data-generator.js'); // File removed
 
 // ハンドアウト生成ヘルパー
 function generateCharacterHandout(character) {

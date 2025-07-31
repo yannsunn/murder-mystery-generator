@@ -155,7 +155,6 @@ murder-mystery-generator/
 ├── api/                    # サーバーレス関数
 │   ├── integrated-micro-generator.js   # メイン生成エンジン
 │   ├── professional-mystery-generator.js # 代替エンジン
-│   ├── export.js                      # ZIP出力機能
 │   ├── utils/                         # ユーティリティ
 │   └── middleware/                    # ミドルウェア
 ├── public/                 # フロントエンド

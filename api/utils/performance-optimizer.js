@@ -3,7 +3,7 @@
  */
 
 // 新しい動的キャッシュシステムを使用
-const { SimpleCacheCompat } = require('./dynamic-cache');
+// const { SimpleCacheCompat } = require('./dynamic-cache'); // File removed
 const { cacheManager } = require('./cache-manager');
 
 /**

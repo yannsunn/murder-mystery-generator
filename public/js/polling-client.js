@@ -25,7 +25,7 @@ class PollingClient {
     this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      const response = await fetch('/api/polling-generator', {
+      const response = await fetch('/api/free-plan-generator', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -70,7 +70,7 @@ class PollingClient {
 
     const poll = async () => {
       try {
-        const response = await fetch('/api/polling-generator', {
+        const response = await fetch('/api/free-plan-generator', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -167,7 +167,7 @@ class PollingClient {
     }
 
     try {
-      await fetch('/api/polling-generator', {
+      await fetch('/api/free-plan-generator', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

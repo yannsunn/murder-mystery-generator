@@ -4,12 +4,13 @@
  */
 
 const { logger } = require('../utils/logger.js');
-const { randomMysteryGenerator } = require('../utils/random-mystery-generator.js');
-const { 
-  setEventSourceHeaders, 
-  sendEventSourceMessage,
-  simulateRandomProgress 
-} = require('./event-source-handler.js');
+// const { randomMysteryGenerator } = require('../utils/random-mystery-generator.js'); // File removed
+// Event source handlers removed - using polling mode instead
+// const { 
+//   setEventSourceHeaders, 
+//   sendEventSourceMessage,
+//   simulateRandomProgress 
+// } = require('./event-source-handler.js');
 
 /**
  * ランダムモードの処理
