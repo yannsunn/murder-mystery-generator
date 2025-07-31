@@ -7,6 +7,7 @@ const { withSecurity } = require('../security-utils.js');
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('../supabase-client.js');
+const { callGroqAPI, getGroqApiKey } = require('../utils/groq-client.js');
 
 class StageBase {
   constructor(stageName, stageWeight = 10) {
@@ -249,18 +250,35 @@ class StageBase {
       ...options
     };
 
-    // APIキーが必須
-    if (!apiKey) {
+    // APIキーが提供されていない場合、環境変数から取得
+    let finalApiKey = apiKey;
+    if (!finalApiKey) {
+      finalApiKey = getGroqApiKey();
+      if (finalApiKey) {
+        logger.debug('Using API key from environment');
+      }
+    }
+
+    if (!finalApiKey) {
       throw new Error('APIキーが設定されていません');
     }
 
     try {
-      return await aiClient.generateWithRetry(systemPrompt, userPrompt, {
-        apiKey,
-        ...config
-      });
+      // シンプルなGROQ API直接呼び出しを使用
+      const result = await callGroqAPI(systemPrompt, userPrompt, finalApiKey);
+      return result;
     } catch (error) {
       logger.error(`AI generation failed for ${this.stageName}:`, error);
+      
+      // フォールバック：元のaiClientを使用
+      try {
+        return await aiClient.generateWithRetry(systemPrompt, userPrompt, {
+          apiKey: finalApiKey,
+          ...config
+        });
+      } catch (fallbackError) {
+        logger.error('Fallback AI generation also failed:', fallbackError);
+      }
       
       // 構造化されたエラーをチェック
       try {

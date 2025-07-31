@@ -3,6 +3,9 @@
  * 段階別Function分離によるマーダーミステリー生成
  */
 
+// 環境変数の初期化を最初に実行
+require('./init-env.js');
+
 const { withSecurity } = require('./security-utils.js');
 const { logger } = require('./utils/logger.js');
 

@@ -3,6 +3,9 @@
  * Vercel無料プラン対応（10秒制限）- セッション管理・進行制御
  */
 
+// 環境変数の初期化を最初に実行
+require('./init-env.js');
+
 const { withSecurity } = require('./security-utils.js');
 const { logger } = require('./utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('./supabase-client.js');
