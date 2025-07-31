@@ -7,6 +7,7 @@ const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
 const { getGroqApiKey } = require('../config/api-key-fallback.js');
 const { debugEnvironmentVariables, getEnvironmentVariable } = require('../utils/env-debug.js');
+const { initializeEnvVars, getVercelEnv } = require('../config/vercel-env-fix.js');
 
 class Stage0Generator extends StageBase {
   constructor() {
@@ -18,6 +19,9 @@ class Stage0Generator extends StageBase {
     
     // 詳細なログを追加
     console.log('[STAGE0] Processing stage with formData:', formData);
+    
+    // Vercel環境変数の初期化
+    initializeEnvVars();
     
     // 環境変数の完全なデバッグ
     const envDebugInfo = debugEnvironmentVariables();
@@ -62,20 +66,28 @@ class Stage0Generator extends StageBase {
     // 環境変数からAPIキーを取得（複数の方法を試す）
     let apiKey = null;
     
-    // 方法1: 直接取得
-    apiKey = getEnvironmentVariable('GROQ_API_KEY');
+    // 方法1: Vercel専用関数で取得
+    apiKey = getVercelEnv('GROQ_API_KEY');
     
-    // 方法2: フォールバック関数を使用
+    // 方法2: 直接取得
+    if (!apiKey) {
+      apiKey = getEnvironmentVariable('GROQ_API_KEY');
+    }
+    
+    // 方法3: フォールバック関数を使用
     if (!apiKey) {
       apiKey = getGroqApiKey();
     }
     
-    // 方法3: セッションデータから
+    // 方法4: セッションデータから
     if (!apiKey) {
       apiKey = sessionData.apiKey;
     }
     
     console.log('[STAGE0] Final API Key status:', apiKey ? 'FOUND' : 'NOT FOUND');
+    console.log('[STAGE0] API Key source check:');
+    console.log('  - process.env.GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'EXISTS' : 'NOT EXISTS');
+    console.log('  - getVercelEnv result:', getVercelEnv('GROQ_API_KEY') ? 'FOUND' : 'NOT FOUND');
     
     if (!apiKey) {
       const errorInfo = {

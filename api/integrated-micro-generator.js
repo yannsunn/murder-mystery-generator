@@ -22,35 +22,16 @@ const {
 const { setSecurityHeaders } = require('./security-utils.js');
 const { createSecurityMiddleware } = require('./middleware/rate-limiter.js');
 const { checkPersonalAccess, checkDailyUsage } = require('./utils/simple-auth.js');
-// const { createPerformanceMiddleware } = require('./core/monitoring.js'); // Removed for simplicity
 const { createValidationMiddleware } = require('./core/validation.js');
-// const { qualityAssessor } = require('./utils/quality-assessor.js'); // Removed for simplicity
 const { executeParallel, SimpleCache } = require('./utils/performance-optimizer.js');
 
 // キャッシュインスタンスの作成
 const cache = new SimpleCache();
 const intelligentCache = cache;
-// const { randomMysteryGenerator } = require('./utils/random-mystery-generator.js'); // File removed
 const { logger } = require('./utils/logger.js');
-// const { resourceManager } = require('./utils/resource-manager.js'); // Removed for simplicity
-// const { executeOptimizedQueryWithMonitoring } = require('./utils/database-optimizer.js'); // Removed for simplicity
 const { saveScenarioToSupabase } = require('./supabase-client.js');
 const { INTEGRATED_GENERATION_FLOW, getStageProgressData } = require('./core/generation-stages.js');
 const { createImagePrompts, generateImages } = require('./core/image-generator.js');
-// Event source handlers removed - using polling mode instead
-// const { 
-//   setupEventSourceConnection, 
-//   setEventSourceHeaders, 
-//   sendEventSourceMessage,
-//   sendProgressUpdate,
-//   integratedEventSourceManager
-// } = require('./core/event-source-handler.js');
-// Error handlers for SSE removed - using polling mode instead
-// const { 
-//   EventSourceError, 
-//   EVENT_SOURCE_ERROR_TYPES, 
-//   eventSourceErrorHandler 
-// } = require('./core/event-source-error-handler.js');
 const { processRandomMode } = require('./core/random-processor.js');
 const { 
   createCacheKey, 
