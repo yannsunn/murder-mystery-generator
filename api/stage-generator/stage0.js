@@ -63,53 +63,117 @@ class Stage0Generator extends StageBase {
 簡潔で効率的に生成してください。
 `;
 
-    // 環境変数からAPIキーを取得（複数の方法を試す）
+    // 段階的APIキー取得アプローチ
     let apiKey = null;
+    const keySearchLog = [];
     
-    // 方法1: Vercel専用関数で取得
-    apiKey = getVercelEnv('GROQ_API_KEY');
-    
-    // 方法2: 直接取得
-    if (!apiKey) {
-      apiKey = getEnvironmentVariable('GROQ_API_KEY');
+    // 方法1: 直接環境変数アクセス
+    if (process.env.GROQ_API_KEY) {
+      apiKey = process.env.GROQ_API_KEY;
+      keySearchLog.push('✅ process.env.GROQ_API_KEY');
+    } else {
+      keySearchLog.push('❌ process.env.GROQ_API_KEY');
     }
     
-    // 方法3: フォールバック関数を使用
+    // 方法2: Vercel専用関数
     if (!apiKey) {
-      apiKey = getGroqApiKey();
+      try {
+        apiKey = getVercelEnv('GROQ_API_KEY');
+        if (apiKey) {
+          keySearchLog.push('✅ getVercelEnv');
+        } else {
+          keySearchLog.push('❌ getVercelEnv');
+        }
+      } catch (e) {
+        keySearchLog.push('❌ getVercelEnv (error): ' + e.message);
+      }
     }
     
-    // 方法4: セッションデータから
+    // 方法3: 環境変数ユーティリティ
     if (!apiKey) {
+      try {
+        apiKey = getEnvironmentVariable('GROQ_API_KEY');
+        if (apiKey) {
+          keySearchLog.push('✅ getEnvironmentVariable');
+        } else {
+          keySearchLog.push('❌ getEnvironmentVariable');
+        }
+      } catch (e) {
+        keySearchLog.push('❌ getEnvironmentVariable (error): ' + e.message);
+      }
+    }
+    
+    // 方法4: フォールバック関数
+    if (!apiKey) {
+      try {
+        apiKey = getGroqApiKey();
+        if (apiKey) {
+          keySearchLog.push('✅ getGroqApiKey');
+        } else {
+          keySearchLog.push('❌ getGroqApiKey');
+        }
+      } catch (e) {
+        keySearchLog.push('❌ getGroqApiKey (error): ' + e.message);
+      }
+    }
+    
+    // 方法5: セッションデータから
+    if (!apiKey && sessionData.apiKey) {
       apiKey = sessionData.apiKey;
+      keySearchLog.push('✅ sessionData.apiKey');
+    } else if (!apiKey) {
+      keySearchLog.push('❌ sessionData.apiKey');
     }
     
-    console.log('[STAGE0] Final API Key status:', apiKey ? 'FOUND' : 'NOT FOUND');
-    console.log('[STAGE0] API Key source check:');
-    console.log('  - process.env.GROQ_API_KEY:', process.env.GROQ_API_KEY ? 'EXISTS' : 'NOT EXISTS');
-    console.log('  - getVercelEnv result:', getVercelEnv('GROQ_API_KEY') ? 'FOUND' : 'NOT FOUND');
+    // 詳細ログ出力
+    console.log('[STAGE0] API Key Search Results:');
+    keySearchLog.forEach(log => console.log('  ' + log));
+    console.log('[STAGE0] Final API Key Found:', apiKey ? 'YES' : 'NO');
+    if (apiKey) {
+      console.log('[STAGE0] API Key Length:', apiKey.length);
+      console.log('[STAGE0] API Key Prefix:', apiKey.substring(0, 8) + '...');
+    }
     
     if (!apiKey) {
-      const errorInfo = {
-        message: 'GROQ API key not found',
-        envVarExists: process.env.GROQ_API_KEY !== undefined,
-        envVarEmpty: process.env.GROQ_API_KEY === '',
-        envVarValue: process.env.GROQ_API_KEY ? 'SET (hidden)' : 'NOT SET',
-        sessionApiKey: sessionData.apiKey ? 'EXISTS' : 'NOT EXISTS',
-        allEnvVars: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')).sort()
-      };
+      // 全環境変数のデバッグ情報
+      const allEnvKeys = Object.keys(process.env);
+      const apiRelatedKeys = allEnvKeys.filter(k => 
+        k.includes('GROQ') || 
+        k.includes('API') || 
+        k.includes('KEY')
+      ).sort();
       
-      console.error('[STAGE0] API Key Error Details:', errorInfo);
+      console.error('[STAGE0] ❌ CRITICAL: No API key found after all attempts');
+      console.error('[STAGE0] Environment Analysis:');
+      console.error('  - Total env vars:', allEnvKeys.length);
+      console.error('  - API-related vars:', apiRelatedKeys);
+      console.error('  - NODE_ENV:', process.env.NODE_ENV);
+      console.error('  - VERCEL:', process.env.VERCEL);
+      console.error('  - VERCEL_ENV:', process.env.VERCEL_ENV);
       
-      // Vercel環境変数設定ページへのリンクを含むエラーメッセージ
+      // 具体的な解決手順を含むエラー
+      const troubleshootingSteps = [
+        '1. Vercel Dashboard → Settings → Environment Variables',
+        '2. GROQ_API_KEY を Production, Preview, Development すべてに設定',
+        '3. 再デプロイを実行 (vercel --prod)',
+        '4. APIキーが gsk_ で始まっていることを確認'
+      ];
+      
       const errorMessage = {
-        id: 'API_KEY_MISSING',
+        id: `API_KEY_MISSING_${Date.now()}`,
         type: 'CONFIGURATION_ERROR',
-        message: 'GROQ APIキーが設定されていません。',
+        message: 'GROQ APIキーが利用できません。環境変数の設定を確認してください。',
         priority: 'CRITICAL',
-        retryable: false,
-        solution: 'Vercelダッシュボードから環境変数を設定してください: Settings → Environment Variables',
-        helpUrl: 'https://vercel.com/docs/environment-variables',
+        retryable: true,
+        troubleshooting: troubleshootingSteps,
+        searchResults: keySearchLog,
+        debugInfo: {
+          totalEnvVars: allEnvKeys.length,
+          apiRelatedVars: apiRelatedKeys,
+          vercelEnv: process.env.VERCEL_ENV,
+          nodeEnv: process.env.NODE_ENV
+        },
+        helpUrl: 'https://console.groq.com/keys',
         timestamp: new Date().toISOString()
       };
       

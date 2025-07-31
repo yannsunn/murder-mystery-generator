@@ -72,11 +72,22 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        // レスポンスが有効な場合のみキャッシュ
-        if (response.status === 200) {
+        // Chrome拡張機能やサポートされていないスキームを除外
+        if (url.protocol === 'chrome-extension:' || 
+            url.protocol === 'moz-extension:' ||
+            url.protocol === 'ms-browser-extension:') {
+          return response;
+        }
+        
+        // レスポンスが有効で、HTTPSまたはHTTPの場合のみキャッシュ
+        if (response.status === 200 && 
+            (url.protocol === 'https:' || url.protocol === 'http:')) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
+            cache.put(request, responseClone).catch(error => {
+              // キャッシュエラーは静かに無視
+              console.debug('Cache put failed:', error.message);
+            });
           });
         }
         return response;
