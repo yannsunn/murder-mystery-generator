@@ -644,6 +644,11 @@ class CoreApp {
         clearInterval(this.pollInterval);
         this.pollInterval = null;
         
+        // ユーザーにエラーを表示
+        if (window.uiManager) {
+          window.uiManager.showError(error.message || '生成中にエラーが発生しました。');
+        }
+        
         // レスポンスがある場合、詳細なデバッグ情報を表示
         if (error.response) {
           try {
