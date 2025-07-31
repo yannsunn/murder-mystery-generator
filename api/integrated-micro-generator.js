@@ -159,34 +159,14 @@ const handler = withApiErrorHandling(async (req, res) => {
       logger.info('🎭 Demo Mode Activated - Using mock data generator for all content');
     }
 
-    // EventSource対応チェック
+    // EventSource is disabled - using polling mode instead
     if (req.headers.accept?.includes('text/event-stream')) {
-      logger.info('[STREAM] EventSource connection requested');
-      logger.info('[STREAM] FormData:', formData);
-      logger.info('[STREAM] SessionId:', sessionId);
-      
-      try {
-        // 統合EventSourceManagerで接続管理
-        const connectionId = integratedEventSourceManager.setupEventSourceConnection(req, res, sessionId);
-        integratedEventSourceManager.setEventSourceHeaders(res);
-        
-        // ストリーミング処理
-        await handleStreamingGeneration(req, res, formData, connectionId);
-        return;
-      } catch (error) {
-        logger.error('[STREAM ERROR] EventSource setup failed:', error);
-        throw new UnifiedError(
-          error.message,
-          ERROR_TYPES.NETWORK_ERROR,
-          500,
-          { 
-            service: 'EVENT_SOURCE', 
-            sessionId, 
-            connectionType: 'streaming',
-            originalError: error 
-          }
-        );
-      }
+      logger.info('[STREAM] EventSource requested but disabled - use polling instead');
+      return res.status(400).json({
+        success: false,
+        error: 'EventSource is not supported. Please use polling mode.',
+        usePolling: true
+      });
     }
 
     // 通常のJSON応答
@@ -218,8 +198,11 @@ const handler = withApiErrorHandling(async (req, res) => {
 });
 
 /**
- * ストリーミング生成処理
+ * ストリーミング生成処理 (DISABLED)
  */
+/* eslint-disable */
+// This function is disabled as EventSource is not supported
+/*
 async function handleStreamingGeneration(req, res, formData, connectionId) {
   try {
     // 開始メッセージ（デモモードチェック）
@@ -379,6 +362,7 @@ async function handleStreamingGeneration(req, res, formData, connectionId) {
     integratedEventSourceManager.closeConnection(connectionId);
   }
 }
+*/
 
 /**
  * 非ストリーミング生成処理

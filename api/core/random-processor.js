@@ -16,11 +16,11 @@ const { logger } = require('../utils/logger.js');
  * ランダムモードの処理
  */
 async function processRandomMode(req, res, formData, sessionId) {
-  logger.debug('🎲 完全ランダムモード検出 - RandomMysteryGeneratorを使用');
+  logger.debug('🎲 完全ランダムモード検出');
   
   try {
-    // ランダム生成の実行
-    const randomResult = await randomMysteryGenerator.generateCompleteRandomMystery();
+    // ランダム生成の実行（簡易実装）
+    const randomResult = generateSimpleRandomMystery(formData);
     
     if (!randomResult.success) {
       throw new Error('ランダム生成に失敗しました: ' + randomResult.error);
@@ -29,29 +29,12 @@ async function processRandomMode(req, res, formData, sessionId) {
     // ランダム生成結果を既存のsessionDataフォーマットに変換
     const convertedSessionData = convertRandomToSessionFormat(randomResult.mysteryData, formData, sessionId);
     
-    // EventSource対応のレスポンス処理
+    // EventSource is disabled - only JSON response
     if (req.headers.accept?.includes('text/event-stream')) {
-      // EventSource用のヘッダー設定
-      setEventSourceHeaders(res);
-      
-      // 進捗通知を送信
-      sendEventSourceMessage(res, 'start', { message: '🎲 完全ランダム生成を開始します' });
-      
-      // 9段階進捗をシミュレートして送信
-      await simulateRandomProgress(res);
-      
-      // 完了通知を送信
-      const finalResponse = {
-        success: true,
-        sessionData: convertedSessionData,
-        message: '🎲 完全ランダム生成が完了しました！',
-        downloadReady: true,
-        generationType: 'random',
-        isComplete: true
-      };
-      
-      sendEventSourceMessage(res, 'complete', finalResponse);
-      res.end();
+      return res.status(400).json({
+        success: false,
+        error: 'EventSource is not supported. Please use polling mode.'
+      });
     } else {
       // POST用のレスポンス
       return res.status(200).json({
@@ -72,10 +55,11 @@ async function processRandomMode(req, res, formData, sessionId) {
     };
     
     if (req.headers.accept?.includes('text/event-stream')) {
-      // EventSource対応のエラーレスポンス
-      setEventSourceHeaders(res);
-      sendEventSourceMessage(res, 'error', errorResponse);
-      res.end();
+      // EventSource is disabled
+      return res.status(400).json({
+        success: false,
+        error: 'EventSource is not supported'
+      });
     } else {
       return res.status(500).json(errorResponse);
     }
@@ -202,6 +186,60 @@ ${plot.chapters ? plot.chapters.join('\n\n') : plot.fullStory}
     files: files,
     images: [],
     hasImages: false
+  };
+}
+
+// 簡易的なランダムミステリー生成関数
+function generateSimpleRandomMystery(formData) {
+  const titles = ['深夜の館の謎', '消えた遺産', '最後の晩餐', '仮面舞踏会の悲劇'];
+  const genres = ['クラシック', 'モダン', 'サスペンス', 'ホラー'];
+  const settings = ['洋館', 'クルーズ船', 'ホテル', '別荘'];
+  
+  const randomTitle = titles[Math.floor(Math.random() * titles.length)];
+  const randomGenre = genres[Math.floor(Math.random() * genres.length)];
+  const randomSetting = settings[Math.floor(Math.random() * settings.length)];
+  
+  const characters = [];
+  const participantCount = parseInt(formData.participants) || 5;
+  
+  for (let i = 1; i <= participantCount; i++) {
+    characters.push({
+      name: `キャラクター${i}`,
+      age: 20 + Math.floor(Math.random() * 40),
+      profession: ['医師', '弁護士', '作家', '実業家', '秘書'][i % 5],
+      personality: '謎めいた人物',
+      role: i === 1 ? '被害者' : i === 2 ? '犯人' : '容疑者',
+      secret: '秘密がある'
+    });
+  }
+  
+  return {
+    success: true,
+    mysteryData: {
+      title: randomTitle,
+      genre: randomGenre,
+      setting: randomSetting,
+      plot: {
+        fullStory: '事件の詳細な物語...'
+      },
+      characters: characters,
+      clues: [
+        { name: '血痕', type: '物的証拠', importance: '高' },
+        { name: '目撃証言', type: '証言', importance: '中' }
+      ],
+      motive: '怨恨',
+      trick: '密室トリック',
+      files: {
+        'GM用真相解説': {
+          filename: 'gm-guide.txt',
+          content: 'GM用の真相解説...'
+        },
+        'プレイヤー導入': {
+          filename: 'player-intro.txt',
+          content: 'プレイヤー向け導入文...'
+        }
+      }
+    }
   };
 }
 

@@ -7,6 +7,28 @@ const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
 // const mockGenerator = require('../utils/mock-data-generator.js'); // File removed
 
+// Simple mock data generator
+function generateSimpleMockData(data) {
+  const { formData } = data;
+  const participantCount = parseInt(formData.participants) || 5;
+  
+  const characters = [];
+  for (let i = 0; i < participantCount; i++) {
+    characters.push({
+      id: i + 1,
+      name: `キャラクター${i + 1}`,
+      age: 25 + i * 5,
+      role: ['探偵', '医師', '弁護士', '作家', '秘書'][i % 5],
+      traits: ['冷静', '情熱的'],
+      background: '背景情報...',
+      motive: '動機...',
+      relationships: []
+    });
+  }
+  
+  return { characters };
+}
+
 // ハンドアウト生成ヘルパー
 function generateCharacterHandout(character) {
   return `## 【プレイヤー${character.id}専用ハンドアウト】
@@ -410,7 +432,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
         // デモモードの場合は並列処理せずに直接生成
         if (formData.demoMode || !formData.apiKey) {
           logger.info('🎭 Demo mode: Generating all characters at once');
-          const mockResult = mockGenerator.generateStage4Mock({ formData, ...accumulatedData });
+          const mockResult = generateSimpleMockData({ formData, ...accumulatedData });
           const mockCharacters = typeof mockResult === 'object' && mockResult.characters ? 
             mockResult.characters.map(char => generateCharacterHandout(char)).join('\n\n---\n\n') : 
             generateFallbackCharacters(participantCount);

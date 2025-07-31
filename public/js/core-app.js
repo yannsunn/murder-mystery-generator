@@ -1111,18 +1111,13 @@ class CoreApp {
     }
     
     try {
-      const sessionId = this.sessionData.sessionId || this.sessionData.id;
-      const response = await fetch(`/api/export?sessionId=${sessionId}`);
-      
-      if (!response.ok) {
-        throw new Error('ダウンロードに失敗しました');
-      }
-      
-      const blob = await response.blob();
+      // Create download content from sessionData
+      const content = this.createDownloadContent(this.sessionData);
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `murder-mystery-${sessionId}.zip`;
+      a.download = `murder-mystery-${this.sessionData.sessionId || Date.now()}.txt`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -1133,6 +1128,25 @@ class CoreApp {
       logger.error('ダウンロードエラー:', error);
       this.showError('ダウンロードに失敗しました');
     }
+  }
+  
+  createDownloadContent(sessionData) {
+    let content = 'マーダーミステリーシナリオ\n';
+    content += '='.repeat(50) + '\n\n';
+    
+    if (sessionData.phases) {
+      Object.values(sessionData.phases).forEach(phase => {
+        if (phase.content) {
+          Object.values(phase.content).forEach(text => {
+            if (typeof text === 'string') {
+              content += text + '\n\n';
+            }
+          });
+        }
+      });
+    }
+    
+    return content;
   }
   
   // 環境チェックメソッド（並列処理用）
