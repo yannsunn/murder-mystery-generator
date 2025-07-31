@@ -72,23 +72,31 @@ self.addEventListener('fetch', (event) => {
       }
 
       return fetch(request).then((response) => {
-        // Chrome拡張機能やサポートされていないスキームを除外
+        // サポートされていないスキームを除外
         if (url.protocol === 'chrome-extension:' || 
             url.protocol === 'moz-extension:' ||
-            url.protocol === 'ms-browser-extension:') {
+            url.protocol === 'ms-browser-extension:' ||
+            url.protocol === 'safari-extension:') {
           return response;
         }
         
-        // レスポンスが有効で、HTTPSまたはHTTPの場合のみキャッシュ
-        if (response.status === 200 && 
-            (url.protocol === 'https:' || url.protocol === 'http:')) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone).catch(error => {
-              // キャッシュエラーは静かに無視
-              console.debug('Cache put failed:', error.message);
+        // 外部リソース（フォントなど）はキャッシュしない
+        if (url.hostname !== location.hostname) {
+          return response;
+        }
+        
+        // レスポンスが有効で、同一オリジンの場合のみキャッシュ
+        if (response.status === 200 && response.ok) {
+          try {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone).catch(error => {
+                // キャッシュエラーは静かに無視
+              });
             });
-          });
+          } catch (e) {
+            // Cloneエラーも静かに無視
+          }
         }
         return response;
       }).catch(() => {

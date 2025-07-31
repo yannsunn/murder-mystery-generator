@@ -63,66 +63,52 @@ class Stage0Generator extends StageBase {
 簡潔で効率的に生成してください。
 `;
 
-    // 段階的APIキー取得アプローチ
-    let apiKey = null;
+    // 直接環境変数アクセス（最も確実）
+    let apiKey = process.env.GROQ_API_KEY;
     const keySearchLog = [];
     
-    // 方法1: 直接環境変数アクセス
-    if (process.env.GROQ_API_KEY) {
-      apiKey = process.env.GROQ_API_KEY;
-      keySearchLog.push('✅ process.env.GROQ_API_KEY');
+    console.log('[STAGE0] Direct env access:');
+    console.log('  GROQ_API_KEY exists:', process.env.GROQ_API_KEY !== undefined);
+    console.log('  GROQ_API_KEY length:', process.env.GROQ_API_KEY?.length || 0);
+    console.log('  GROQ_API_KEY valid format:', process.env.GROQ_API_KEY?.startsWith('gsk_') || false);
+    
+    if (apiKey) {
+      keySearchLog.push('✅ Direct process.env.GROQ_API_KEY - SUCCESS');
+      console.log('[STAGE0] ✅ API Key found via direct access');
     } else {
-      keySearchLog.push('❌ process.env.GROQ_API_KEY');
+      keySearchLog.push('❌ Direct process.env.GROQ_API_KEY - FAILED');
+      console.log('[STAGE0] ❌ API Key NOT found via direct access');
     }
     
-    // 方法2: Vercel専用関数
-    if (!apiKey) {
-      try {
-        apiKey = getVercelEnv('GROQ_API_KEY');
-        if (apiKey) {
-          keySearchLog.push('✅ getVercelEnv');
-        } else {
-          keySearchLog.push('❌ getVercelEnv');
+    // 環境変数は確実に存在することが確認されているので、
+    // 他のフォールバック手段はスキップ
+    if (apiKey) {
+      console.log('[STAGE0] Using API key from direct environment access');
+    } else {
+      console.log('[STAGE0] WARNING: Environment variable exists but not accessible');
+      console.log('[STAGE0] Attempting alternative access methods...');
+      
+      // 代替手段を試す
+      const alternativeMethods = [
+        () => getVercelEnv('GROQ_API_KEY'),
+        () => getEnvironmentVariable('GROQ_API_KEY'),
+        () => getGroqApiKey(),
+        () => sessionData.apiKey
+      ];
+      
+      for (let i = 0; i < alternativeMethods.length && !apiKey; i++) {
+        try {
+          apiKey = alternativeMethods[i]();
+          if (apiKey) {
+            console.log(`[STAGE0] ✅ Success with method ${i + 1}`);
+            keySearchLog.push(`✅ Alternative method ${i + 1}`);
+            break;
+          }
+        } catch (e) {
+          console.log(`[STAGE0] Method ${i + 1} failed:`, e.message);
+          keySearchLog.push(`❌ Method ${i + 1}: ${e.message}`);
         }
-      } catch (e) {
-        keySearchLog.push('❌ getVercelEnv (error): ' + e.message);
       }
-    }
-    
-    // 方法3: 環境変数ユーティリティ
-    if (!apiKey) {
-      try {
-        apiKey = getEnvironmentVariable('GROQ_API_KEY');
-        if (apiKey) {
-          keySearchLog.push('✅ getEnvironmentVariable');
-        } else {
-          keySearchLog.push('❌ getEnvironmentVariable');
-        }
-      } catch (e) {
-        keySearchLog.push('❌ getEnvironmentVariable (error): ' + e.message);
-      }
-    }
-    
-    // 方法4: フォールバック関数
-    if (!apiKey) {
-      try {
-        apiKey = getGroqApiKey();
-        if (apiKey) {
-          keySearchLog.push('✅ getGroqApiKey');
-        } else {
-          keySearchLog.push('❌ getGroqApiKey');
-        }
-      } catch (e) {
-        keySearchLog.push('❌ getGroqApiKey (error): ' + e.message);
-      }
-    }
-    
-    // 方法5: セッションデータから
-    if (!apiKey && sessionData.apiKey) {
-      apiKey = sessionData.apiKey;
-      keySearchLog.push('✅ sessionData.apiKey');
-    } else if (!apiKey) {
-      keySearchLog.push('❌ sessionData.apiKey');
     }
     
     // 詳細ログ出力
