@@ -34,10 +34,9 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "api/**/*",
+    "src/**/*",
     "scripts/**/*",
     "tests/**/*",
-    "types/**/*",
     "*.js",
     "*.ts"
   ],
