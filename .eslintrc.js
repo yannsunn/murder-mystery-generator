@@ -33,7 +33,7 @@ module.exports = {
     'indent': ['error', 2],
     'quotes': ['error', 'single'],
     'semi': ['error', 'always'],
-    'comma-trailing': ['error', 'never'],
+    'comma-dangle': ['error', 'never'],
     
     // Accessibility
     'jsx-a11y/alt-text': 'off', // We're not using JSX

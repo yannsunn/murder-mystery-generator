@@ -242,7 +242,7 @@ class CacheManager {
     
     // メモリに余裕があり、ヒット率が高いキャッシュを拡張
     if (memoryUsagePercent < 50) {
-      let expanded = [];
+      const expanded = [];
       
       this.caches.forEach((cache, name) => {
         const stats = cache.getStats();
@@ -306,7 +306,7 @@ class CacheManager {
       const stats = cache.getStats();
       // ここで統計をログに記録したり、メトリクスサービスに送信したりできます
       if (process.env.NODE_ENV === 'development') {
-        process.env.NODE_ENV !== "production" && console.log(`Cache ${name} stats:`, {
+        process.env.NODE_ENV !== 'production' && console.log(`Cache ${name} stats:`, {
           hitRate: stats.hitRate,
           size: stats.size,
           memoryMB: stats.memoryUsageMB

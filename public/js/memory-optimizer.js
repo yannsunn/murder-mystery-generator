@@ -88,7 +88,7 @@ class MemoryOptimizer {
   monitorMemoryUsage() {
     const checkMemory = () => {
       if (performance.memory.usedJSHeapSize > this.maxHeapSize) {
-        (process.env.NODE_ENV !== "production" || true) && console.warn('🧠 High memory usage detected, performing cleanup...');
+        (process.env.NODE_ENV !== 'production' || true) && console.warn('🧠 High memory usage detected, performing cleanup...');
         this.performEmergencyCleanup();
       }
     };
@@ -117,7 +117,7 @@ class MemoryOptimizer {
       }
 
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.warn('Memory optimization error:', error);
+      (process.env.NODE_ENV !== 'production' || true) && console.warn('Memory optimization error:', error);
     }
   }
 
@@ -171,7 +171,7 @@ class MemoryOptimizer {
       window.gc();
     }
 
-    process.env.NODE_ENV !== "production" && console.log('🧠 Emergency memory cleanup completed');
+    process.env.NODE_ENV !== 'production' && console.log('🧠 Emergency memory cleanup completed');
   }
 
   /**
@@ -185,7 +185,7 @@ class MemoryOptimizer {
 
     this.objectPool.clear();
     
-    process.env.NODE_ENV !== "production" && console.log('🧠 Memory optimizer cleanup completed');
+    process.env.NODE_ENV !== 'production' && console.log('🧠 Memory optimizer cleanup completed');
   }
 
   /**

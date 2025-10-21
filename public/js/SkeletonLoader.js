@@ -19,7 +19,7 @@ class SkeletonLoader {
    * スケルトンローディング用CSSスタイル注入
    */
   injectStyles() {
-    if (document.getElementById('skeleton-styles')) return;
+    if (document.getElementById('skeleton-styles')) {return;}
 
     const style = document.createElement('style');
     style.id = 'skeleton-styles';
@@ -309,19 +309,19 @@ class SkeletonLoader {
     let skeleton;
     
     switch (type) {
-      case 'generation':
-        skeleton = this.createGenerationSkeleton();
-        break;
-      case 'form':
-        skeleton = this.createFormSkeleton();
-        break;
-      case 'result':
-        skeleton = this.createResultSkeleton();
-        break;
-      case 'card':
-      default:
-        skeleton = this.createCardSkeleton();
-        break;
+    case 'generation':
+      skeleton = this.createGenerationSkeleton();
+      break;
+    case 'form':
+      skeleton = this.createFormSkeleton();
+      break;
+    case 'result':
+      skeleton = this.createResultSkeleton();
+      break;
+    case 'card':
+    default:
+      skeleton = this.createCardSkeleton();
+      break;
     }
 
     // オプション適用
@@ -352,10 +352,10 @@ class SkeletonLoader {
    */
   hide(containerId, fadeOut = true) {
     const skeletonData = this.activeSkeletons.get(containerId);
-    if (!skeletonData) return;
+    if (!skeletonData) {return;}
 
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container) {return;}
 
     if (fadeOut) {
       skeletonData.element.classList.add('skeleton-fade-out');
@@ -378,7 +378,7 @@ class SkeletonLoader {
    */
   showProgressiveContent(containerId, contentCreator, steps = 3, interval = 500) {
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container) {return;}
 
     this.show(containerId, 'card');
 

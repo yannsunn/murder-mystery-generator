@@ -50,7 +50,7 @@ class PerformanceMonitor {
    */
   endRequest(requestId, status = 'success') {
     const request = this.metrics.requests.get(requestId);
-    if (!request) return;
+    if (!request) {return;}
     
     request.endTime = Date.now();
     request.duration = request.endTime - request.startTime;
@@ -81,7 +81,7 @@ class PerformanceMonitor {
    */
   addMarker(requestId, markerName) {
     const request = this.metrics.requests.get(requestId);
-    if (!request) return;
+    if (!request) {return;}
     
     request.markers.set(markerName, Date.now() - request.startTime);
   }
@@ -103,7 +103,7 @@ class PerformanceMonitor {
     const duration = Date.now() - startTime;
     this.recordOperation(operationName, duration, !error);
     
-    if (error) throw error;
+    if (error) {throw error;}
     return result;
   }
 

@@ -43,7 +43,7 @@ class LazyLoader {
 
   loadImage(img) {
     const src = img.getAttribute('data-src');
-    if (!src) return;
+    if (!src) {return;}
 
     // Create new image to preload
     const newImg = new Image();

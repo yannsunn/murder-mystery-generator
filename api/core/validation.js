@@ -184,7 +184,7 @@ class UnifiedInputValidator {
    * 🧹 HTMLエスケープ処理
    */
   escapeHtml(text) {
-    if (typeof text !== 'string') return '';
+    if (typeof text !== 'string') {return '';}
     
     if (this.isServer) {
       // サーバー側: 手動エスケープ
@@ -245,7 +245,7 @@ class UnifiedInputValidator {
    * 🧹 テキストサニタイゼーション
    */
   sanitizeText(input) {
-    if (!input) return '';
+    if (!input) {return '';}
     
     let sanitized = input.toString().trim();
     
@@ -272,42 +272,42 @@ class UnifiedInputValidator {
     }
 
     switch (rule.type) {
-      case 'string':
-        if (typeof value !== 'string') {
-          throw new ValidationError(`${fieldName} must be a string`, fieldName);
-        }
-        return this.validateString(value, rule, fieldName);
+    case 'string':
+      if (typeof value !== 'string') {
+        throw new ValidationError(`${fieldName} must be a string`, fieldName);
+      }
+      return this.validateString(value, rule, fieldName);
 
-      case 'number':
-        const num = Number(value);
-        if (isNaN(num)) {
-          throw new ValidationError(`${fieldName} must be a number`, fieldName);
-        }
-        return this.validateNumber(num, rule, fieldName);
+    case 'number':
+      const num = Number(value);
+      if (isNaN(num)) {
+        throw new ValidationError(`${fieldName} must be a number`, fieldName);
+      }
+      return this.validateNumber(num, rule, fieldName);
 
-      case 'boolean':
-        if (typeof value === 'boolean') return value;
-        if (typeof value === 'string') {
-          const lower = value.toLowerCase();
-          if (lower === 'true' || lower === '1') return true;
-          if (lower === 'false' || lower === '0' || lower === '') return false;
-        }
-        return Boolean(value);
+    case 'boolean':
+      if (typeof value === 'boolean') {return value;}
+      if (typeof value === 'string') {
+        const lower = value.toLowerCase();
+        if (lower === 'true' || lower === '1') {return true;}
+        if (lower === 'false' || lower === '0' || lower === '') {return false;}
+      }
+      return Boolean(value);
 
-      case 'object':
-        if (typeof value !== 'object' || Array.isArray(value)) {
-          throw new ValidationError(`${fieldName} must be an object`, fieldName);
-        }
-        return value;
+    case 'object':
+      if (typeof value !== 'object' || Array.isArray(value)) {
+        throw new ValidationError(`${fieldName} must be an object`, fieldName);
+      }
+      return value;
 
-      case 'array':
-        if (!Array.isArray(value)) {
-          throw new ValidationError(`${fieldName} must be an array`, fieldName);
-        }
-        return value;
+    case 'array':
+      if (!Array.isArray(value)) {
+        throw new ValidationError(`${fieldName} must be an array`, fieldName);
+      }
+      return value;
 
-      default:
-        return value;
+    default:
+      return value;
     }
   }
 
@@ -452,38 +452,38 @@ class UnifiedInputValidator {
 
     try {
       switch (apiType) {
-        case 'generation':
-          if (data.formData) {
-            validated.formData = this.validateFormData(data.formData);
-          }
+      case 'generation':
+        if (data.formData) {
+          validated.formData = this.validateFormData(data.formData);
+        }
           
-          const commonData = { 
-            sessionId: data.sessionId, 
-            action: data.action,
-            continueFrom: data.continueFrom
-          };
-          Object.assign(validated, this.validateCommon(commonData));
-          break;
+        const commonData = { 
+          sessionId: data.sessionId, 
+          action: data.action,
+          continueFrom: data.continueFrom
+        };
+        Object.assign(validated, this.validateCommon(commonData));
+        break;
 
-        case 'micro':
-          const microData = { 
-            action: data.action, 
-            taskId: data.taskId, 
-            sessionId: data.sessionId 
-          };
-          Object.assign(validated, this.validateCommon(microData));
-          if (data.formData) {
-            validated.formData = this.validateFormData(data.formData);
-          }
-          break;
+      case 'micro':
+        const microData = { 
+          action: data.action, 
+          taskId: data.taskId, 
+          sessionId: data.sessionId 
+        };
+        Object.assign(validated, this.validateCommon(microData));
+        if (data.formData) {
+          validated.formData = this.validateFormData(data.formData);
+        }
+        break;
 
-        case 'storage':
-          const storageData = { action: data.action, sessionId: data.sessionId };
-          Object.assign(validated, this.validateCommon(storageData));
-          break;
+      case 'storage':
+        const storageData = { action: data.action, sessionId: data.sessionId };
+        Object.assign(validated, this.validateCommon(storageData));
+        break;
 
-        default:
-          throw new ValidationError(`Unknown API type: ${apiType}`);
+      default:
+        throw new ValidationError(`Unknown API type: ${apiType}`);
       }
     } catch (error) {
       throw new ValidationError(`API validation failed: ${error.message}`);
@@ -519,7 +519,7 @@ class UnifiedInputValidator {
    * 🎨 エラー表示（クライアント専用）
    */
   displayErrors(errors) {
-    if (this.isServer || !errors.length) return;
+    if (this.isServer || !errors.length) {return;}
 
     const errorContainer = document.createElement('div');
     errorContainer.className = 'validation-errors';
@@ -557,7 +557,7 @@ class UnifiedInputValidator {
    * 🧽 エラーメッセージクリア（クライアント専用）
    */
   clearErrors() {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
     
     const errorContainer = document.querySelector('.validation-errors');
     if (errorContainer) {
@@ -569,10 +569,10 @@ class UnifiedInputValidator {
    * ⚡ リアルタイム検証設定（クライアント専用）
    */
   setupRealtimeValidation() {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
 
     const form = document.getElementById('scenario-form');
-    if (!form) return;
+    if (!form) {return;}
 
     // カスタム要求フィールドの文字数制限
     const customRequest = form.querySelector('#custom-request');

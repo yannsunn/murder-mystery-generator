@@ -45,10 +45,10 @@ class MemoryManager {
    */
   getFromCache(cacheName, key) {
     const cache = this.caches.get(cacheName);
-    if (!cache) return null;
+    if (!cache) {return null;}
     
     const entry = cache.get(key);
-    if (!entry) return null;
+    if (!entry) {return null;}
     
     // 期限切れチェック
     if (Date.now() - entry.timestamp > this.maxCacheAge) {

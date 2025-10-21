@@ -311,17 +311,17 @@ class UltraDeploymentSystem {
       let deployCommand;
       
       switch (deploymentStrategy) {
-        case 'production':
-          deployCommand = 'vercel --prod --yes';
-          break;
-        case 'preview':
-          deployCommand = 'vercel --yes';
-          break;
-        case 'safe':
-          deployCommand = 'vercel --yes --debug';
-          break;
-        default:
-          deployCommand = 'vercel --yes';
+      case 'production':
+        deployCommand = 'vercel --prod --yes';
+        break;
+      case 'preview':
+        deployCommand = 'vercel --yes';
+        break;
+      case 'safe':
+        deployCommand = 'vercel --yes --debug';
+        break;
+      default:
+        deployCommand = 'vercel --yes';
       }
       
       console.log('   🚀 Vercelデプロイメント実行中...');
