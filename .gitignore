@@ -58,3 +58,4 @@ temp/
 .env.development.local
 .env.production.local
 .env.local
+.github/workflows/ci-cd.yml
