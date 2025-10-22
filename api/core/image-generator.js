@@ -73,11 +73,11 @@ async function generateImages(imagePrompts) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(sanitizeObject({
-          model: "dall-e-3",
+          model: 'dall-e-3',
           prompt: promptData.prompt,
           n: 1,
-          size: "1024x1024",
-          quality: "standard"
+          size: '1024x1024',
+          quality: 'standard'
         }))
       });
       

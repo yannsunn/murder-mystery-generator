@@ -105,21 +105,21 @@ self.addEventListener('message', (event) => {
   const { type, data } = event.data;
   
   switch (type) {
-    case 'CACHE_RESOURCE':
-      cacheResource(data.url, data.cacheName);
-      break;
+  case 'CACHE_RESOURCE':
+    cacheResource(data.url, data.cacheName);
+    break;
       
-    case 'CLEAR_CACHE':
-      clearCache(data.cacheName);
-      break;
+  case 'CLEAR_CACHE':
+    clearCache(data.cacheName);
+    break;
       
-    case 'GET_CACHE_STATUS':
-      getCacheStatus().then(status => {
-        event.ports[0].postMessage(status);
-      });
-      break;
+  case 'GET_CACHE_STATUS':
+    getCacheStatus().then(status => {
+      event.ports[0].postMessage(status);
+    });
+    break;
       
-    default:
+  default:
       // Unknown message type - debug log removed for production
   }
 });
@@ -257,31 +257,31 @@ function createOfflineFallbackResponse(request) {
   
   // APIエンドポイント別のフォールバック
   switch (url.pathname) {
-    case '/api/generate':
-      return new Response(JSON.stringify({
-        success: false,
-        offline: true,
-        message: 'オフライン生成機能を使用してください',
-        fallback: true
-      }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      });
+  case '/api/generate':
+    return new Response(JSON.stringify({
+      success: false,
+      offline: true,
+      message: 'オフライン生成機能を使用してください',
+      fallback: true
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
       
-    case '/api/ping':
-      return new Response('offline', {
-        status: 200,
-        headers: { 'Content-Type': 'text/plain' }
-      });
+  case '/api/ping':
+    return new Response('offline', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' }
+    });
       
-    default:
-      return new Response(JSON.stringify({
-        error: 'Service unavailable offline',
-        offline: true
-      }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' }
-      });
+  default:
+    return new Response(JSON.stringify({
+      error: 'Service unavailable offline',
+      offline: true
+    }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 

@@ -4,7 +4,7 @@
  */
 
 // ショートカットの状態管理
-let shortcutsEnabled = true;
+const shortcutsEnabled = true;
 let helpModalVisible = false;
 
 /**
@@ -75,7 +75,7 @@ function focusSearchInput() {
  * ❓ ショートカットヘルプ表示
  */
 function showShortcutHelp() {
-  if (helpModalVisible) return;
+  if (helpModalVisible) {return;}
   
   const helpModal = document.createElement('div');
   helpModal.className = 'keyboard-help-modal';
@@ -250,7 +250,7 @@ function toggleReducedMotion() {
  * 🎮 メインキーボードイベントハンドラー
  */
 function handleKeyboardShortcut(event) {
-  if (!shortcutsEnabled) return;
+  if (!shortcutsEnabled) {return;}
   
   // 入力フィールドにフォーカスがある場合は一部のショートカットを無効化
   const activeElement = document.activeElement;
@@ -305,14 +305,14 @@ function handleKeyboardShortcut(event) {
  */
 function improvedFocusManagement() {
   // Tab順序の改善
-  let focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  const focusableElements = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
   
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Tab') {
-      let focusable = Array.from(document.querySelectorAll(focusableElements))
+      const focusable = Array.from(document.querySelectorAll(focusableElements))
         .filter(el => !el.hasAttribute('disabled') && !el.getAttribute('aria-hidden'));
       
-      let index = focusable.indexOf(document.activeElement);
+      const index = focusable.indexOf(document.activeElement);
       
       if (event.shiftKey) {
         // Shift+Tab: 前の要素

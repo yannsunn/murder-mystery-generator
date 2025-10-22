@@ -563,13 +563,13 @@ ${allCharacters.map((c, idx) => `${idx + 1}. ${c.name}`).join('\n')}
 ## キャラクター関係図
 
 ${allCharacters.map((c1, i) => 
-  allCharacters.map((c2, j) => {
-    if (i !== j) {
-      return `### ${c1.name} → ${c2.name}\n[具体的な関係性、感情、過去の経緯、現在の状況]`;
-    }
-    return '';
-  }).filter(r => r).join('\n\n')
-).join('\n\n')}
+    allCharacters.map((c2, j) => {
+      if (i !== j) {
+        return `### ${c1.name} → ${c2.name}\n[具体的な関係性、感情、過去の経緯、現在の状況]`;
+      }
+      return '';
+    }).filter(r => r).join('\n\n')
+  ).join('\n\n')}
 
 ## 関係性の特徴
 - グループ内の力関係
@@ -856,7 +856,7 @@ ${characterRelationships}
         timeline: accumulatedData.timeline || ''
       };
       
-      const systemPrompt = `30分-1時間短時間マーダーミステリーセッション専門のゲームマスター指導者として、短時間で完璧に進行する実用的ガイドを作成してください。文章の切れや不完全さは絶対に許されません。`;
+      const systemPrompt = '30分-1時間短時間マーダーミステリーセッション専門のゲームマスター指導者として、短時間で完璧に進行する実用的ガイドを作成してください。文章の切れや不完全さは絶対に許されません。';
       
       const userPrompt = `
 完全なシナリオ情報: ${JSON.stringify(allData, null, 2)}

@@ -107,7 +107,7 @@ function validateAndSanitizeInput(data) {
  * テキストのサニタイゼーション
  */
 function sanitizeText(text) {
-  if (typeof text !== 'string') return '';
+  if (typeof text !== 'string') {return '';}
   
   return text
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // script タグの削除
@@ -117,7 +117,7 @@ function sanitizeText(text) {
         '<': '&lt;',
         '>': '&gt;',
         '"': '&quot;',
-        "'": '&#x27;',
+        '\'': '&#x27;',
         '&': '&amp;'
       };
       return escapeMap[match];
@@ -233,7 +233,7 @@ function setSecurityHeaders(res) {
   
   // CSP ヘッダーの追加
   res.setHeader('Content-Security-Policy', 
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
+    'default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'');
 }
 
 /**

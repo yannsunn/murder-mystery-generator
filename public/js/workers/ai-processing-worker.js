@@ -6,11 +6,11 @@
 // Worker内で使用するライブラリ
 // logger-frontend.jsが存在しないため、シンプルなloggerを定義
 const logger = {
-  debug: (...args) => process.env.NODE_ENV !== "production" && console.debug('[Worker]', ...args),
-  info: (...args) => process.env.NODE_ENV !== "production" && console.info('[Worker]', ...args),
-  success: (...args) => process.env.NODE_ENV !== "production" && console.log('[Worker] ✅', ...args),
-  warn: (...args) => (process.env.NODE_ENV !== "production" || true) && console.warn('[Worker]', ...args),
-  error: (...args) => (process.env.NODE_ENV !== "production" || true) && console.error('[Worker]', ...args)
+  debug: (...args) => process.env.NODE_ENV !== 'production' && console.debug('[Worker]', ...args),
+  info: (...args) => process.env.NODE_ENV !== 'production' && console.info('[Worker]', ...args),
+  success: (...args) => process.env.NODE_ENV !== 'production' && console.log('[Worker] ✅', ...args),
+  warn: (...args) => (process.env.NODE_ENV !== 'production' || true) && console.warn('[Worker]', ...args),
+  error: (...args) => (process.env.NODE_ENV !== 'production' || true) && console.error('[Worker]', ...args)
 };
 
 class AIProcessingWorker {
@@ -50,32 +50,32 @@ class AIProcessingWorker {
     
     try {
       switch (type) {
-        case 'processPhase':
-          await this.processPhase(payload, taskId);
-          break;
+      case 'processPhase':
+        await this.processPhase(payload, taskId);
+        break;
           
-        case 'processParallel':
-          await this.processParallelPhases(payload, taskId);
-          break;
+      case 'processParallel':
+        await this.processParallelPhases(payload, taskId);
+        break;
           
-        case 'evaluateQuality':
-          await this.evaluateQuality(payload, taskId);
-          break;
+      case 'evaluateQuality':
+        await this.evaluateQuality(payload, taskId);
+        break;
           
-        case 'optimizeContent':
-          await this.optimizeContent(payload, taskId);
-          break;
+      case 'optimizeContent':
+        await this.optimizeContent(payload, taskId);
+        break;
           
-        case 'getMetrics':
-          this.sendMetrics(taskId);
-          break;
+      case 'getMetrics':
+        this.sendMetrics(taskId);
+        break;
           
-        case 'terminate':
-          this.terminate();
-          break;
+      case 'terminate':
+        this.terminate();
+        break;
           
-        default:
-          throw new Error(`Unknown task type: ${type}`);
+      default:
+        throw new Error(`Unknown task type: ${type}`);
       }
     } catch (error) {
       this.sendError(taskId, error);
@@ -325,13 +325,13 @@ class AIProcessingWorker {
     const content = JSON.stringify(result);
     
     // 文字数チェック
-    if (content.length > 200) score += 0.2;
-    if (content.length > 500) score += 0.1;
+    if (content.length > 200) {score += 0.2;}
+    if (content.length > 500) {score += 0.1;}
     
     // キーワード存在チェック
     const keywords = ['タイトル', 'コンセプト', '事件', 'キャラクター'];
     keywords.forEach(keyword => {
-      if (content.includes(keyword)) score += 0.05;
+      if (content.includes(keyword)) {score += 0.05;}
     });
     
     // ランダム要素
@@ -405,7 +405,7 @@ class AIProcessingWorker {
     
     let found = 0;
     requiredElements.forEach(element => {
-      if (contentStr.includes(element)) found++;
+      if (contentStr.includes(element)) {found++;}
     });
     
     return found / requiredElements.length;

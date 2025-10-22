@@ -315,7 +315,7 @@ class ErrorMonitoringIntegration {
    * 定期レポート設定
    */
   setupPeriodicReporting() {
-    if (!this.isEnabled) return;
+    if (!this.isEnabled) {return;}
     
     // 5分ごとにエラーサマリーをレポート
     this.reportingInterval = setInterval(() => {
@@ -819,20 +819,20 @@ class UnifiedErrorHandler {
     
     // 優先度に応じたログレベル
     switch (error.priority) {
-      case 'CRITICAL':
-        logger.error(`🔴 CRITICAL ERROR [${error.id}]: ${error.message}`, logData);
-        break;
-      case 'HIGH':
-        logger.error(`🟠 HIGH ERROR [${error.id}]: ${error.message}`, logData);
-        break;
-      case 'MEDIUM':
-        logger.warn(`🟡 MEDIUM ERROR [${error.id}]: ${error.message}`, logData);
-        break;
-      case 'LOW':
-        logger.info(`🟢 LOW ERROR [${error.id}]: ${error.message}`, logData);
-        break;
-      default:
-        logger.error(`⚫ UNKNOWN ERROR [${error.id}]: ${error.message}`, logData);
+    case 'CRITICAL':
+      logger.error(`🔴 CRITICAL ERROR [${error.id}]: ${error.message}`, logData);
+      break;
+    case 'HIGH':
+      logger.error(`🟠 HIGH ERROR [${error.id}]: ${error.message}`, logData);
+      break;
+    case 'MEDIUM':
+      logger.warn(`🟡 MEDIUM ERROR [${error.id}]: ${error.message}`, logData);
+      break;
+    case 'LOW':
+      logger.info(`🟢 LOW ERROR [${error.id}]: ${error.message}`, logData);
+      break;
+    default:
+      logger.error(`⚫ UNKNOWN ERROR [${error.id}]: ${error.message}`, logData);
     }
     
     // ファイルログ出力（本番環境のみ）

@@ -1,4 +1,4 @@
-# 🚀 Claude Code Development Rules - Ultra Advanced Next.js/React Edition
+# 🚀 Claude Code Development Rules - Murder Mystery Generator Edition
 
 ## ⚡ **MANDATORY ULTRA SYNC LIMIT BREAKTHROUGH**
 **🔥 各指示ごとに必ず実行: ウルトラシンク分析による限界突破**
@@ -55,25 +55,27 @@ ALWAYS create a detailed plan before coding:
 
 ---
 
-## 🏗️ **NEXT.JS/REACT ARCHITECTURE STANDARDS**
+## 🏗️ **PROJECT ARCHITECTURE STANDARDS**
 
-### **📁 Project Structure Rules**
+### **📁 Project Structure Rules (実際の構成)**
 ```
-src/
-├── app/                    # Next.js 13+ App Router
-│   ├── (auth)/            # Route groups
-│   ├── api/               # API routes
-│   ├── globals.css        # Global styles
-│   └── layout.tsx         # Root layout
-├── components/            # Reusable components
-│   ├── ui/               # Base UI components
-│   ├── forms/            # Form components
-│   └── layouts/          # Layout components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility libraries
-├── store/                # State management
-├── types/                # TypeScript definitions
-└── utils/                # Helper functions
+murder-mystery-generator/
+├── api/                    # サーバーレス関数 (Vercel Functions)
+│   ├── core/              # コアロジック (生成・監視・検証)
+│   ├── config/            # 環境設定・API管理
+│   ├── middleware/        # セキュリティ・レート制限
+│   ├── stage-generator/   # 9段階生成システム
+│   └── utils/             # ユーティリティ関数
+├── src/                   # TypeScript移行中
+│   ├── api/              # TypeScript版API (移行中)
+│   └── types/            # 型定義 (完備)
+├── public/               # フロントエンド (Vanilla JS)
+│   ├── js/              # JavaScript
+│   ├── css/             # スタイルシート
+│   └── index.html       # メインページ
+├── tests/               # テストスイート
+├── scripts/             # デプロイ・セットアップスクリプト
+└── docs/                # ドキュメント
 ```
 
 ### **🎨 Component Development Rules**
@@ -151,17 +153,17 @@ npm run build         # Production build test
 
 ## 📦 **DEPENDENCY MANAGEMENT**
 
-### **Preferred Stack**
+### **Current Stack (実際の構成)**
 ```json
 {
-  "framework": "Next.js 14+",
-  "ui": "Tailwind CSS + shadcn/ui",
-  "state": "Zustand / TanStack Query",
-  "forms": "React Hook Form + Zod",
-  "testing": "Vitest + Testing Library",
+  "framework": "Vanilla JavaScript ES6+",
+  "backend": "Node.js Serverless Functions (Vercel)",
+  "database": "Supabase (PostgreSQL)",
+  "ai": "Groq SDK + OpenAI (fallback)",
+  "testing": "Jest + JSDOM",
   "linting": "ESLint + Prettier",
-  "database": "Prisma + PostgreSQL",
-  "auth": "NextAuth.js",
+  "typescript": "Partial Migration (型定義完備)",
+  "security": "Custom middleware + Rate Limiting",
   "deployment": "Vercel"
 }
 ```

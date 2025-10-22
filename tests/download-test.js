@@ -9,31 +9,31 @@
 const mockScenarioData = {
   phases: {
     phase1: {
-      content: "サンプル マーダーミステリー シナリオ\n\n豪華客船で発生した謎の事件。\n乗客の中に潜む犯人を見つけ出せ！"
+      content: 'サンプル マーダーミステリー シナリオ\n\n豪華客船で発生した謎の事件。\n乗客の中に潜む犯人を見つけ出せ！'
     },
     phase2: {
       characters: [
-        { name: "船長", age: 45, role: "指揮官" },
-        { name: "乗客A", age: 30, role: "会社員" }
+        { name: '船長', age: 45, role: '指揮官' },
+        { name: '乗客A', age: 30, role: '会社員' }
       ]
     },
     phase3: {
-      relationships: "船長と乗客Aは古い知り合い"
+      relationships: '船長と乗客Aは古い知り合い'
     },
     phase4: {
-      incident: "船室で発見された謎の死体"
+      incident: '船室で発見された謎の死体'
     },
     phase5: {
-      clues: ["血痕", "壊れた時計", "謎のメモ"]
+      clues: ['血痕', '壊れた時計', '謎のメモ']
     },
     phase6: {
-      timeline: "19:00 - 事件発生\n20:00 - 発見"
+      timeline: '19:00 - 事件発生\n20:00 - 発見'
     },
     phase7: {
-      solution: "真犯人は..."
+      solution: '真犯人は...'
     },
     phase8: {
-      gamemaster: "進行方法とヒント"
+      gamemaster: '進行方法とヒント'
     }
   },
   metadata: {

@@ -30,24 +30,24 @@ async function freePlanGenerator(req, res) {
 
     // ルーティング処理
     switch (action) {
-      case 'start':
-        return await startGeneration(req, res);
+    case 'start':
+      return await startGeneration(req, res);
       
-      case 'poll':
-        return await pollProgress(req, res);
+    case 'poll':
+      return await pollProgress(req, res);
       
-      case 'status':
-        return await getStatus(req, res);
+    case 'status':
+      return await getStatus(req, res);
       
-      case 'download':
-        return await downloadResult(req, res);
+    case 'download':
+      return await downloadResult(req, res);
       
-      default:
-        return res.status(400).json({
-          success: false,
-          error: `Unknown action: ${action}`,
-          availableActions: ['start', 'poll', 'status', 'download']
-        });
+    default:
+      return res.status(400).json({
+        success: false,
+        error: `Unknown action: ${action}`,
+        availableActions: ['start', 'poll', 'status', 'download']
+      });
     }
 
   } catch (error) {
@@ -237,8 +237,8 @@ async function pollProgress(req, res) {
         if (!stageResponse.success) {
           console.error(`[POLL-PROGRESS] Stage ${stageToExecute} failed:`, stageResponse);
           if (stageResponse.debug) {
-            console.error(`[POLL-PROGRESS] Debug info:`, stageResponse.debug);
-            console.error(`[POLL-PROGRESS] API Key Status:`, stageResponse.debug.apiKeyStatus);
+            console.error('[POLL-PROGRESS] Debug info:', stageResponse.debug);
+            console.error('[POLL-PROGRESS] API Key Status:', stageResponse.debug.apiKeyStatus);
           }
           
           // エラーを返す
@@ -271,7 +271,7 @@ async function pollProgress(req, res) {
           sessionId: sessionId
         });
       } catch (error) {
-        console.error(`[POLL-PROGRESS] Status update failed:`, error);
+        console.error('[POLL-PROGRESS] Status update failed:', error);
         // ステータス取得失敗
         return res.status(500).json({
           success: false,
@@ -281,7 +281,7 @@ async function pollProgress(req, res) {
       }
 
       // 進行チェック
-      let newCurrentStage = updatedStatus.currentStageIndex;
+      const newCurrentStage = updatedStatus.currentStageIndex;
       if (newCurrentStage === currentStageIndex && stageRetryCount >= 2) {
         // 最大リトライ回数に達した
         return res.status(500).json({
@@ -313,7 +313,7 @@ async function pollProgress(req, res) {
     console.log(`[POLL-PROGRESS] Stage ${currentStageIndex} status:`);
     console.log(`[POLL-PROGRESS] - stageToExecute: ${stageToExecute}`);
     console.log(`[POLL-PROGRESS] - stageRetryCount: ${stageRetryCount}`);
-    console.log(`[POLL-PROGRESS] - stages_completed:`, stages_completed);
+    console.log('[POLL-PROGRESS] - stages_completed:', stages_completed);
     
     // 最大リトライ回数に達した場合はエラー
     if (stageRetryCount >= maxRetries) {

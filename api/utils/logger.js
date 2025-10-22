@@ -82,14 +82,14 @@ class EnhancedLogger {
    * ファイルログ設定
    */
   setupFileLogging() {
-    if (!this.enableFileLogging) return;
+    if (!this.enableFileLogging) {return;}
     
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true });
       }
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to create log directory:', error);
+      (process.env.NODE_ENV !== 'production' || true) && console.error('Failed to create log directory:', error);
       this.enableFileLogging = false;
     }
   }
@@ -98,7 +98,7 @@ class EnhancedLogger {
    * 定期フラッシュ設定
    */
   setupPeriodicFlush() {
-    if (!this.enableFileLogging) return;
+    if (!this.enableFileLogging) {return;}
     
     this.flushTimer = setInterval(() => {
       this.flushLogs();
@@ -218,20 +218,20 @@ class EnhancedLogger {
     
     // レベルに応じたコンソール出力
     switch (level) {
-      case 'DEBUG':
-      case 'INFO':
-      case 'SUCCESS':
-        process.env.NODE_ENV !== "production" && console.log(formattedMessage);
-        break;
-      case 'WARN':
-        (process.env.NODE_ENV !== "production" || true) && console.warn(formattedMessage);
-        break;
-      case 'ERROR':
-      case 'CRITICAL':
-        (process.env.NODE_ENV !== "production" || true) && console.error(formattedMessage);
-        break;
-      default:
-        process.env.NODE_ENV !== "production" && console.log(formattedMessage);
+    case 'DEBUG':
+    case 'INFO':
+    case 'SUCCESS':
+      process.env.NODE_ENV !== 'production' && console.log(formattedMessage);
+      break;
+    case 'WARN':
+      (process.env.NODE_ENV !== 'production' || true) && console.warn(formattedMessage);
+      break;
+    case 'ERROR':
+    case 'CRITICAL':
+      (process.env.NODE_ENV !== 'production' || true) && console.error(formattedMessage);
+      break;
+    default:
+      process.env.NODE_ENV !== 'production' && console.log(formattedMessage);
     }
   }
 
@@ -269,7 +269,7 @@ class EnhancedLogger {
       // バッファークリア
       this.logBuffer = [];
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to flush logs to file:', error);
+      (process.env.NODE_ENV !== 'production' || true) && console.error('Failed to flush logs to file:', error);
     }
   }
 
@@ -299,7 +299,7 @@ class EnhancedLogger {
         }
       }
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to rotate log file:', error);
+      (process.env.NODE_ENV !== 'production' || true) && console.error('Failed to rotate log file:', error);
     }
   }
 
@@ -324,7 +324,7 @@ class EnhancedLogger {
         });
       }
     } catch (error) {
-      (process.env.NODE_ENV !== "production" || true) && console.error('Failed to cleanup old log files:', error);
+      (process.env.NODE_ENV !== 'production' || true) && console.error('Failed to cleanup old log files:', error);
     }
   }
 

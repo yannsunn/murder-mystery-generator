@@ -47,7 +47,7 @@ class ResourceManager {
   }
 
   addEventListener(element, event, handler, options = {}) {
-    if (!element || !event || !handler) return null;
+    if (!element || !event || !handler) {return null;}
     
     const id = `${Date.now()}_${Math.random()}`;
     element.addEventListener(event, handler, options);
@@ -526,7 +526,7 @@ class CoreApp {
         });
         
         if (!response.ok) {
-          let errorText = await response.text();
+          const errorText = await response.text();
           console.error('Polling response error:', response.status, errorText);
           
           // JSONレスポンスの場合、デバッグ情報を表示
@@ -555,7 +555,7 @@ class CoreApp {
           const errorDetails = [];
           
           // エラーメッセージの解析
-          let errorMessage = data.error || 'シナリオ生成に失敗しました';
+          const errorMessage = data.error || 'シナリオ生成に失敗しました';
           
           // GROQ APIシステムエラーの場合の特別処理
           if (errorMessage.includes('SYSTEM_FAILURE') || errorMessage.includes('システムに一時的な問題')) {
@@ -570,7 +570,7 @@ class CoreApp {
             errorDetails.push(`エラー: ${errorMessage}`);
           }
           
-          if (data.currentStage !== undefined) errorDetails.push(`\nステージ: ${data.currentStage}`);
+          if (data.currentStage !== undefined) {errorDetails.push(`\nステージ: ${data.currentStage}`);}
           
           // デバッグ情報があれば追加
           if (data.debug) {
@@ -865,7 +865,7 @@ class CoreApp {
   }
 
   collectFormData() {
-    if (!this.elements.form) return {};
+    if (!this.elements.form) {return {};}
     
     const formData = new FormData(this.elements.form);
     const data = {};
@@ -1001,7 +1001,7 @@ class CoreApp {
   }
 
   renderResults() {
-    if (!this.sessionData || !this.elements.resultContainer) return;
+    if (!this.sessionData || !this.elements.resultContainer) {return;}
     
     // 詳細な結果表示
     this.createDetailedResultPresentation();
@@ -1011,7 +1011,7 @@ class CoreApp {
     const container = this.elements.resultContainer;
     const scenarioContent = container.querySelector('#scenario-content');
     
-    if (!scenarioContent) return;
+    if (!scenarioContent) {return;}
     
     const scenario = this.sessionData.scenario || this.sessionData;
     
@@ -1049,7 +1049,7 @@ class CoreApp {
   }
   
   renderScenarioSection(title, content, className = '') {
-    if (!content) return '';
+    if (!content) {return '';}
     
     const contentHtml = typeof content === 'string' 
       ? `<p>${content.replace(/\n/g, '<br>')}</p>`
@@ -1066,7 +1066,7 @@ class CoreApp {
   }
   
   formatCharacters(characters) {
-    if (!characters || !Array.isArray(characters)) return '<p>キャラクター情報なし</p>';
+    if (!characters || !Array.isArray(characters)) {return '<p>キャラクター情報なし</p>';}
     
     return characters.map(char => `
       <div class="character-card">
@@ -1079,7 +1079,7 @@ class CoreApp {
   }
   
   formatTimeline(timeline) {
-    if (!timeline) return '<p>タイムライン情報なし</p>';
+    if (!timeline) {return '<p>タイムライン情報なし</p>';}
     
     if (Array.isArray(timeline)) {
       return timeline.map(event => `
@@ -1094,7 +1094,7 @@ class CoreApp {
   }
   
   formatClues(clues) {
-    if (!clues) return '<p>手がかり情報なし</p>';
+    if (!clues) {return '<p>手がかり情報なし</p>';}
     
     if (Array.isArray(clues)) {
       return clues.map(clue => `

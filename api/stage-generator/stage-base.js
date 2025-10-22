@@ -94,7 +94,7 @@ class StageBase {
       const executionTime = Date.now() - startTime;
       logger.error(`❌ ${this.stageName} エラー [${executionTime}ms]:`, error);
       console.error(`[STAGE-BASE ERROR] ${this.stageName}:`, error);
-      console.error(`[STAGE-BASE] Stack trace:`, error.stack);
+      console.error('[STAGE-BASE] Stack trace:', error.stack);
 
       // APIキーの状態を確認
       const apiKeyStatus = {

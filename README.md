@@ -53,11 +53,13 @@
 
 ### **アーキテクチャ**
 ```
-Frontend:  Vanilla JavaScript ES6+ + Modern CSS
-Backend:   Node.js Serverless Functions  
-AI:        Groq API (primary) + OpenAI (fallback)
-Deploy:    Vercel/Netlify Edge Functions
-Export:    JSZip file generation
+Frontend:   Vanilla JavaScript ES6+ + Modern CSS
+Backend:    Node.js Serverless Functions (Vercel Functions)
+Database:   Supabase (PostgreSQL)
+AI:         Groq API (primary) + OpenAI (fallback)
+Deploy:     Vercel Edge Functions
+Export:     JSZip file generation
+TypeScript: Partial migration (型定義完備)
 ```
 
 ### **主要技術**

@@ -38,7 +38,7 @@ let cleanupTimer = null;
 
 // メモリリーク防止のための自動クリーンアップ
 function startCleanupTimer() {
-  if (cleanupTimer) return;
+  if (cleanupTimer) {return;}
   
   cleanupTimer = setInterval(() => {
     const yesterday = new Date();
@@ -89,7 +89,7 @@ function checkDailyUsage(identifier = 'personal') {
   
   // メモリ使用量の監視（デバッグ用）
   if (dailyUsage.size > 100) {
-    (process.env.NODE_ENV !== "production" || true) && console.warn(`[simple-auth] Warning: dailyUsage Map size is ${dailyUsage.size}`);
+    (process.env.NODE_ENV !== 'production' || true) && console.warn(`[simple-auth] Warning: dailyUsage Map size is ${dailyUsage.size}`);
   }
   
   return {

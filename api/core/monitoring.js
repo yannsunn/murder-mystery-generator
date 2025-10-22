@@ -82,7 +82,7 @@ class UnifiedPerformanceMonitor {
    * 🖥️ サーバー監視初期化
    */
   initializeServerMonitoring() {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     // 定期的なメトリクス集計（1分毎）
     setInterval(() => this.aggregateMetrics(), 60000);
@@ -98,7 +98,7 @@ class UnifiedPerformanceMonitor {
    * 🌐 クライアント監視初期化
    */
   initializeClientMonitoring() {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
 
     // Core Web Vitals の初期化は startMonitoring で行う
     this.thresholds = ALERT_THRESHOLDS.client;
@@ -108,7 +108,7 @@ class UnifiedPerformanceMonitor {
    * 🚀 監視開始
    */
   startMonitoring() {
-    if (this.isMonitoring) return;
+    if (this.isMonitoring) {return;}
     
     this.isMonitoring = true;
 
@@ -126,7 +126,7 @@ class UnifiedPerformanceMonitor {
    * 🖥️ サーバー監視開始
    */
   startServerMonitoring() {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
     
     // システムメトリクス収集開始
     this.collectSystemMetrics();
@@ -136,7 +136,7 @@ class UnifiedPerformanceMonitor {
    * 🌐 クライアント監視開始
    */
   startClientMonitoring() {
-    if (this.isServer || typeof window === 'undefined') return;
+    if (this.isServer || typeof window === 'undefined') {return;}
 
     // Core Web Vitals 監視
     this.initCoreWebVitals();
@@ -164,7 +164,7 @@ class UnifiedPerformanceMonitor {
    * 🎯 Core Web Vitals 初期化（クライアント専用）
    */
   initCoreWebVitals() {
-    if (this.isServer || !('PerformanceObserver' in window)) return;
+    if (this.isServer || !('PerformanceObserver' in window)) {return;}
 
     // LCP (Largest Contentful Paint)
     try {
@@ -235,7 +235,7 @@ class UnifiedPerformanceMonitor {
    * 🔄 Layout Shift 監視（クライアント専用）
    */
   initLayoutShiftObserver() {
-    if (this.isServer || !('PerformanceObserver' in window)) return;
+    if (this.isServer || !('PerformanceObserver' in window)) {return;}
 
     let clsValue = 0;
     let sessionValue = 0;
@@ -281,7 +281,7 @@ class UnifiedPerformanceMonitor {
    * 📊 Resource Timing 監視（クライアント専用）
    */
   initResourceTimingObserver() {
-    if (this.isServer || !('PerformanceObserver' in window)) return;
+    if (this.isServer || !('PerformanceObserver' in window)) {return;}
 
     try {
       const resourceObserver = new PerformanceObserver((entryList) => {
@@ -320,7 +320,7 @@ class UnifiedPerformanceMonitor {
    * ⏱️ Long Task 監視（クライアント専用）
    */
   initLongTaskObserver() {
-    if (this.isServer || !('PerformanceObserver' in window)) return;
+    if (this.isServer || !('PerformanceObserver' in window)) {return;}
 
     try {
       const longTaskObserver = new PerformanceObserver((entryList) => {
@@ -348,7 +348,7 @@ class UnifiedPerformanceMonitor {
    * 💾 Memory 使用量監視（クライアント専用）
    */
   initMemoryMonitoring() {
-    if (this.isServer || !('memory' in performance)) return;
+    if (this.isServer || !('memory' in performance)) {return;}
 
     const checkMemory = () => {
       if (this.isMonitoring) {
@@ -382,7 +382,7 @@ class UnifiedPerformanceMonitor {
    * 🌐 Navigation Timing 監視（クライアント専用）
    */
   initNavigationTiming() {
-    if (this.isServer || !('PerformanceNavigationTiming' in window)) return;
+    if (this.isServer || !('PerformanceNavigationTiming' in window)) {return;}
 
     const navigation = performance.getEntriesByType('navigation')[0];
     if (navigation) {
@@ -405,7 +405,7 @@ class UnifiedPerformanceMonitor {
    * 🚨 Error tracking 初期化（クライアント専用）
    */
   initErrorTracking() {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
 
     // JavaScript エラー
     window.addEventListener('error', (event) => {
@@ -441,7 +441,7 @@ class UnifiedPerformanceMonitor {
    * 🖥️ システムメトリクス収集（サーバー専用）
    */
   collectSystemMetrics() {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const memoryUsage = process.memoryUsage();
     this.metrics.memoryUsage = memoryUsage.heapUsed / memoryUsage.heapTotal;
@@ -470,7 +470,7 @@ class UnifiedPerformanceMonitor {
    * 🔍 リクエスト開始追跡（サーバー専用）
    */
   startRequest(req) {
-    if (!this.isServer) return null;
+    if (!this.isServer) {return null;}
 
     const requestId = `${req.method}_${Date.now()}_${Math.random()}`;
     const startTime = process.hrtime.bigint();
@@ -496,10 +496,10 @@ class UnifiedPerformanceMonitor {
    * ✅ リクエスト終了追跡（サーバー専用）
    */
   endRequest(requestId, res, error = null) {
-    if (!this.isServer) return null;
+    if (!this.isServer) {return null;}
 
     const requestData = this.activeRequests.get(requestId);
-    if (!requestData) return null;
+    if (!requestData) {return null;}
 
     const endTime = process.hrtime.bigint();
     const responseTime = Number(endTime - requestData.startTime) / 1000000;
@@ -531,7 +531,7 @@ class UnifiedPerformanceMonitor {
    * 📊 サーバーメトリクス記録
    */
   recordServerMetrics(requestData) {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const minute = Math.floor(Date.now() / 60000);
     const key = `${minute}_${requestData.method}_${this.getEndpointCategory(requestData.url)}`;
@@ -567,7 +567,7 @@ class UnifiedPerformanceMonitor {
    * 🚨 サーバーアラートチェック
    */
   checkServerAlerts(requestData) {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const alerts = [];
     
@@ -599,10 +599,10 @@ class UnifiedPerformanceMonitor {
    * 🎯 クライアント閾値チェック
    */
   checkClientThreshold(metric, value) {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
 
     const threshold = ALERT_THRESHOLDS.client[metric];
-    if (!threshold) return;
+    if (!threshold) {return;}
 
     const rating = this.rateMetric(metric, value);
     
@@ -629,8 +629,8 @@ class UnifiedPerformanceMonitor {
 
     const [good, poor] = thresholds[metric] || [0, Infinity];
     
-    if (value <= good) return 'good';
-    if (value <= poor) return 'needs-improvement';
+    if (value <= good) {return 'good';}
+    if (value <= poor) {return 'needs-improvement';}
     return 'poor';
   }
 
@@ -649,7 +649,7 @@ class UnifiedPerformanceMonitor {
     this.alerts.push(alert);
     
     const logLevel = alert.severity === 'high' ? 'error' : 
-                    alert.severity === 'medium' ? 'warn' : 'info';
+      alert.severity === 'medium' ? 'warn' : 'info';
     console[logLevel](`🚨 Performance Alert [${alert.source}]: ${message}`);
     
     if (this.alerts.length > 100) {
@@ -661,7 +661,7 @@ class UnifiedPerformanceMonitor {
    * 🚨 エラー追加（クライアント専用）
    */
   addError(type, details) {
-    if (this.isServer) return;
+    if (this.isServer) {return;}
 
     const error = {
       type,
@@ -684,7 +684,7 @@ class UnifiedPerformanceMonitor {
    * 📊 エラー記録（サーバー専用）
    */
   recordError(requestData) {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const errorKey = `${requestData.error}_${requestData.url}`;
     
@@ -707,8 +707,8 @@ class UnifiedPerformanceMonitor {
    * 🚨 アラート送信
    */
   async sendAlerts(alerts) {
-    process.env.NODE_ENV !== "production" && console.log('🚨 Performance Alerts:', 
-                JSON.stringify(alerts, null, 2));
+    process.env.NODE_ENV !== 'production' && console.log('🚨 Performance Alerts:', 
+      JSON.stringify(alerts, null, 2));
     
     // 本番環境では外部アラートサービスに送信
     if (this.isServer && process.env.ALERT_WEBHOOK_URL) {
@@ -753,27 +753,27 @@ class UnifiedPerformanceMonitor {
    * 🔧 ユーティリティメソッド
    */
   getResourceType(url) {
-    if (this.isServer) return 'unknown';
+    if (this.isServer) {return 'unknown';}
     
-    if (url.includes('.css')) return 'stylesheet';
-    if (url.includes('.js')) return 'script';
-    if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) return 'image';
-    if (url.match(/\.(woff|woff2|ttf|eot)$/i)) return 'font';
-    if (url.includes('/api/')) return 'api';
+    if (url.includes('.css')) {return 'stylesheet';}
+    if (url.includes('.js')) {return 'script';}
+    if (url.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {return 'image';}
+    if (url.match(/\.(woff|woff2|ttf|eot)$/i)) {return 'font';}
+    if (url.includes('/api/')) {return 'api';}
     return 'other';
   }
 
   getEndpointCategory(url) {
-    if (!this.isServer) return 'unknown';
+    if (!this.isServer) {return 'unknown';}
     
-    if (url.includes('/api/ultra-integrated-generator')) return 'generation';
-    if (url.includes('/api/micro-generation-system')) return 'micro';
-    if (url.includes('/api/health')) return 'health';
+    if (url.includes('/api/ultra-integrated-generator')) {return 'generation';}
+    if (url.includes('/api/micro-generation-system')) {return 'micro';}
+    if (url.includes('/api/health')) {return 'health';}
     return 'other';
   }
 
   getClientIP(req) {
-    if (!this.isServer) return 'unknown';
+    if (!this.isServer) {return 'unknown';}
     
     // Vercel環境ではreq.headersが未定義の場合があるため安全にアクセス
     if (!req || !req.headers) {
@@ -788,7 +788,7 @@ class UnifiedPerformanceMonitor {
   }
 
   updateAverageResponseTime(responseTime) {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
     
     const alpha = 0.1;
     this.metrics.averageResponseTime = 
@@ -817,8 +817,8 @@ class UnifiedPerformanceMonitor {
       recommendations: this.generateRecommendations()
     };
 
-    process.env.NODE_ENV !== "production" && console.log('📊 Performance Report:', 
-                JSON.stringify(report, null, 2));
+    process.env.NODE_ENV !== 'production' && console.log('📊 Performance Report:', 
+      JSON.stringify(report, null, 2));
     
     return report;
   }
@@ -913,7 +913,7 @@ class UnifiedPerformanceMonitor {
    * 🧹 クリーンアップ
    */
   cleanup() {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const cutoff = Date.now() - 60 * 60 * 1000; // 1時間前
     const cutoffMinute = Math.floor(cutoff / 60000);
@@ -931,7 +931,7 @@ class UnifiedPerformanceMonitor {
    * 📊 集計メトリクス
    */
   aggregateMetrics() {
-    if (!this.isServer) return;
+    if (!this.isServer) {return;}
 
     const now = Date.now();
     const last5Minutes = now - 5 * 60 * 1000;
@@ -1022,7 +1022,7 @@ class UnifiedPerformanceMonitor {
    * 🔧 Express/Vercel ミドルウェア（サーバー専用）
    */
   middleware() {
-    if (!this.isServer) return (req, res, next) => next?.();
+    if (!this.isServer) {return (req, res, next) => next?.();}
 
     return (req, res, next) => {
       const requestId = this.startRequest(req);

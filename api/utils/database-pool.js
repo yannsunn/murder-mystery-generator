@@ -35,8 +35,8 @@ class DatabasePool {
 
       if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
         const missingVars = [];
-        if (!SUPABASE_URL) missingVars.push('SUPABASE_URL');
-        if (!SUPABASE_ANON_KEY) missingVars.push('SUPABASE_ANON_KEY');
+        if (!SUPABASE_URL) {missingVars.push('SUPABASE_URL');}
+        if (!SUPABASE_ANON_KEY) {missingVars.push('SUPABASE_ANON_KEY');}
         
         throw new Error(
           `Supabase環境変数が設定されていません: ${missingVars.join(', ')}\n` +
@@ -212,76 +212,76 @@ class DatabasePool {
 
         // 操作に応じてクエリを構築
         switch (operation) {
-          case 'select':
-            query = query.select(options.select || '*');
+        case 'select':
+          query = query.select(options.select || '*');
             
-            // フィルター適用
-            Object.entries(filters).forEach(([key, value]) => {
-              if (Array.isArray(value)) {
-                query = query.in(key, value);
-              } else if (typeof value === 'object' && value.operator) {
-                switch (value.operator) {
-                  case 'gte':
-                    query = query.gte(key, value.value);
-                    break;
-                  case 'lte':
-                    query = query.lte(key, value.value);
-                    break;
-                  case 'like':
-                    query = query.like(key, value.value);
-                    break;
-                  case 'ilike':
-                    query = query.ilike(key, value.value);
-                    break;
-                  default:
-                    query = query.eq(key, value.value);
-                }
-              } else {
-                query = query.eq(key, value);
+          // フィルター適用
+          Object.entries(filters).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              query = query.in(key, value);
+            } else if (typeof value === 'object' && value.operator) {
+              switch (value.operator) {
+              case 'gte':
+                query = query.gte(key, value.value);
+                break;
+              case 'lte':
+                query = query.lte(key, value.value);
+                break;
+              case 'like':
+                query = query.like(key, value.value);
+                break;
+              case 'ilike':
+                query = query.ilike(key, value.value);
+                break;
+              default:
+                query = query.eq(key, value.value);
               }
-            });
-
-            // ソート・ページング
-            if (options.orderBy) {
-              query = query.order(options.orderBy.column, {
-                ascending: options.orderBy.ascending !== false
-              });
-            }
-            if (options.limit) {
-              query = query.limit(options.limit);
-            }
-            if (options.offset) {
-              query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
-            }
-
-            result = await query;
-            break;
-
-          case 'insert':
-            result = await query.insert(data);
-            break;
-
-          case 'update':
-            query = query.update(data);
-            Object.entries(filters).forEach(([key, value]) => {
+            } else {
               query = query.eq(key, value);
+            }
+          });
+
+          // ソート・ページング
+          if (options.orderBy) {
+            query = query.order(options.orderBy.column, {
+              ascending: options.orderBy.ascending !== false
             });
-            result = await query;
-            break;
+          }
+          if (options.limit) {
+            query = query.limit(options.limit);
+          }
+          if (options.offset) {
+            query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+          }
 
-          case 'upsert':
-            result = await query.upsert(data, options.upsertOptions || {});
-            break;
+          result = await query;
+          break;
 
-          case 'delete':
-            Object.entries(filters).forEach(([key, value]) => {
-              query = query.eq(key, value);
-            });
-            result = await query;
-            break;
+        case 'insert':
+          result = await query.insert(data);
+          break;
 
-          default:
-            throw new Error(`未対応の操作: ${operation}`);
+        case 'update':
+          query = query.update(data);
+          Object.entries(filters).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+          result = await query;
+          break;
+
+        case 'upsert':
+          result = await query.upsert(data, options.upsertOptions || {});
+          break;
+
+        case 'delete':
+          Object.entries(filters).forEach(([key, value]) => {
+            query = query.eq(key, value);
+          });
+          result = await query;
+          break;
+
+        default:
+          throw new Error(`未対応の操作: ${operation}`);
         }
 
         // エラーチェック
