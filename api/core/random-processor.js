@@ -63,7 +63,6 @@ async function processRandomMode(req, res, formData, sessionId) {
     } else {
       return res.status(500).json(errorResponse);
     }
-    return true; // エラー処理完了
   }
 }
 

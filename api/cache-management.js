@@ -4,7 +4,7 @@
 
 const { cacheManager } = require('./utils/cache-manager');
 
-exports.handler = async (event, context) => {
+exports.handler = async (event, _context) => {
   const path = event.path.replace(/\/api\/cache-management\/?/, '');
   const method = event.httpMethod;
   
@@ -40,21 +40,23 @@ exports.handler = async (event, context) => {
       break;
       
       // GET /api/cache-management/cache/{name} - 特定キャッシュの詳細
-    case method === 'GET' && path.startsWith('cache/'):
+    case method === 'GET' && path.startsWith('cache/'): {
       const cacheName = path.split('/')[1];
       response = cacheManager.getCacheDetails(cacheName);
       break;
+    }
       
       // DELETE /api/cache-management/cache/{name} - 特定キャッシュをクリア
-    case method === 'DELETE' && path.startsWith('cache/'):
+    case method === 'DELETE' && path.startsWith('cache/'): {
       const cacheToDelete = path.split('/')[1];
       cacheManager.clearCache(cacheToDelete);
-      response = { 
-        success: true, 
+      response = {
+        success: true,
         message: `Cache '${cacheToDelete}' cleared`,
         timestamp: new Date().toISOString()
       };
       break;
+    }
       
       // DELETE /api/cache-management/all - すべてのキャッシュをクリア
     case method === 'DELETE' && path === 'all':
@@ -67,29 +69,31 @@ exports.handler = async (event, context) => {
       break;
       
       // POST /api/cache-management/optimize - メモリ最適化
-    case method === 'POST' && path === 'optimize':
+    case method === 'POST' && path === 'optimize': {
       const optimizationResult = cacheManager.optimizeMemory();
       response = {
         ...optimizationResult,
         timestamp: new Date().toISOString()
       };
       break;
+    }
       
       // PUT /api/cache-management/cache/{name}/policy - キャッシュポリシー更新
-    case method === 'PUT' && path.includes('/policy'):
+    case method === 'PUT' && path.includes('/policy'): {
       const policyCache = path.split('/')[1];
       const policy = JSON.parse(event.body || '{}');
       cacheManager.updateCachePolicy(policyCache, policy);
-      response = { 
-        success: true, 
+      response = {
+        success: true,
         message: `Cache policy updated for '${policyCache}'`,
         policy,
         timestamp: new Date().toISOString()
       };
       break;
+    }
       
       // POST /api/cache-management/warmup/{name} - キャッシュウォームアップ
-    case method === 'POST' && path.startsWith('warmup/'):
+    case method === 'POST' && path.startsWith('warmup/'): {
       const warmupCache = path.split('/')[1];
       // ここでは簡単な例として、空のデータローダーを使用
       const warmupResult = await cacheManager.warmup(warmupCache, async () => ({}));
@@ -98,6 +102,7 @@ exports.handler = async (event, context) => {
         timestamp: new Date().toISOString()
       };
       break;
+    }
       
     default:
       return {

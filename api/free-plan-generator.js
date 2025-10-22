@@ -26,7 +26,7 @@ async function freePlanGenerator(req, res) {
       return res.status(200).end();
     }
 
-    const { action, sessionId, stageIndex, formData, method } = req.method === 'GET' ? req.query : req.body;
+    const { action } = req.method === 'GET' ? req.query : req.body;
 
     // ルーティング処理
     switch (action) {

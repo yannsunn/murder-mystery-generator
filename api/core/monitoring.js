@@ -184,6 +184,7 @@ class UnifiedPerformanceMonitor {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       this.observers.push(lcpObserver);
     } catch (e) {
+      console.warn('LCP observer not supported:', e.message);
     }
 
     // FCP (First Contentful Paint)
@@ -205,6 +206,7 @@ class UnifiedPerformanceMonitor {
       fcpObserver.observe({ entryTypes: ['paint'] });
       this.observers.push(fcpObserver);
     } catch (e) {
+      console.warn('FCP observer not supported:', e.message);
     }
 
     // FID (First Input Delay)
@@ -274,6 +276,7 @@ class UnifiedPerformanceMonitor {
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       this.observers.push(clsObserver);
     } catch (e) {
+      console.warn('CLS observer not supported:', e.message);
     }
   }
 
@@ -313,6 +316,7 @@ class UnifiedPerformanceMonitor {
       resourceObserver.observe({ entryTypes: ['resource'] });
       this.observers.push(resourceObserver);
     } catch (e) {
+      console.warn('Resource observer not supported:', e.message);
     }
   }
 
@@ -341,6 +345,7 @@ class UnifiedPerformanceMonitor {
       longTaskObserver.observe({ entryTypes: ['longtask'] });
       this.observers.push(longTaskObserver);
     } catch (e) {
+      console.warn('Long task observer not supported:', e.message);
     }
   }
 
@@ -713,7 +718,7 @@ class UnifiedPerformanceMonitor {
     // 本番環境では外部アラートサービスに送信
     if (this.isServer && process.env.ALERT_WEBHOOK_URL) {
       try {
-        const response = await fetch(process.env.ALERT_WEBHOOK_URL, {
+        await fetch(process.env.ALERT_WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -726,6 +731,7 @@ class UnifiedPerformanceMonitor {
           })
         });
       } catch (error) {
+        console.warn('Failed to send alert webhook:', error.message);
       }
     }
   }
@@ -842,7 +848,7 @@ class UnifiedPerformanceMonitor {
       }
     } else {
       // クライアント側スコア計算
-      Object.entries(this.metrics.coreWebVitals || {}).forEach(([metric, data]) => {
+      Object.entries(this.metrics.coreWebVitals || {}).forEach(([_metric, data]) => {
         if (data.rating === 'poor') {
           score -= 20;
         } else if (data.rating === 'needs-improvement') {
@@ -953,15 +959,8 @@ class UnifiedPerformanceMonitor {
     
     const errorRate = totalRequests > 0 ? totalErrors / totalRequests : 0;
     const avgResponseTime = totalRequests > 0 ? totalResponseTime / totalRequests : 0;
-    
-    return {
-      requests: totalRequests,
-      errors: totalErrors,
-      errorRate: `${(errorRate * 100).toFixed(2)}%`,
-      avgResponseTime: `${avgResponseTime.toFixed(2)}ms`,
-      concurrent: this.metrics.currentConcurrentRequests
-    };
-    
+
+    // アラート送信（returnの前に実行）
     if (errorRate > ALERT_THRESHOLDS.server.errorRate) {
       this.sendAlerts([{
         type: 'HIGH_ERROR_RATE',
@@ -970,6 +969,14 @@ class UnifiedPerformanceMonitor {
         actual: errorRate * 100
       }]);
     }
+
+    return {
+      requests: totalRequests,
+      errors: totalErrors,
+      errorRate: `${(errorRate * 100).toFixed(2)}%`,
+      avgResponseTime: `${avgResponseTime.toFixed(2)}ms`,
+      concurrent: this.metrics.currentConcurrentRequests
+    };
   }
 
   /**

@@ -66,7 +66,7 @@ function getPlayTime(complexity) {
 }
 
 // デモモード用ヘルパー関数
-async function handleStageGeneration(stageNumber, formData, systemPrompt, userPrompt, previousData = {}) {
+async function handleStageGeneration(stageNumber, formData, systemPrompt, userPrompt, _previousData = {}) {
   try {
     // AIクライアントを使用して生成
     const result = await aiClient.generateContent(systemPrompt, userPrompt);
@@ -126,7 +126,7 @@ const INTEGRATED_GENERATION_FLOW = [
       
       const { formData } = accumulatedData;
       
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのマーダーミステリークリエイターです。
+      const systemPrompt = `あなたは「狂気山脈 陰謀の分水嶺」レベルのマーダーミステリークリエイターです。
 30分-1時間セッション用のマーダーミステリーの大まかな全体構造をランダムに生成してください。
 この段階では、後で詳細化されるための基本的なアウトラインを作成します。`;
       
@@ -190,7 +190,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
       
       const randomOutline = accumulatedData.random_outline || '';
       
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
+      const systemPrompt = `あなたは「狂気山脈 陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリー企画者です。
 ランダム生成された大まかな構造を基に、詳細なコンセプトと世界観を精密に作成してください。`;
       
       const userPrompt = `
@@ -454,7 +454,7 @@ ${Array.from({length: parseInt(formData.participants)}, (_, i) => `**プレイ�
             const playerId = i + 1;
             logger.debug(`🎭 プレイヤー${playerId}のキャラクター生成開始...`);
             
-            const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
+            const systemPrompt = `あなたは「狂気山脈 陰謀の分水嶺」レベルのプロフェッショナルマーダーミステリーキャラクター設計専門家です。
 30分-1時間セッション用の魅力的で複雑なキャラクターを一人ずつ丁寧に作成してください。`;
             
             const userPrompt = `
@@ -759,7 +759,7 @@ ${characterRelationships}
       const characters = accumulatedData.characters || '';
       const evidenceSystem = accumulatedData.evidence_system || '';
       
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルのプロフェッショナルGM（ゲームマスター）です。
+      const systemPrompt = `あなたは「狂気山脈 陰謀の分水嶺」レベルのプロフェッショナルGM（ゲームマスター）です。
 30分-1時間セッション用の完璧なGM進行ガイドを、これまでの全段階の情報を統合して作成してください。
 実際のセッション運営で即座に使用できる実用的なガイドに仕上げてください。`;
       
@@ -1082,7 +1082,7 @@ ${characterRelationships}
       const gamemasterGuide = accumulatedData.gamemaster_guide || '';
       const finalIntegration = accumulatedData.final_integration || '';
       
-      const systemPrompt = `あなたは「狂気山脈　陰謀の分水嶺」レベルの品質管理最高責任者です。
+      const systemPrompt = `あなたは「狂気山脈 陰謀の分水嶺」レベルの品質管理最高責任者です。
 理想的な生成フローを完了した全ての出力物を総合的にレビューし、最終的な品質保証を行ってください。
 ランダム生成→段階的生成→全体調整が適切に行われたかを確認し、必要に応じて最終調整を指示してください。`;
       

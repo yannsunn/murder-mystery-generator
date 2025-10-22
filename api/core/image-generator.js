@@ -49,7 +49,6 @@ function createImagePrompts(sessionData) {
 
   const prompts = [];
   const concept = sessionData.phases?.step1?.content?.concept || '';
-  const characters = sessionData.phases?.step2?.content?.characters || '';
 
   // タイトル抽出
   const titleMatch = concept.match(/## 作品タイトル[\s\S]*?\n([^\n]+)/);
@@ -242,30 +241,6 @@ async function generateImages(imagePrompts) {
   logger.info(`🎨 Image generation completed: ${successCount}/${images.length} successful`);
 
   return images;
-}
-
-/**
- * サロゲートペア不正除去ユーティリティ
- */
-function removeInvalidSurrogates(str) {
-  return typeof str === 'string'
-    ? str.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, '')
-    : str;
-}
-
-function sanitizeObject(obj) {
-  if (typeof obj === 'string') {
-    return removeInvalidSurrogates(obj);
-  } else if (Array.isArray(obj)) {
-    return obj.map(sanitizeObject);
-  } else if (typeof obj === 'object' && obj !== null) {
-    const newObj = {};
-    for (const key in obj) {
-      newObj[key] = sanitizeObject(obj[key]);
-    }
-    return newObj;
-  }
-  return obj;
 }
 
 // CommonJS形式でエクスポート
