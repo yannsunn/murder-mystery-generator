@@ -13,27 +13,18 @@ const {
 } = require('./utils/error-handler.js');
 const {
   withApiErrorHandling,
-  convertDatabaseError,
   convertValidationError
 } = require('./utils/error-handler-integration.js');
 const { setSecurityHeaders } = require('./security-utils.js');
-const { createSecurityMiddleware } = require('./middleware/rate-limiter.js');
 const { checkPersonalAccess, checkDailyUsage } = require('./utils/simple-auth.js');
-const { createValidationMiddleware } = require('./core/validation.js');
-const { executeParallel, SimpleCache } = require('./utils/performance-optimizer.js');
+const { SimpleCache } = require('./utils/performance-optimizer.js');
 
 // キャッシュインスタンスの作成
 const cache = new SimpleCache();
-const intelligentCache = cache;
 const { logger } = require('./utils/logger.js');
-const { saveScenarioToSupabase } = require('./supabase-client.js');
-const { INTEGRATED_GENERATION_FLOW, getStageProgressData } = require('./core/generation-stages.js');
-const { createImagePrompts, generateImages } = require('./core/image-generator.js');
-const { processRandomMode } = require('./core/random-processor.js');
-const { 
-  createCacheKey, 
-  createFormDataHash,
-  sanitizeObject 
+const { INTEGRATED_GENERATION_FLOW } = require('./core/generation-stages.js');
+const {
+  createCacheKey
 } = require('./core/generation-utils.js');
 
 const config = {

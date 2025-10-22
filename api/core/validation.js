@@ -496,9 +496,6 @@ class UnifiedInputValidator {
    * 🌐 クライアント用フォーム検証
    */
   validateClientForm(formData) {
-    const errors = [];
-    const sanitizedData = {};
-
     try {
       const validation = this.validateFormData(formData);
       return {

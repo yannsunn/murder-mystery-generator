@@ -46,7 +46,7 @@ exports.handler = async (event, _context) => {
       break;
     }
       
-      // DELETE /api/cache-management/cache/{name} - 特定キャッシュをクリア
+    // DELETE /api/cache-management/cache/{name} - 特定キャッシュをクリア
     case method === 'DELETE' && path.startsWith('cache/'): {
       const cacheToDelete = path.split('/')[1];
       cacheManager.clearCache(cacheToDelete);
@@ -58,7 +58,7 @@ exports.handler = async (event, _context) => {
       break;
     }
       
-      // DELETE /api/cache-management/all - すべてのキャッシュをクリア
+    // DELETE /api/cache-management/all - すべてのキャッシュをクリア
     case method === 'DELETE' && path === 'all':
       cacheManager.clearAll();
       response = { 
@@ -78,7 +78,7 @@ exports.handler = async (event, _context) => {
       break;
     }
       
-      // PUT /api/cache-management/cache/{name}/policy - キャッシュポリシー更新
+    // PUT /api/cache-management/cache/{name}/policy - キャッシュポリシー更新
     case method === 'PUT' && path.includes('/policy'): {
       const policyCache = path.split('/')[1];
       const policy = JSON.parse(event.body || '{}');
@@ -92,7 +92,7 @@ exports.handler = async (event, _context) => {
       break;
     }
       
-      // POST /api/cache-management/warmup/{name} - キャッシュウォームアップ
+    // POST /api/cache-management/warmup/{name} - キャッシュウォームアップ
     case method === 'POST' && path.startsWith('warmup/'): {
       const warmupCache = path.split('/')[1];
       // ここでは簡単な例として、空のデータローダーを使用
