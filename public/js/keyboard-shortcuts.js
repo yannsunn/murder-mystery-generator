@@ -33,7 +33,7 @@ const shortcuts = {
   // アクセシビリティ
   'Alt+h': () => toggleHighContrast(),
   'Alt+f': () => toggleLargeFonts(),
-  'Alt+r': () => toggleReducedMotion(),
+  'Alt+r': () => toggleReducedMotion()
 };
 
 /**

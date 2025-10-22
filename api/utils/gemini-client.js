@@ -79,7 +79,7 @@ class GeminiImageClient {
           const base64Image = imagePart.inlineData.data;
           const mimeType = imagePart.inlineData.mimeType || 'image/png';
 
-          logger.debug(`✅ [Gemini] Image generated successfully`);
+          logger.debug('✅ [Gemini] Image generated successfully');
 
           return {
             success: true,
