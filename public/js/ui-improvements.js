@@ -22,10 +22,14 @@ class UIManager {
     // メインカードを隠す
     mainCard.classList.add('hidden');
     
-    // エラーメッセージを設定
+    // エラーメッセージを設定（XSS対策: textContentとcreateElement使用）
     errorMessage.textContent = message;
     if (details) {
-      errorMessage.innerHTML += `<br><small>詳細: ${details}</small>`;
+      const br = document.createElement('br');
+      const small = document.createElement('small');
+      small.textContent = `詳細: ${details}`;
+      errorMessage.appendChild(br);
+      errorMessage.appendChild(small);
     }
     
     // エラー表示

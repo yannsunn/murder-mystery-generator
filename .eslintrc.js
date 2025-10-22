@@ -9,7 +9,7 @@ module.exports = {
     'eslint:recommended'
   ],
   parserOptions: {
-    ecmaVersion: 2021,
+    ecmaVersion: 2022,  // ES2022 クラスフィールド対応
     sourceType: 'module'
   },
   rules: {

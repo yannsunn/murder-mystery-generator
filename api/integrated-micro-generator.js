@@ -6,16 +6,13 @@
 // Vercel環境では環境変数は直接process.envから読む必要がある
 const isVercel = process.env.VERCEL === '1';
 const { envManager } = !isVercel ? require('./config/env-manager.js') : { get: (key) => process.env[key], initialized: true };
-const { aiClient } = require('./utils/ai-client.js');
-const { 
-  withErrorHandler, 
-  UnifiedError, 
-  ERROR_TYPES, 
-  unifiedErrorHandler 
+// 未使用importを削除（ESLint no-unused-vars対策）
+const {
+  UnifiedError,
+  ERROR_TYPES
 } = require('./utils/error-handler.js');
-const { 
-  withApiErrorHandling, 
-  convertAIError, 
+const {
+  withApiErrorHandling,
   convertDatabaseError,
   convertValidationError
 } = require('./utils/error-handler-integration.js');
@@ -45,10 +42,10 @@ const config = {
   runtime: 'nodejs',
   api: {
     bodyParser: {
-      sizeLimit: '10mb',
+      sizeLimit: '10mb'
     },
-    responseLimit: false, // ストリーミングレスポンスのため無制限に
-  },
+    responseLimit: false // ストリーミングレスポンスのため無制限に
+  }
 };
 
 

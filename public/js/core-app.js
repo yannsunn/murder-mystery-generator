@@ -3,6 +3,19 @@
  * ログ・リソース管理・アプリケーション初期化統合
  */
 
+// ========== SECURITY UTILITIES ==========
+/**
+ * HTMLエスケープ関数（XSS対策）
+ */
+function escapeHtml(text) {
+  if (typeof text !== 'string') {
+    return text;
+  }
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 // ========== LOGGER SYSTEM ==========
 // グローバルスコープでの重複定義を防ぐ
 if (typeof Logger === 'undefined') {
@@ -827,11 +840,14 @@ class CoreApp {
   showSuccessMessage() {
     const successDiv = document.createElement('div');
     successDiv.className = 'alert alert-success';
-    successDiv.innerHTML = `
-      <strong>🎉 シナリオ生成完了！</strong><br>
-      生成されたシナリオが下に表示されています。
-      ダウンロードボタンからZIPファイルとして保存できます。
-    `;
+    // XSS対策: DOM操作で要素を安全に構築
+    const strong = document.createElement('strong');
+    strong.textContent = '🎉 シナリオ生成完了！';
+    const br = document.createElement('br');
+    const text = document.createTextNode('生成されたシナリオが下に表示されています。ダウンロードボタンからZIPファイルとして保存できます。');
+    successDiv.appendChild(strong);
+    successDiv.appendChild(br);
+    successDiv.appendChild(text);
     
     const container = document.querySelector('.main-container');
     if (container) {
@@ -1014,21 +1030,21 @@ class CoreApp {
     if (!scenarioContent) {return;}
     
     const scenario = this.sessionData.scenario || this.sessionData;
-    
-    // メインシナリオコンテンツ
+
+    // メインシナリオコンテンツ（XSS対策: エスケープ処理を適用）
     scenarioContent.innerHTML = `
       <div class="mystery-title-card">
-        <h2 class="mystery-title">🔍 ${scenario.title || 'マーダーミステリーシナリオ'}</h2>
-        <div class="mystery-subtitle">${scenario.subtitle || '【生成完了】'}</div>
+        <h2 class="mystery-title">🔍 ${escapeHtml(scenario.title || 'マーダーミステリーシナリオ')}</h2>
+        <div class="mystery-subtitle">${escapeHtml(scenario.subtitle || '【生成完了】')}</div>
       </div>
-      
+
       <div class="scenario-meta-info">
-        <span class="meta-item">📅 ${scenario.era || '現代'}</span>
-        <span class="meta-item">🏠 ${scenario.setting || '洋館'}</span>
-        <span class="meta-item">👥 ${scenario.participants || 6}人</span>
-        <span class="meta-item">⏱️ ${scenario.playtime || '2-3時間'}</span>
+        <span class="meta-item">📅 ${escapeHtml(scenario.era || '現代')}</span>
+        <span class="meta-item">🏠 ${escapeHtml(scenario.setting || '洋館')}</span>
+        <span class="meta-item">👥 ${escapeHtml(scenario.participants || 6)}人</span>
+        <span class="meta-item">⏱️ ${escapeHtml(scenario.playtime || '2-3時間')}</span>
       </div>
-      
+
       <div class="scenario-sections">
         ${this.renderScenarioSection('📖 シナリオ概要', scenario.overview || scenario.concept)}
         ${this.renderScenarioSection('🎭 キャラクター', this.formatCharacters(scenario.characters))}
@@ -1036,7 +1052,7 @@ class CoreApp {
         ${this.renderScenarioSection('🔍 手がかり・証拠', this.formatClues(scenario.clues || scenario.evidence))}
         ${this.renderScenarioSection('🎯 真相', scenario.truth || scenario.solution, 'truth-section')}
       </div>
-      
+
       <div class="action-buttons">
         <button class="btn btn-primary download-btn" onclick="app.downloadScenario()">
           📥 シナリオをダウンロード (ZIP)
@@ -1050,14 +1066,15 @@ class CoreApp {
   
   renderScenarioSection(title, content, className = '') {
     if (!content) {return '';}
-    
-    const contentHtml = typeof content === 'string' 
-      ? `<p>${content.replace(/\n/g, '<br>')}</p>`
+
+    // XSS対策: テキストコンテンツをエスケープ
+    const contentHtml = typeof content === 'string'
+      ? `<p>${escapeHtml(content).replace(/\n/g, '<br>')}</p>`
       : content;
-    
+
     return `
-      <div class="scenario-section ${className}">
-        <h3>${title}</h3>
+      <div class="scenario-section ${escapeHtml(className)}">
+        <h3>${escapeHtml(title)}</h3>
         <div class="section-content">
           ${contentHtml}
         </div>
@@ -1067,46 +1084,49 @@ class CoreApp {
   
   formatCharacters(characters) {
     if (!characters || !Array.isArray(characters)) {return '<p>キャラクター情報なし</p>';}
-    
+
+    // XSS対策: すべてのキャラクター情報をエスケープ
     return characters.map(char => `
       <div class="character-card">
-        <h4>${char.name || '名前未設定'}</h4>
-        <p class="character-role">${char.role || '役職未設定'}</p>
-        <p>${char.description || char.background || '説明なし'}</p>
-        ${char.secret ? `<p class="character-secret">秘密: ${char.secret}</p>` : ''}
+        <h4>${escapeHtml(char.name || '名前未設定')}</h4>
+        <p class="character-role">${escapeHtml(char.role || '役職未設定')}</p>
+        <p>${escapeHtml(char.description || char.background || '説明なし')}</p>
+        ${char.secret ? `<p class="character-secret">秘密: ${escapeHtml(char.secret)}</p>` : ''}
       </div>
     `).join('');
   }
   
   formatTimeline(timeline) {
     if (!timeline) {return '<p>タイムライン情報なし</p>';}
-    
+
+    // XSS対策: タイムライン情報をエスケープ
     if (Array.isArray(timeline)) {
       return timeline.map(event => `
         <div class="timeline-event">
-          <span class="time">${event.time || '時刻不明'}</span>
-          <span class="event">${event.event || event.description || ''}</span>
+          <span class="time">${escapeHtml(event.time || '時刻不明')}</span>
+          <span class="event">${escapeHtml(event.event || event.description || '')}</span>
         </div>
       `).join('');
     }
-    
-    return `<p>${timeline.replace(/\n/g, '<br>')}</p>`;
+
+    return `<p>${escapeHtml(timeline).replace(/\n/g, '<br>')}</p>`;
   }
   
   formatClues(clues) {
     if (!clues) {return '<p>手がかり情報なし</p>';}
-    
+
+    // XSS対策: 手がかり情報をエスケープ
     if (Array.isArray(clues)) {
       return clues.map(clue => `
         <div class="clue-item">
-          <h4>${clue.name || clue.title || '手がかり'}</h4>
-          <p>${clue.description || clue.content || ''}</p>
-          ${clue.location ? `<p class="clue-location">場所: ${clue.location}</p>` : ''}
+          <h4>${escapeHtml(clue.name || clue.title || '手がかり')}</h4>
+          <p>${escapeHtml(clue.description || clue.content || '')}</p>
+          ${clue.location ? `<p class="clue-location">場所: ${escapeHtml(clue.location)}</p>` : ''}
         </div>
       `).join('');
     }
-    
-    return `<p>${clues.replace(/\n/g, '<br>')}</p>`;
+
+    return `<p>${escapeHtml(clues).replace(/\n/g, '<br>')}</p>`;
   }
   
   async downloadScenario() {
