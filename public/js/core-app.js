@@ -1290,5 +1290,9 @@ if (document.readyState === 'loading') {
 
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { Logger, ResourceManager, CoreApp };
+  module.exports = {
+    Logger: typeof Logger !== 'undefined' ? Logger : (typeof window !== 'undefined' ? window.Logger : undefined),
+    ResourceManager,
+    CoreApp
+  };
 }

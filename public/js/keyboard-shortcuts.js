@@ -50,9 +50,10 @@ function switchToTab(tabName) {
  */
 function navigateTabs(direction) {
   const tabs = ['overview', 'scenario', 'characters', 'timeline', 'gm-guide', 'images'];
-  const currentIndex = tabs.indexOf(currentActiveTab || 'overview');
+  const currentTab = (typeof currentActiveTab !== 'undefined') ? currentActiveTab : 'overview';
+  const currentIndex = tabs.indexOf(currentTab || 'overview');
   const newIndex = Math.max(0, Math.min(tabs.length - 1, currentIndex + direction));
-  
+
   if (newIndex !== currentIndex) {
     switchToTab(tabs[newIndex]);
   }

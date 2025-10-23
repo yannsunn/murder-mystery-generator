@@ -539,14 +539,6 @@ function extractTitle(outline) {
   return match ? (match[1] || match[2]).trim() : 'マーダーミステリー';
 }
 
-function getNextActionForStage(nextStageIndex) {
-  if (nextStageIndex >= 9) {
-    return 'complete';
-  }
-  return `execute_stage_${nextStageIndex}`;
-}
-
-
 // 内部呼び出し用に生の関数もエクスポート
 module.exports = withSecurity(stageController, 'stage-control');
 module.exports.stageControllerDirect = stageController; // セキュリティラップなし版
