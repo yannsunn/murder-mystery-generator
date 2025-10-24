@@ -14,7 +14,7 @@ class Stage3Generator extends StageBase {
     super('段階3: 事件詳細・状況設定', 13);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, random_outline, concept_detail, incident_core } = sessionData;
     
     const systemPrompt = `あなたは詳細なシナリオ設計の専門家です。

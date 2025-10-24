@@ -14,17 +14,17 @@ class Stage0Generator extends StageBase {
     super('段階0: ランダム全体構造・アウトライン生成', 15);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData } = sessionData;
-    
+
     // 詳細なログを追加
     console.log('[STAGE0] Processing stage with formData:', formData);
-    
+
     // Vercel環境変数の初期化
     initializeEnvVars();
-    
+
     // 環境変数の完全なデバッグ
-    const envDebugInfo = debugEnvironmentVariables();
+    debugEnvironmentVariables();
     console.log('[STAGE0] Environment debug complete');
     
     const systemPrompt = `あなたは商業レベルのマーダーミステリー企画者です。

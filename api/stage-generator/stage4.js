@@ -14,7 +14,7 @@ class Stage4Generator extends StageBase {
     super('段階4: キャラクター生成・関係性構築', 35);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, random_outline, concept_detail, incident_core, incident_details } = sessionData;
     
     // 参加者数に応じて効率的な生成方法を選択

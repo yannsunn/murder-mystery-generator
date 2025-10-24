@@ -14,7 +14,7 @@ class Stage7Generator extends StageBase {
     super('段階7: 統合・品質確認', 5);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData } = sessionData;
     
     const systemPrompt = `あなたは品質管理の専門家です。

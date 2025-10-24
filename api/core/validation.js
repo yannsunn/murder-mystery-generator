@@ -278,12 +278,13 @@ class UnifiedInputValidator {
       }
       return this.validateString(value, rule, fieldName);
 
-    case 'number':
+    case 'number': {
       const num = Number(value);
       if (isNaN(num)) {
         throw new ValidationError(`${fieldName} must be a number`, fieldName);
       }
       return this.validateNumber(num, rule, fieldName);
+    }
 
     case 'boolean':
       if (typeof value === 'boolean') {return value;}
@@ -452,35 +453,38 @@ class UnifiedInputValidator {
 
     try {
       switch (apiType) {
-      case 'generation':
+      case 'generation': {
         if (data.formData) {
           validated.formData = this.validateFormData(data.formData);
         }
-          
-        const commonData = { 
-          sessionId: data.sessionId, 
+
+        const commonData = {
+          sessionId: data.sessionId,
           action: data.action,
           continueFrom: data.continueFrom
         };
         Object.assign(validated, this.validateCommon(commonData));
         break;
+      }
 
-      case 'micro':
-        const microData = { 
-          action: data.action, 
-          taskId: data.taskId, 
-          sessionId: data.sessionId 
+      case 'micro': {
+        const microData = {
+          action: data.action,
+          taskId: data.taskId,
+          sessionId: data.sessionId
         };
         Object.assign(validated, this.validateCommon(microData));
         if (data.formData) {
           validated.formData = this.validateFormData(data.formData);
         }
         break;
+      }
 
-      case 'storage':
+      case 'storage': {
         const storageData = { action: data.action, sessionId: data.sessionId };
         Object.assign(validated, this.validateCommon(storageData));
         break;
+      }
 
       default:
         throw new ValidationError(`Unknown API type: ${apiType}`);

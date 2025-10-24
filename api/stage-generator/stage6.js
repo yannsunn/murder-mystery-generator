@@ -14,7 +14,7 @@ class Stage6Generator extends StageBase {
     super('段階6: GM進行ガイド・セッション管理', 8);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, characters, evidence_system } = sessionData;
     
     const systemPrompt = `あなたはGM経験豊富な専門家です。

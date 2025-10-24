@@ -14,7 +14,7 @@ class Stage1Generator extends StageBase {
     super('段階1: コンセプト精密化・世界観詳細化', 10);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, random_outline } = sessionData;
     
     const systemPrompt = `あなたは商業レベルのマーダーミステリー企画者です。

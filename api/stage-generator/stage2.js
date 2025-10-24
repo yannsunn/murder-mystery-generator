@@ -14,7 +14,7 @@ class Stage2Generator extends StageBase {
     super('段階2: 事件核心・犯人・動機設定', 12);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, random_outline, concept_detail } = sessionData;
     
     const systemPrompt = `あなたは論理的なミステリー構成の専門家です。

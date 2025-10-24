@@ -43,9 +43,8 @@ const config = {
 // メインハンドラー - 統一エラーハンドリング適用
 const handler = withApiErrorHandling(async (req, res) => {
   const startTime = Date.now();
-  
-  try {
-    // 初期ログ出力
+
+  // 初期ログ出力
     logger.debug('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
     logger.debug('[INIT] Request method:', req.method);
     
@@ -154,11 +153,6 @@ const handler = withApiErrorHandling(async (req, res) => {
         version: '1.0.0'
       }
     };
-
-  } catch (error) {
-    // エラーは統一エラーハンドリングシステムで処理
-    throw error;
-  }
 }, {
   context: { 
     service: 'INTEGRATED_MICRO_GENERATOR',

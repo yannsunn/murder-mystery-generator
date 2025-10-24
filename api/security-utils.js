@@ -375,7 +375,7 @@ function withSecurity(handler, endpoint = 'unknown') {
 }
 
 // Vercel Functions handler export
-const handler = async (event, context) => {
+const handler = async (_event, _context) => {
   return createSecureResponse({
     message: 'Security utilities loaded',
     timestamp: new Date().toISOString()

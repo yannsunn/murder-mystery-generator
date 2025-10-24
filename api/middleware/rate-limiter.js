@@ -262,7 +262,7 @@ class SecurityMonitor {
     return this.blockedIPs.has(ip);
   }
 
-  async notifyAdmin(ip, violations) {
+  async notifyAdmin(_ip, _violations) {
     // Slack/Discord/Email通知の実装予定
   }
 

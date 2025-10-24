@@ -52,32 +52,32 @@ async function stageController(req, res) {
   const startTime = Date.now();
 
   try {
-    const { action, sessionId, stageIndex, formData } = req.body;
+    const { action } = req.body;
 
     switch (action) {
-      case 'initialize':
-        return await initializeSession(req, res);
+    case 'initialize':
+      return await initializeSession(req, res);
       
-      case 'get_status':
-        return await getSessionStatus(req, res);
+    case 'get_status':
+      return await getSessionStatus(req, res);
       
-      case 'execute_stage':
-        return await executeStage(req, res);
+    case 'execute_stage':
+      return await executeStage(req, res);
       
-      case 'get_result':
-        return await getFinalResult(req, res);
+    case 'get_result':
+      return await getFinalResult(req, res);
       
-      case 'cleanup':
-        return await cleanupSession(req, res);
+    case 'cleanup':
+      return await cleanupSession(req, res);
       
-      case 'force_advance':
-        return await forceAdvanceStage(req, res);
+    case 'force_advance':
+      return await forceAdvanceStage(req, res);
       
-      default:
-        return res.status(400).json({
-          success: false,
-          error: `Unknown action: ${action}`
-        });
+    default:
+      return res.status(400).json({
+        success: false,
+        error: `Unknown action: ${action}`
+      });
     }
 
   } catch (error) {
@@ -223,18 +223,10 @@ async function executeStage(req, res) {
 
     if (!stageResponse.success) {
       console.error(`[STAGE-CONTROLLER] Stage ${stageIndex} failed:`, stageResponse);
-      const errorMessage = typeof stageResponse.error === 'object' 
-        ? JSON.stringify(stageResponse.error) 
+      const errorMessage = typeof stageResponse.error === 'object'
+        ? JSON.stringify(stageResponse.error)
         : stageResponse.error || 'Unknown error';
-      
-      // エラーの詳細情報を返す
-      const errorDetails = {
-        stage: stageIndex,
-        error: errorMessage,
-        debug: stageResponse.debug || {},
-        timestamp: new Date().toISOString()
-      };
-      
+
       throw new Error(`Stage ${stageIndex} execution failed: ${errorMessage}`);
     }
 
@@ -453,7 +445,7 @@ async function callStageFunction(url, payload) {
     return result;
   } catch (error) {
     logger.error(`❌ Stage${payload.stageIndex} function error:`, error);
-    console.error(`[CALL-STAGE-FUNCTION] Full error details:`, {
+    console.error('[CALL-STAGE-FUNCTION] Full error details:', {
       stage: payload.stageIndex,
       error: error.message,
       stack: error.stack,
@@ -477,7 +469,7 @@ async function callStageFunction(url, payload) {
   }
 }
 
-function calculateProgress(currentStage, totalStages) {
+function calculateProgress(currentStage, _totalStages) {
   const stageWeights = [15, 10, 12, 13, 35, 18, 8, 5, 4];
   const totalWeight = stageWeights.reduce((sum, weight) => sum + weight, 0);
   
@@ -534,7 +526,7 @@ function formatFinalScenario(sessionData) {
 }
 
 function extractTitle(outline) {
-  if (!outline) return 'マーダーミステリー';
+  if (!outline) {return 'マーダーミステリー';}
   const match = outline.match(/タイトル[:：]?\s*(.+)|title[:：]?\s*(.+)/i);
   return match ? (match[1] || match[2]).trim() : 'マーダーミステリー';
 }

@@ -14,7 +14,7 @@ class Stage5Generator extends StageBase {
     super('段階5: 証拠配置・手がかり体系化', 18);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData, incident_core, incident_details, characters } = sessionData;
     
     const systemPrompt = `あなたは論理的な証拠設計の専門家です。

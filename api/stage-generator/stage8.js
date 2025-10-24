@@ -14,7 +14,7 @@ class Stage8Generator extends StageBase {
     super('段階8: 最終品質保証・完成', 4);
   }
 
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     const { formData } = sessionData;
     
     const systemPrompt = `あなたは最終品質保証の専門家です。

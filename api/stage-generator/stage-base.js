@@ -3,7 +3,6 @@
  * Vercel無料プラン（10秒制限）対応
  */
 
-const { withSecurity } = require('../security-utils.js');
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('../supabase-client.js');
@@ -135,7 +134,7 @@ class StageBase {
   /**
    * 段階固有の処理（サブクラスで実装）
    */
-  async processStage(sessionData, stageData) {
+  async processStage(sessionData, _stageData) {
     throw new Error('processStage must be implemented by subclass');
   }
 

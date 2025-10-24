@@ -45,8 +45,6 @@ async function processRandomMode(req, res, formData, sessionId) {
         generationType: 'random'
       });
     }
-    
-    return true; // 処理完了
   } catch (error) {
     logger.error('❌ ランダム生成エラー:', error);
     const errorResponse = {
