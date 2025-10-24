@@ -15,7 +15,9 @@ class Stage5Generator extends StageBase {
   }
 
   async processStage(sessionData, _stageData) {
-    const { formData, incident_core, incident_details, characters } = sessionData;
+    const { formData, characters } = sessionData;
+    const incident_core = sessionData.incident_core || sessionData.step3_content || '';
+    const incident_details = sessionData.incident_details || sessionData.step3_details || '';
     
     const systemPrompt = `あなたは論理的な証拠設計の専門家です。
 推理ゲームとして適切な証拠・手がかりシステムを構築してください。

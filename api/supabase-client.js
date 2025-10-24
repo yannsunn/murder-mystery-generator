@@ -13,8 +13,7 @@ try {
 }
 
 const { createClient } = require('@supabase/supabase-js');
-const { envManager } = require('./config/env-manager.js');
-const { databasePool, executeOptimizedQuery, initializeDatabasePool } = require('./utils/database-pool.js');
+const { executeOptimizedQuery, initializeDatabasePool } = require('./utils/database-pool.js');
 const { logger } = require('./utils/logger.js');
 
 // Supabase接続情報（環境変数の検証）
@@ -74,7 +73,7 @@ async function ensureTablesExist() {
 
   try {
     // scenariosテーブルの存在確認
-    const { data: scenarios, error: scenariosError } = await supabaseAdmin
+    const { error: scenariosError } = await supabaseAdmin
       .from('scenarios')
       .select('count')
       .limit(1);
@@ -90,7 +89,7 @@ async function ensureTablesExist() {
     }
 
     // user_sessionsテーブルの存在確認
-    const { data: sessions, error: sessionsError } = await supabaseAdmin
+    const { error: sessionsError } = await supabaseAdmin
       .from('user_sessions')
       .select('count')
       .limit(1);
@@ -271,7 +270,7 @@ async function testSupabaseConnection() {
   }
 
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('scenarios')
       .select('count')
       .limit(1);
