@@ -45,114 +45,114 @@ const handler = withApiErrorHandling(async (req, res) => {
   const startTime = Date.now();
 
   // 初期ログ出力
-    logger.debug('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
-    logger.debug('[INIT] Request method:', req.method);
+  logger.debug('[INIT] Integrated Micro Generator called at:', new Date().toISOString());
+  logger.debug('[INIT] Request method:', req.method);
     
-    // セキュリティヘッダーの設定
-    setSecurityHeaders(res);
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  // セキュリティヘッダーの設定
+  setSecurityHeaders(res);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 
-    // OPTIONSリクエストの処理
-    if (req.method === 'OPTIONS') {
-      logger.debug('[OPTIONS] Preflight request handled');
-      res.status(200).end();
-      return { success: true, message: 'CORS preflight handled' };
-    }
+  // OPTIONSリクエストの処理
+  if (req.method === 'OPTIONS') {
+    logger.debug('[OPTIONS] Preflight request handled');
+    res.status(200).end();
+    return { success: true, message: 'CORS preflight handled' };
+  }
 
-    // パーソナルアクセスチェック
-    const accessCheck = checkPersonalAccess(req);
-    if (!accessCheck.allowed) {
-      logger.warn('[AUTH] Personal access denied:', accessCheck.reason);
-      throw new UnifiedError(
-        accessCheck.reason || 'このサービスは許可されたユーザーのみ利用可能です',
-        ERROR_TYPES.AUTHORIZATION_ERROR,
-        401,
-        { service: 'AUTH', check: 'personal_access' }
-      );
-    }
+  // パーソナルアクセスチェック
+  const accessCheck = checkPersonalAccess(req);
+  if (!accessCheck.allowed) {
+    logger.warn('[AUTH] Personal access denied:', accessCheck.reason);
+    throw new UnifiedError(
+      accessCheck.reason || 'このサービスは許可されたユーザーのみ利用可能です',
+      ERROR_TYPES.AUTHORIZATION_ERROR,
+      401,
+      { service: 'AUTH', check: 'personal_access' }
+    );
+  }
 
-    // 1日の使用制限チェック
-    const usageCheck = checkDailyUsage();
-    if (!usageCheck.allowed) {
-      logger.warn('[LIMIT] Daily usage limit exceeded');
-      throw new UnifiedError(
-        usageCheck.reason || '本日の利用上限に達しました。明日再度お試しください。',
-        ERROR_TYPES.RATE_LIMIT_ERROR,
-        429,
-        { 
-          service: 'RATE_LIMIT', 
-          resetTime: usageCheck.resetTime,
-          check: 'daily_usage' 
-        }
-      );
-    }
-
-    // リクエストデータの取得
-    let formData = req.method === 'GET' ? req.query : req.body || {};
-    
-    // GETリクエストでformDataがJSON文字列の場合はパース
-    if (req.method === 'GET' && formData.formData && typeof formData.formData === 'string') {
-      try {
-        formData = { ...formData, ...JSON.parse(formData.formData) };
-      } catch (e) {
-        logger.error('[ERROR] Failed to parse formData:', e);
-        throw convertValidationError(e, { 
-          field: 'formData', 
-          value: formData.formData,
-          validator: 'JSON.parse' 
-        });
+  // 1日の使用制限チェック
+  const usageCheck = checkDailyUsage();
+  if (!usageCheck.allowed) {
+    logger.warn('[LIMIT] Daily usage limit exceeded');
+    throw new UnifiedError(
+      usageCheck.reason || '本日の利用上限に達しました。明日再度お試しください。',
+      ERROR_TYPES.RATE_LIMIT_ERROR,
+      429,
+      { 
+        service: 'RATE_LIMIT', 
+        resetTime: usageCheck.resetTime,
+        check: 'daily_usage' 
       }
-    }
-    
-    const sessionId = formData.sessionId || `session_${Date.now()}`;
-    
-    logger.debug('[REQUEST] Form data:', formData);
-    logger.debug('[REQUEST] Session ID:', sessionId);
+    );
+  }
 
-    // GROQ APIキーの確認（フロントエンドから送信されたキーを優先）
-    const groqKey = formData.apiKey || 
+  // リクエストデータの取得
+  let formData = req.method === 'GET' ? req.query : req.body || {};
+    
+  // GETリクエストでformDataがJSON文字列の場合はパース
+  if (req.method === 'GET' && formData.formData && typeof formData.formData === 'string') {
+    try {
+      formData = { ...formData, ...JSON.parse(formData.formData) };
+    } catch (e) {
+      logger.error('[ERROR] Failed to parse formData:', e);
+      throw convertValidationError(e, { 
+        field: 'formData', 
+        value: formData.formData,
+        validator: 'JSON.parse' 
+      });
+    }
+  }
+    
+  const sessionId = formData.sessionId || `session_${Date.now()}`;
+    
+  logger.debug('[REQUEST] Form data:', formData);
+  logger.debug('[REQUEST] Session ID:', sessionId);
+
+  // GROQ APIキーの確認（フロントエンドから送信されたキーを優先）
+  const groqKey = formData.apiKey || 
                    process.env.GROQ_API_KEY || 
                    envManager.get('GROQ_API_KEY') || 
                    process.env['GROQ_API_KEY']; // 文字列アクセスも試行
     
-    if (!groqKey) {
-      logger.warn('[DEMO MODE] No GROQ_API_KEY found, running in demo mode');
-      logger.info('[DEMO MODE] Demo mode allows full functionality with mock data');
+  if (!groqKey) {
+    logger.warn('[DEMO MODE] No GROQ_API_KEY found, running in demo mode');
+    logger.info('[DEMO MODE] Demo mode allows full functionality with mock data');
       
-      // デモモードフラグを設定
-      formData.demoMode = true;
-      formData.mockGenerated = true;
+    // デモモードフラグを設定
+    formData.demoMode = true;
+    formData.mockGenerated = true;
       
-      // デモモード通知メッセージ
-      logger.info('🎭 Demo Mode Activated - Using mock data generator for all content');
-    }
+    // デモモード通知メッセージ
+    logger.info('🎭 Demo Mode Activated - Using mock data generator for all content');
+  }
 
-    // EventSource is disabled - using polling mode instead
-    if (req.headers.accept?.includes('text/event-stream')) {
-      logger.info('[STREAM] EventSource requested but disabled - use polling instead');
-      return res.status(400).json({
-        success: false,
-        error: 'EventSource is not supported. Please use polling mode.',
-        usePolling: true
-      });
-    }
+  // EventSource is disabled - using polling mode instead
+  if (req.headers.accept?.includes('text/event-stream')) {
+    logger.info('[STREAM] EventSource requested but disabled - use polling instead');
+    return res.status(400).json({
+      success: false,
+      error: 'EventSource is not supported. Please use polling mode.',
+      usePolling: true
+    });
+  }
 
-    // 通常のJSON応答
-    const result = await generateMysteryScenario(formData, sessionId);
+  // 通常のJSON応答
+  const result = await generateMysteryScenario(formData, sessionId);
     
-    logger.debug('[COMPLETE] Generation completed for session:', sessionId);
+  logger.debug('[COMPLETE] Generation completed for session:', sessionId);
     
-    // 統一レスポンス形式
-    return {
-      success: true,
-      data: result,
-      metadata: {
-        sessionId,
-        processingTime: `${Date.now() - startTime}ms`,
-        timestamp: new Date().toISOString(),
-        version: '1.0.0'
-      }
-    };
+  // 統一レスポンス形式
+  return {
+    success: true,
+    data: result,
+    metadata: {
+      sessionId,
+      processingTime: `${Date.now() - startTime}ms`,
+      timestamp: new Date().toISOString(),
+      version: '1.0.0'
+    }
+  };
 }, {
   context: { 
     service: 'INTEGRATED_MICRO_GENERATOR',
