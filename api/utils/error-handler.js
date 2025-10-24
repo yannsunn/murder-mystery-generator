@@ -185,7 +185,6 @@ class ErrorStatistics {
   getStatistics() {
     const now = Date.now();
     const last24Hours = now - (24 * 60 * 60 * 1000);
-    const lastHour = now - (60 * 60 * 1000);
     
     const totalErrors = Array.from(this.stats.values())
       .reduce((sum, stat) => sum + stat.count, 0);
@@ -262,7 +261,6 @@ class ErrorStatistics {
    * 古い統計データのクリーンアップ
    */
   cleanupOldStats(now) {
-    const cutoff = now - (7 * 24 * 60 * 60 * 1000); // 7日前
     const currentHour = Math.floor(now / (1000 * 60 * 60));
     const oldHour = currentHour - 24; // 24時間前
     
@@ -362,8 +360,8 @@ class ErrorMonitoringIntegration {
   }
 }
 
-// グローバルモニタリングインスタンス
-const errorMonitoringIntegration = new ErrorMonitoringIntegration();
+// グローバルモニタリングインスタンス (将来の拡張用)
+// const errorMonitoringIntegration = new ErrorMonitoringIntegration();
 
 /**
  * 🚀 UNIFIED ERROR CLASS
@@ -522,7 +520,7 @@ class AutoRecoveryManager {
     });
 
     // レート制限エラーの復旧戦略
-    this.addRecoveryStrategy(ERROR_TYPES.RATE_LIMIT_ERROR, async (error, context) => {
+    this.addRecoveryStrategy(ERROR_TYPES.RATE_LIMIT_ERROR, async (error, _context) => {
       logger.info(`🔄 Attempting rate limit recovery for: ${error.id}`);
       
       // より長い遅延で再試行
@@ -535,7 +533,7 @@ class AutoRecoveryManager {
     });
 
     // ネットワークエラーの復旧戦略
-    this.addRecoveryStrategy(ERROR_TYPES.NETWORK_ERROR, async (error, context) => {
+    this.addRecoveryStrategy(ERROR_TYPES.NETWORK_ERROR, async (error, _context) => {
       logger.info(`🔄 Attempting network recovery for: ${error.id}`);
       
       // 指数バックオフで再試行
@@ -548,11 +546,10 @@ class AutoRecoveryManager {
     });
 
     // 外部サービスエラーの復旧戦略
-    this.addRecoveryStrategy(ERROR_TYPES.EXTERNAL_SERVICE_ERROR, async (error, context) => {
+    this.addRecoveryStrategy(ERROR_TYPES.EXTERNAL_SERVICE_ERROR, async (error, _context) => {
       logger.info(`🔄 Attempting external service recovery for: ${error.id}`);
-      
+
       // サービス固有の復旧ロジック
-      const serviceName = context.serviceName || 'unknown';
       const backoffDelay = error.retryDelay * (1 + error.retryCount * 0.5);
       
       return { 
@@ -563,7 +560,7 @@ class AutoRecoveryManager {
     });
 
     // 一時的エラーの復旧戦略
-    this.addRecoveryStrategy(ERROR_TYPES.TEMPORARY_ERROR, async (error, context) => {
+    this.addRecoveryStrategy(ERROR_TYPES.TEMPORARY_ERROR, async (error, _context) => {
       logger.info(`🔄 Attempting temporary error recovery for: ${error.id}`);
       
       // 短い遅延で再試行
@@ -742,7 +739,7 @@ class UnifiedErrorHandler {
   /**
    * エラー正規化
    */
-  normalizeError(error, req = null, context = {}) {
+  normalizeError(error, _req = null, context = {}) {
     if (error instanceof UnifiedError) {
       return error;
     }
@@ -1076,7 +1073,7 @@ function validateAndWrapError(error, defaultMessage = 'An error occurred') {
 /**
  * エラーレスポンス作成
  */
-function createErrorResponse(error, context = {}) {
+function createErrorResponse(error, _context = {}) {
   const unifiedError = validateAndWrapError(error);
   return unifiedError.toUserResponse();
 }
@@ -1158,8 +1155,6 @@ function getErrorHandlerHealth() {
  */
 function initializeErrorHandling(options = {}) {
   const {
-    enableFileLogging = process.env.NODE_ENV === 'production',
-    enableAlerts = true,
     customRecoveryStrategies = {},
     notificationChannels = [],
     alertThresholds = {}
@@ -1205,6 +1200,7 @@ module.exports = {
   UnifiedErrorHandler,
   AutoRecoveryManager,
   ErrorStatistics,
+  ErrorMonitoringIntegration,
   
   // インスタンス
   unifiedErrorHandler,
