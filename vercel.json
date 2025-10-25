@@ -62,12 +62,5 @@
         }
       ]
     }
-  ],
-  "redirects": [
-    {
-      "source": "/health",
-      "destination": "/api/debug-env?debug_token=check-env-2025",
-      "permanent": false
-    }
   ]
 }

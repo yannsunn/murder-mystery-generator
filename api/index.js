@@ -1,8 +1,8 @@
 /**
  * API Entry Point
- * This file redirects to the main integrated-micro-generator handler
+ * This file redirects to the main free-plan-generator handler
  */
 
-const handler = require('./integrated-micro-generator.js');
+const handler = require('./free-plan-generator.js');
 
 module.exports = handler;

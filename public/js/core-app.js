@@ -372,8 +372,8 @@ class CoreApp {
       sessionId: sessionId,
       stream: 'true'
     });
-    
-    const url = `/api/integrated-micro-generator?${params}`;
+
+    const url = `/api/free-plan-generator?${params}`;
     
     const { eventSource, id } = resourceManager.createEventSource(url, {
       id: sessionId

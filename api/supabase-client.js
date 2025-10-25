@@ -13,7 +13,6 @@ try {
 }
 
 const { createClient } = require('@supabase/supabase-js');
-const { executeOptimizedQuery, initializeDatabasePool } = require('./utils/database-pool.js');
 const { logger } = require('./utils/logger.js');
 
 // Supabase接続情報（環境変数の検証）
@@ -45,17 +44,13 @@ async function initializeSupabase() {
   }
 
   try {
-    // 従来の接続も保持（互換性のため）
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
+
     if (SUPABASE_SERVICE_KEY) {
       supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
     }
 
-    // 新しい接続プールを初期化
-    await initializeDatabasePool();
-
-    logger.success('✅ Supabase接続プール初期化完了');
+    logger.success('✅ Supabase初期化完了');
     return true;
   } catch (error) {
     logger.error('❌ Supabase初期化エラー:', error);
@@ -142,18 +137,16 @@ async function saveScenarioToSupabase(sessionId, scenarioData) {
       updated_at: new Date().toISOString()
     };
 
-    // 接続プール経由で最適化実行
-    const result = await executeOptimizedQuery({
-      table: 'scenarios',
-      operation: 'upsert',
-      data: data,
-      options: {
-        upsertOptions: { onConflict: 'id' }
-      }
-    });
+    const { data: result, error } = await supabase
+      .from('scenarios')
+      .upsert(data, { onConflict: 'id' });
+
+    if (error) {
+      throw error;
+    }
 
     logger.success(`✅ シナリオ保存完了: ${sessionId}`);
-    return { success: true, data: result.data };
+    return { success: true, data: result };
 
   } catch (error) {
     logger.error('❌ シナリオ保存エラー:', error);
@@ -182,20 +175,18 @@ async function getScenarioFromSupabase(sessionId) {
   }
   
   try {
-    const result = await executeOptimizedQuery({
-      table: 'scenarios',
-      operation: 'select',
-      filters: { id: sessionId },
-      options: { select: '*' },
-      cacheKey: `scenario_${sessionId}`
-    });
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('*')
+      .eq('id', sessionId)
+      .single();
 
-    if (!result.data || result.data.length === 0) {
+    if (error || !data) {
       return { success: false, error: 'シナリオが見つかりません' };
     }
 
     logger.success(`✅ シナリオ取得完了: ${sessionId}`);
-    return { success: true, data: result.data[0] };
+    return { success: true, data: data };
 
   } catch (error) {
     logger.error('❌ シナリオ取得エラー:', error);
@@ -240,20 +231,18 @@ async function saveUserSessionToSupabase(sessionId, userData) {
  */
 async function getAllScenariosFromSupabase(limit = 50, offset = 0) {
   try {
-    const result = await executeOptimizedQuery({
-      table: 'scenarios',
-      operation: 'select',
-      options: {
-        select: 'id, title, description, created_at, updated_at',
-        orderBy: { column: 'created_at', ascending: false },
-        limit: limit,
-        offset: offset
-      },
-      cacheKey: `scenarios_list_${limit}_${offset}`
-    });
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('id, title, description, created_at, updated_at')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-    logger.success(`✅ ${result.data.length}件のシナリオ取得完了`);
-    return { success: true, data: result.data };
+    if (error) {
+      throw error;
+    }
+
+    logger.success(`✅ ${data.length}件のシナリオ取得完了`);
+    return { success: true, data: data };
 
   } catch (error) {
     logger.error('❌ シナリオ一覧取得エラー:', error);
