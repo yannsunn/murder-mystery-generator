@@ -66,28 +66,38 @@ class Stage0Generator extends StageBase {
     // 直接環境変数アクセス（最も確実）
     let apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const keySearchLog = [];
+    const isDevelopment = process.env.NODE_ENV !== 'production';
 
-    console.log('[STAGE0] Direct env access:');
-    console.log('  GEMINI_API_KEY exists:', process.env.GEMINI_API_KEY !== undefined);
-    console.log('  GOOGLE_API_KEY exists:', process.env.GOOGLE_API_KEY !== undefined);
-    console.log('  API Key length:', apiKey?.length || 0);
-    console.log('  API Key valid format:', apiKey?.startsWith('AIza') || false);
+    // 開発環境のみデバッグ情報出力
+    if (isDevelopment) {
+      console.log('[STAGE0] Direct env access:');
+      console.log('  GEMINI_API_KEY exists:', process.env.GEMINI_API_KEY !== undefined);
+      console.log('  GOOGLE_API_KEY exists:', process.env.GOOGLE_API_KEY !== undefined);
+    }
 
     if (apiKey) {
       keySearchLog.push('✅ Direct process.env.GEMINI_API_KEY/GOOGLE_API_KEY - SUCCESS');
-      console.log('[STAGE0] ✅ API Key found via direct access');
+      if (isDevelopment) {
+        console.log('[STAGE0] ✅ API Key found via direct access');
+      }
     } else {
       keySearchLog.push('❌ Direct process.env.GEMINI_API_KEY/GOOGLE_API_KEY - FAILED');
-      console.log('[STAGE0] ❌ API Key NOT found via direct access');
+      if (isDevelopment) {
+        console.log('[STAGE0] ❌ API Key NOT found via direct access');
+      }
     }
 
     // 環境変数は確実に存在することが確認されているので、
     // 他のフォールバック手段はスキップ
     if (apiKey) {
-      console.log('[STAGE0] Using API key from direct environment access');
+      if (isDevelopment) {
+        console.log('[STAGE0] Using API key from direct environment access');
+      }
     } else {
-      console.log('[STAGE0] WARNING: Environment variable exists but not accessible');
-      console.log('[STAGE0] Attempting alternative access methods...');
+      if (isDevelopment) {
+        console.log('[STAGE0] WARNING: Environment variable exists but not accessible');
+        console.log('[STAGE0] Attempting alternative access methods...');
+      }
 
       // 代替手段を試す
       const alternativeMethods = [
@@ -101,12 +111,16 @@ class Stage0Generator extends StageBase {
         try {
           apiKey = alternativeMethods[i]();
           if (apiKey) {
-            console.log(`[STAGE0] ✅ Success with method ${i + 1}`);
+            if (isDevelopment) {
+              console.log(`[STAGE0] ✅ Success with method ${i + 1}`);
+            }
             keySearchLog.push(`✅ Alternative method ${i + 1}`);
             break;
           }
         } catch (e) {
-          console.log(`[STAGE0] Method ${i + 1} failed:`, e.message);
+          if (isDevelopment) {
+            console.log(`[STAGE0] Method ${i + 1} failed:`, e.message);
+          }
           keySearchLog.push(`❌ Method ${i + 1}: ${e.message}`);
         }
       }

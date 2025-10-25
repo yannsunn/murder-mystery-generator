@@ -30,6 +30,48 @@ const RATE_LIMITS = {
 // IPベースの制限ストレージ（プロダクションではRedis推奨）
 const rateLimitStore = new Map();
 
+// メモリリーク対策設定
+const MAX_STORE_ENTRIES = 10000; // 最大エントリ数
+const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5分ごとにクリーンアップ
+
+/**
+ * 定期的なメモリクリーンアップ
+ */
+function setupAutomaticCleanup() {
+  setInterval(() => {
+    const now = Date.now();
+    const maxAge = 24 * 60 * 60 * 1000; // 24時間以上古いエントリを削除
+
+    // rateLimitStoreのクリーンアップ
+    for (const [key, requests] of rateLimitStore.entries()) {
+      const validRequests = requests.filter(timestamp => timestamp > now - maxAge);
+      if (validRequests.length === 0) {
+        rateLimitStore.delete(key);
+      } else if (validRequests.length < requests.length) {
+        rateLimitStore.set(key, validRequests);
+      }
+    }
+
+    // サイズ制限チェック
+    if (rateLimitStore.size > MAX_STORE_ENTRIES) {
+      // 最も古いエントリから削除
+      const entries = Array.from(rateLimitStore.entries());
+      const toDelete = entries.length - MAX_STORE_ENTRIES;
+      for (let i = 0; i < toDelete; i++) {
+        rateLimitStore.delete(entries[i][0]);
+      }
+    }
+
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    if (isDevelopment) {
+      console.log(`[RATE-LIMITER] Cleanup completed. Store size: ${rateLimitStore.size}`);
+    }
+  }, CLEANUP_INTERVAL);
+}
+
+// 自動クリーンアップを開始
+setupAutomaticCleanup();
+
 /**
  * レート制限の実装
  */
@@ -237,23 +279,57 @@ class IPWhitelist {
  */
 class SecurityMonitor {
   constructor() {
-    this.suspiciousIPs = new Map();
-    this.blockedIPs = new Set();
+    this.suspiciousIPs = new Map(); // { ip: { count, lastViolation } }
+    this.blockedIPs = new Map(); // { ip: blockedAt }
+    this.setupCleanup();
+  }
+
+  /**
+   * 定期的なクリーンアップ（24時間以上古いブロック解除）
+   */
+  setupCleanup() {
+    setInterval(() => {
+      const now = Date.now();
+      const maxBlockDuration = 24 * 60 * 60 * 1000; // 24時間
+      const maxSuspiciousAge = 1 * 60 * 60 * 1000; // 1時間
+
+      // ブロックIPのクリーンアップ
+      for (const [ip, blockedAt] of this.blockedIPs.entries()) {
+        if (now - blockedAt > maxBlockDuration) {
+          this.blockedIPs.delete(ip);
+        }
+      }
+
+      // 疑わしいIPのクリーンアップ
+      for (const [ip, data] of this.suspiciousIPs.entries()) {
+        if (now - data.lastViolation > maxSuspiciousAge) {
+          this.suspiciousIPs.delete(ip);
+        }
+      }
+
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+      if (isDevelopment) {
+        console.log(`[SECURITY-MONITOR] Cleanup: ${this.blockedIPs.size} blocked, ${this.suspiciousIPs.size} suspicious`);
+      }
+    }, CLEANUP_INTERVAL);
   }
 
   detectSuspiciousActivity(req, rateLimitResult) {
     const ip = new RateLimiter().getClientIP(req);
-    
+
     if (!rateLimitResult.allowed) {
-      const violations = this.suspiciousIPs.get(ip) || 0;
-      this.suspiciousIPs.set(ip, violations + 1);
+      const now = Date.now();
+      const suspiciousData = this.suspiciousIPs.get(ip) || { count: 0, lastViolation: now };
+      suspiciousData.count += 1;
+      suspiciousData.lastViolation = now;
+      this.suspiciousIPs.set(ip, suspiciousData);
 
       // 5回以上の制限違反で自動ブロック
-      if (violations >= 5) {
-        this.blockedIPs.add(ip);
-        
+      if (suspiciousData.count >= 5) {
+        this.blockedIPs.set(ip, now);
+
         // 管理者通知（実装予定）
-        this.notifyAdmin(ip, violations + 1);
+        this.notifyAdmin(ip, suspiciousData.count);
       }
     }
   }
