@@ -5,7 +5,7 @@
 
 const { StageBase } = require('./stage-base.js');
 const { withSecurity } = require('../security-utils.js');
-const { getGroqApiKey } = require('../config/api-key-fallback.js');
+const { getGeminiApiKey } = require('../config/api-key-fallback.js');
 const { debugEnvironmentVariables, getEnvironmentVariable } = require('../utils/env-debug.js');
 const { initializeEnvVars, getVercelEnv } = require('../config/vercel-env-fix.js');
 
@@ -64,22 +64,23 @@ class Stage0Generator extends StageBase {
 `;
 
     // 直接環境変数アクセス（最も確実）
-    let apiKey = process.env.GROQ_API_KEY;
+    let apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const keySearchLog = [];
-    
+
     console.log('[STAGE0] Direct env access:');
-    console.log('  GROQ_API_KEY exists:', process.env.GROQ_API_KEY !== undefined);
-    console.log('  GROQ_API_KEY length:', process.env.GROQ_API_KEY?.length || 0);
-    console.log('  GROQ_API_KEY valid format:', process.env.GROQ_API_KEY?.startsWith('gsk_') || false);
-    
+    console.log('  GEMINI_API_KEY exists:', process.env.GEMINI_API_KEY !== undefined);
+    console.log('  GOOGLE_API_KEY exists:', process.env.GOOGLE_API_KEY !== undefined);
+    console.log('  API Key length:', apiKey?.length || 0);
+    console.log('  API Key valid format:', apiKey?.startsWith('AIza') || false);
+
     if (apiKey) {
-      keySearchLog.push('✅ Direct process.env.GROQ_API_KEY - SUCCESS');
+      keySearchLog.push('✅ Direct process.env.GEMINI_API_KEY/GOOGLE_API_KEY - SUCCESS');
       console.log('[STAGE0] ✅ API Key found via direct access');
     } else {
-      keySearchLog.push('❌ Direct process.env.GROQ_API_KEY - FAILED');
+      keySearchLog.push('❌ Direct process.env.GEMINI_API_KEY/GOOGLE_API_KEY - FAILED');
       console.log('[STAGE0] ❌ API Key NOT found via direct access');
     }
-    
+
     // 環境変数は確実に存在することが確認されているので、
     // 他のフォールバック手段はスキップ
     if (apiKey) {
@@ -87,12 +88,12 @@ class Stage0Generator extends StageBase {
     } else {
       console.log('[STAGE0] WARNING: Environment variable exists but not accessible');
       console.log('[STAGE0] Attempting alternative access methods...');
-      
+
       // 代替手段を試す
       const alternativeMethods = [
-        () => getVercelEnv('GROQ_API_KEY'),
-        () => getEnvironmentVariable('GROQ_API_KEY'),
-        () => getGroqApiKey(),
+        () => getVercelEnv('GEMINI_API_KEY') || getVercelEnv('GOOGLE_API_KEY'),
+        () => getEnvironmentVariable('GEMINI_API_KEY') || getEnvironmentVariable('GOOGLE_API_KEY'),
+        () => getGeminiApiKey(),
         () => sessionData.apiKey
       ];
       
@@ -140,7 +141,7 @@ class Stage0Generator extends StageBase {
       // 具体的な解決手順を含むエラー
       const troubleshootingSteps = [
         '1. Vercel Dashboard → Settings → Environment Variables',
-        '2. GROQ_API_KEY を Production, Preview, Development すべてに設定',
+        '2. GEMINI_API_KEY を Production, Preview, Development すべてに設定',
         '3. 再デプロイを実行 (vercel --prod)',
         '4. APIキーが gsk_ で始まっていることを確認'
       ];

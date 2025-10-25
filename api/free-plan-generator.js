@@ -121,7 +121,7 @@ async function startGeneration(req, res) {
       // より詳細なエラーメッセージを含める
       const errorMessage = stageError.message || 'Unknown error';
       if (errorMessage.includes('GROQ') || errorMessage.includes('API')) {
-        throw new Error(`${errorMessage}\n\nPlease set GROQ_API_KEY in Vercel Dashboard: Settings → Environment Variables`);
+        throw new Error(`${errorMessage}\n\nPlease set GEMINI_API_KEY in Vercel Dashboard: Settings → Environment Variables`);
       }
       throw stageError;
     }
@@ -248,7 +248,7 @@ async function pollProgress(req, res) {
             sessionId: sessionId,
             currentStage: stageToExecute,
             debug: stageResponse.debug,
-            help: 'Please ensure GROQ_API_KEY is set in Vercel Environment Variables. See: https://vercel.com/docs/environment-variables'
+            help: 'Please ensure GEMINI_API_KEY is set in Vercel Environment Variables. See: https://vercel.com/docs/environment-variables'
           });
         }
       } catch (error) {

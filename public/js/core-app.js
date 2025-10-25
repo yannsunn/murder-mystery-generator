@@ -612,7 +612,7 @@ class CoreApp {
             // タイムアウトエラー - 即座に停止
             clearInterval(this.pollInterval);
             this.pollInterval = null;
-            const errorMsg = `エラー: ステージ${data.currentStage}で処理が進まなくなりました\n\n可能性のある原因:\n1. Vercel環境変数にGROQ_API_KEYが設定されていない\n2. APIキーが無効\n3. APIのレート制限\n\n現在のステージ: ${data.currentStage}\n進捗: ${data.progress}%\nセッションID: ${sessionId}`;
+            const errorMsg = `エラー: ステージ${data.currentStage}で処理が進まなくなりました\n\n可能性のある原因:\n1. Vercel環境変数にGEMINI_API_KEYが設定されていない\n2. APIキーが無効\n3. APIのレート制限\n\n現在のステージ: ${data.currentStage}\n進捗: ${data.progress}%\nセッションID: ${sessionId}`;
             console.error('❌ Stuck timeout:', {
               stage: data.currentStage,
               progress: data.progress,

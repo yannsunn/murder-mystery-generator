@@ -6,7 +6,7 @@
 const { aiClient } = require('../utils/ai-client.js');
 const { logger } = require('../utils/logger.js');
 const { saveScenarioToSupabase, getScenarioFromSupabase } = require('../supabase-client.js');
-const { callGroqAPI, getGroqApiKey } = require('../utils/groq-client.js');
+const { callGeminiTextAPI, getGeminiApiKey } = require('../utils/gemini-text-client.js');
 
 class StageBase {
   constructor(stageName, stageWeight = 10) {
@@ -97,8 +97,8 @@ class StageBase {
 
       // APIキーの状態を確認
       const apiKeyStatus = {
-        envGROQ: process.env.GROQ_API_KEY ? 'SET' : 'NOT_SET',
-        envGROQLength: process.env.GROQ_API_KEY ? process.env.GROQ_API_KEY.length : 0,
+        envGEMINI: (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? 'SET' : 'NOT_SET',
+        envGEMINILength: (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)?.length || 0,
         envKeys: Object.keys(process.env).filter(k => k.includes('API') || k.includes('KEY')).sort(),
         vercelEnv: process.env.VERCEL ? 'YES' : 'NO',
         nodeEnv: process.env.NODE_ENV,
@@ -252,7 +252,7 @@ class StageBase {
     // APIキーが提供されていない場合、環境変数から取得
     let finalApiKey = apiKey;
     if (!finalApiKey) {
-      finalApiKey = getGroqApiKey();
+      finalApiKey = getGeminiApiKey();
       if (finalApiKey) {
         logger.debug('Using API key from environment');
       }
@@ -263,8 +263,8 @@ class StageBase {
     }
 
     try {
-      // シンプルなGROQ API直接呼び出しを使用
-      const result = await callGroqAPI(systemPrompt, userPrompt, finalApiKey);
+      // シンプルなGemini API直接呼び出しを使用
+      const result = await callGeminiTextAPI(systemPrompt, userPrompt, finalApiKey);
       return result;
     } catch (error) {
       logger.error(`AI generation failed for ${this.stageName}:`, error);

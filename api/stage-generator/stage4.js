@@ -65,7 +65,7 @@ class Stage4Generator extends StageBase {
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      process.env.GROQ_API_KEY || sessionData.apiKey,
+      process.env.GEMINI_API_KEY || sessionData.apiKey,
       { 
         maxTokens: 2500,
         timeout: 7000,
@@ -113,7 +113,7 @@ class Stage4Generator extends StageBase {
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      process.env.GROQ_API_KEY || sessionData.apiKey,
+      process.env.GEMINI_API_KEY || sessionData.apiKey,
       { 
         maxTokens: 2800,
         timeout: 7000,
@@ -162,7 +162,7 @@ class Stage4Generator extends StageBase {
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      process.env.GROQ_API_KEY || sessionData.apiKey,
+      process.env.GEMINI_API_KEY || sessionData.apiKey,
       { 
         maxTokens: 3000,
         timeout: 7000,

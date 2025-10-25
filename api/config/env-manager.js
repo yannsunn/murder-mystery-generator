@@ -18,16 +18,16 @@ catch (e) {
  */
 const REQUIRED_ENV_VARS = {
   // AI Provider Keys
-  GROQ_API_KEY: {
+  GEMINI_API_KEY: {
     type: 'string',
     required: false, // Made optional to prevent 500 errors
     fallback: '', // Empty fallback to handle missing key gracefully
-    description: 'Groq AI API key for primary AI generation'
+    description: 'Google Gemini AI API key for AI generation'
   },
-  OPENAI_API_KEY: {
+  GOOGLE_API_KEY: {
     type: 'string',
     required: false,
-    description: 'OpenAI API key for fallback AI generation'
+    description: 'Google API key (alias for GEMINI_API_KEY)'
   },
   // Database
   DATABASE_URL: {
@@ -231,7 +231,7 @@ class EnvironmentManager {
      * デバッグ情報の生成
      */
   generateDebugInfo() {
-    const groqKey = this.get('GROQ_API_KEY') || '';
+    const geminiKey = this.get('GEMINI_API_KEY') || this.get('GOOGLE_API_KEY') || '';
     return {
       timestamp: new Date().toISOString(),
       runtime: {
@@ -240,12 +240,12 @@ class EnvironmentManager {
         VERCEL_ENV: this.get('VERCEL_ENV') || undefined,
         VERCEL_REGION: this.get('VERCEL_REGION') || undefined
       },
-      groqApiKey: {
-        exists: !!groqKey,
-        empty: !groqKey || groqKey.length === 0,
-        length: groqKey.length,
-        validPrefix: groqKey.startsWith('gsk_'),
-        firstChars: groqKey ? groqKey.substring(0, 8) + '***' : 'none'
+      geminiApiKey: {
+        exists: !!geminiKey,
+        empty: !geminiKey || geminiKey.length === 0,
+        length: geminiKey.length,
+        validPrefix: geminiKey.startsWith('AIza'),
+        firstChars: geminiKey ? geminiKey.substring(0, 8) + '***' : 'none'
       },
       supabaseKeys: {
         url: this.has('SUPABASE_URL') ? 'SET' : 'NOT_SET',
@@ -262,7 +262,7 @@ class EnvironmentManager {
     let example = '# 🚀 Murder Mystery Generator - Environment Variables\n';
     example += '# Copy this file to .env and fill in your values\n\n';
     const categories = {
-      'AI Providers': ['GROQ_API_KEY', 'OPENAI_API_KEY'],
+      'AI Providers': ['GEMINI_API_KEY', 'GOOGLE_API_KEY'],
       'Database': ['DATABASE_URL'],
       'Application': ['NODE_ENV'],
       'Security': ['RATE_LIMIT_WINDOW_MS', 'RATE_LIMIT_MAX_REQUESTS'],

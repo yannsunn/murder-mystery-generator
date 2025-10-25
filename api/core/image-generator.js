@@ -4,7 +4,7 @@
  */
 
 const { logger } = require('../utils/logger.js');
-const { GeminiImageClient } = require('../utils/gemini-client.js');
+const { GeminiImageClient } = require('../utils/gemini-image-client.js');
 
 /**
  * 画像プロバイダーの選択
@@ -85,7 +85,8 @@ function createImagePrompts(sessionData) {
 }
 
 /**
- * Gemini 2.5 Flash Image generation
+ * Gemini 2.5 Flash画像プロンプト生成
+ * Note: 実際の画像はフロントエンドまたは外部サービスで生成
  */
 async function generateImageWithGemini(promptData) {
   try {
@@ -95,28 +96,24 @@ async function generateImageWithGemini(promptData) {
       throw new Error('GEMINI_API_KEY is not configured');
     }
 
-    logger.debug(`🎨 [Gemini] Generating: ${promptData.type}`);
+    logger.debug(`🎨 [Gemini] Generating image prompt for: ${promptData.type}`);
 
-    const result = await geminiClient.generateImage(promptData.prompt, {
-      aspectRatio: promptData.type === 'main_concept' ? '16:9' : '1:1'
-    });
+    const result = await geminiClient.generateImagePrompt(promptData.prompt);
 
     if (result.success) {
-      logger.debug(`✅ [Gemini] Image generated: ${promptData.type}`);
+      logger.success(`✅ [Gemini] Image prompt generated: ${promptData.type}`);
       return {
         ...promptData,
         provider: 'gemini',
         model: 'gemini-2.5-flash',
-        url: result.url,
-        data: result.data,
-        mimeType: result.mimeType,
+        generatedPrompt: result.prompt,
         status: 'success'
       };
     } else {
       throw new Error(result.error || 'Unknown error');
     }
   } catch (error) {
-    logger.error(`❌ [Gemini] Image generation failed: ${error.message}`);
+    logger.error(`❌ [Gemini] Image prompt generation failed: ${error.message}`);
     return {
       ...promptData,
       provider: 'gemini',

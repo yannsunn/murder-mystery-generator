@@ -60,7 +60,7 @@ ${concept_detail || ''}
     const result = await this.generateWithAI(
       systemPrompt, 
       userPrompt, 
-      process.env.GROQ_API_KEY || sessionData.apiKey,
+      process.env.GEMINI_API_KEY || sessionData.apiKey,
       { 
         maxTokens: 2000,
         timeout: 6000,
