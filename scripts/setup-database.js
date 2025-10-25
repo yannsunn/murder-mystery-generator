@@ -127,7 +127,7 @@ async function testConnection() {
   console.log('🔌 Supabase接続をテスト中...');
 
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('scenarios')
       .select('count')
       .limit(1);

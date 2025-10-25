@@ -41,14 +41,12 @@ function startCleanupTimer() {
   if (cleanupTimer) {return;}
   
   cleanupTimer = setInterval(() => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = yesterday.toDateString();
-    
-    // 古いエントリを削除
+    // 古いエントリを削除（今日以外のエントリ）
+    const todayString = new Date().toDateString();
+
     for (const [key] of dailyUsage) {
       const keyDate = key.split('_').slice(1).join('_');
-      if (keyDate !== new Date().toDateString()) {
+      if (keyDate !== todayString) {
         dailyUsage.delete(key);
       }
     }

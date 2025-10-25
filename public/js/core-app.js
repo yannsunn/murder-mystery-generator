@@ -120,7 +120,7 @@ class ResourceManager {
 
   cleanup() {
     // Close all EventSources
-    this.eventSources.forEach((es, id) => {
+    this.eventSources.forEach((es) => {
       es.close();
     });
     this.eventSources.clear();
@@ -134,7 +134,7 @@ class ResourceManager {
     this.intervals.clear();
 
     // Remove all event listeners
-    this.eventListeners.forEach((listener, id) => {
+    this.eventListeners.forEach((listener) => {
       listener.element.removeEventListener(listener.event, listener.handler);
     });
     this.eventListeners.clear();
@@ -346,10 +346,10 @@ class CoreApp {
       this.checkEnvironment(),
       this.prepareSession(sessionId)
     ];
-    
+
     try {
-      const [envResult, sessionResult] = await Promise.allSettled(initPromises);
-      
+      const [envResult] = await Promise.allSettled(initPromises);
+
       const isVercel = envResult.status === 'fulfilled' ? envResult.value : this.detectVercelFallback();
       
       // Vercel環境または本番環境では常にPolling方式を使用
@@ -437,7 +437,7 @@ class CoreApp {
     };
   }
   
-  async connectPolling(sessionId) {
+  async connectPolling(_sessionId) {
     logger.info('🆓 Free Plan Mode: 段階別Function分離システムを使用');
     
     try {
@@ -513,9 +513,7 @@ class CoreApp {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
     }
-    
-    let retryCount = 0;
-    const maxRetries = 3;
+
     let stuckCount = 0;
     const maxStuckCount = 5; // 同じステージに5回以上いたら停止
     let lastStage = -1;
@@ -630,10 +628,10 @@ class CoreApp {
           lastStage = data.currentStage;
           lastProgress = data.progress;
         }
-        
+
         // リトライカウントをリセット
-        retryCount = 0;
-        
+        this.eventSourceRetryCount = 0;
+
         // 進捗更新
         this.handleFreePlanProgress(data);
         
@@ -1250,8 +1248,6 @@ class CoreApp {
 // Loggerインスタンスを安全に作成
 const logger = window.Logger ? new window.Logger() : (window.logger || { debug: () => {}, info: () => {}, success: () => {}, warn: () => {}, error: () => {} });
 
-// グローバルAppインスタンス（HTML内から参照可能）
-let app;
 // グローバルに公開
 window.logger = logger;
 
@@ -1270,8 +1266,7 @@ function initializeApp() {
     coreApp = new CoreApp();
     window.coreApp = coreApp; // Global access
     window.app = coreApp; // Compatibility alias
-    app = coreApp; // グローバル変数にも設定
-    
+
     // Prevent UltraIntegratedApp initialization
     window.ultraAppInitialized = true;
     
@@ -1291,7 +1286,7 @@ if (document.readyState === 'loading') {
 // Export for module usage
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    Logger: typeof Logger !== 'undefined' ? Logger : (typeof window !== 'undefined' ? window.Logger : undefined),
+    Logger: typeof window !== 'undefined' ? window.Logger : undefined,
     ResourceManager,
     CoreApp
   };

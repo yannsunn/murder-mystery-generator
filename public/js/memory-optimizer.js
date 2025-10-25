@@ -125,7 +125,7 @@ class MemoryOptimizer {
    * オブジェクトプール最適化
    */
   optimizeObjectPools() {
-    this.objectPool.forEach((pool, type) => {
+    this.objectPool.forEach((pool) => {
       // 大きすぎるプールを縮小
       if (pool.length > 20) {
         pool.splice(10);

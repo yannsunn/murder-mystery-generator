@@ -15,19 +15,16 @@ const html = fs.readFileSync(
 );
 
 let dom;
-let container;
 
 beforeEach(() => {
   dom = new JSDOM(html, {
     runScripts: 'dangerously',
     resources: 'usable'
   });
-  
+
   global.window = dom.window;
   global.document = dom.window.document;
   global.navigator = dom.window.navigator;
-  
-  container = document.body;
 });
 
 afterEach(() => {
@@ -129,9 +126,8 @@ describe('Performance Tests', () => {
 
   test('should defer non-critical JavaScript', () => {
     // JavaScriptの遅延読み込みをテスト
-    const scriptTags = document.querySelectorAll('script[src]');
     const deferredScripts = document.querySelectorAll('script[defer]');
-    
+
     expect(deferredScripts.length).toBeGreaterThan(0);
   });
 });

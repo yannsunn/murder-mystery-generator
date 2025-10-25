@@ -81,7 +81,7 @@ async function testEnvManager(results) {
   
   try {
     // 初期化テスト
-    const isValid = envManager.initialize();
+    envManager.initialize();
     results.pass('EnvManager initialization');
     
     // 必須環境変数チェック

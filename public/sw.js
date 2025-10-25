@@ -90,7 +90,7 @@ self.addEventListener('fetch', (event) => {
           try {
             const responseClone = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone).catch(error => {
+              cache.put(request, responseClone).catch(_error => {
                 // キャッシュエラーは静かに無視
               });
             });

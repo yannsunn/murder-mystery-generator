@@ -425,7 +425,7 @@ class DatabasePool {
     logger.info('データベース接続プールをシャットダウンしています...');
     
     // 全接続を解放
-    for (const [id, connection] of this.connections) {
+    for (const [, connection] of this.connections) {
       if (connection.client && typeof connection.client.removeAllChannels === 'function') {
         connection.client.removeAllChannels();
       }

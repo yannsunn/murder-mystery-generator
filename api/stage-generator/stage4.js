@@ -15,7 +15,7 @@ class Stage4Generator extends StageBase {
   }
 
   async processStage(sessionData, _stageData) {
-    const { formData, random_outline, concept_detail, incident_core, incident_details } = sessionData;
+    const { formData } = sessionData;
     
     // 参加者数に応じて効率的な生成方法を選択
     const participants = parseInt(formData.participants) || 6;

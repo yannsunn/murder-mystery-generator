@@ -27,8 +27,7 @@ class GeminiImageClient {
     }
 
     const {
-      aspectRatio = '1:1', // 1:1, 16:9, 9:16
-      numberOfImages = 1,
+      // aspectRatio and numberOfImages reserved for future implementation
       safetySettings = 'default'
     } = options;
 

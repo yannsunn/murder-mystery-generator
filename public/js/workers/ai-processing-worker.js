@@ -208,7 +208,7 @@ class AIProcessingWorker {
    * フェーズ処理実行
    */
   async executePhaseProcessing(phase) {
-    const { phaseName, formData, context, handler } = phase;
+    const { phaseName, formData, context } = phase;
     
     // シミュレート処理（実際のプロダクションではAI APIコール）
     return new Promise((resolve) => {
@@ -248,7 +248,7 @@ class AIProcessingWorker {
   /**
    * 模擬結果生成
    */
-  generateMockResult(phaseName, formData, context) {
+  generateMockResult(phaseName, formData, _context) {
     const templates = {
       'random_outline': {
         random_outline: `## 作品基本情報（ランダム版）
@@ -277,7 +277,7 @@ class AIProcessingWorker {
   /**
    * ランダムタイトル生成
    */
-  generateRandomTitle(formData) {
+  generateRandomTitle(_formData) {
     const prefixes = ['消えた', '隠された', '最後の', '呪われた', '忘れられた'];
     const subjects = ['真実', '証拠', '記憶', '告白', '手紙'];
     const suffixes = ['の謎', 'の秘密', 'の影', 'の謎解き', 'の事件'];
@@ -310,7 +310,7 @@ class AIProcessingWorker {
     return tricks[Math.floor(Math.random() * tricks.length)];
   }
 
-  generateGenre(formData) {
+  generateGenre(_formData) {
     const genres = ['本格ミステリー', 'サスペンス', 'ホラーミステリー', '推理もの'];
     return genres[Math.floor(Math.random() * genres.length)];
   }
@@ -357,22 +357,17 @@ class AIProcessingWorker {
   async evaluateQuality(payload, taskId) {
     const { content, criteria } = payload;
     const startTime = performance.now();
-    
-    try {
-      const evaluation = await this.performQualityEvaluation(content, criteria);
-      const processingTime = performance.now() - startTime;
-      
-      this.sendSuccess(taskId, {
-        evaluation,
-        processingTime
-      });
-      
-    } catch (error) {
-      throw error;
-    }
+
+    const evaluation = await this.performQualityEvaluation(content, criteria);
+    const processingTime = performance.now() - startTime;
+
+    this.sendSuccess(taskId, {
+      evaluation,
+      processingTime
+    });
   }
 
-  async performQualityEvaluation(content, criteria) {
+  async performQualityEvaluation(content, _criteria) {
     // 詳細な品質評価ロジック
     const scores = {};
     
@@ -411,17 +406,17 @@ class AIProcessingWorker {
     return found / requiredElements.length;
   }
 
-  evaluateConsistency(content) {
+  evaluateConsistency(_content) {
     // 一貫性チェックの簡易実装
     return 0.7 + Math.random() * 0.3;
   }
 
-  evaluateCreativity(content) {
+  evaluateCreativity(_content) {
     // 創造性評価の簡易実装
     return 0.6 + Math.random() * 0.4;
   }
 
-  evaluateLogic(content) {
+  evaluateLogic(_content) {
     // 論理性評価の簡易実装
     return 0.8 + Math.random() * 0.2;
   }
@@ -454,20 +449,15 @@ class AIProcessingWorker {
   async optimizeContent(payload, taskId) {
     const { content, optimizationSettings } = payload;
     const startTime = performance.now();
-    
-    try {
-      const optimizedContent = await this.performOptimization(content, optimizationSettings);
-      const processingTime = performance.now() - startTime;
-      
-      this.sendSuccess(taskId, {
-        optimizedContent,
-        optimizations: optimizedContent.optimizations,
-        processingTime
-      });
-      
-    } catch (error) {
-      throw error;
-    }
+
+    const optimizedContent = await this.performOptimization(content, optimizationSettings);
+    const processingTime = performance.now() - startTime;
+
+    this.sendSuccess(taskId, {
+      optimizedContent,
+      optimizations: optimizedContent.optimizations,
+      processingTime
+    });
   }
 
   async performOptimization(content, settings) {
@@ -584,4 +574,4 @@ class AIProcessingWorker {
 }
 
 // ワーカー初期化
-const aiWorker = new AIProcessingWorker();
+new AIProcessingWorker();

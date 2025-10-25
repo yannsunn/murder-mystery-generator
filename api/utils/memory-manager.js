@@ -81,8 +81,8 @@ class MemoryManager {
    */
   cleanupOldEntries() {
     let cleaned = 0;
-    
-    this.caches.forEach((cache, cacheName) => {
+
+    this.caches.forEach((cache) => {
       const now = Date.now();
       const keysToDelete = [];
       

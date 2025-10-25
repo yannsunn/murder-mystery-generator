@@ -25,9 +25,9 @@ function createSuccessResponse(content, metadata = {}) {
 /**
  * 統一エラーレスポンス
  */
-function createErrorResponse(error, statusCode = 500) {
+function createErrorResponse(error, _statusCode = 500) {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   return {
     success: false,
     error: isProduction ? 'An error occurred' : error.message,

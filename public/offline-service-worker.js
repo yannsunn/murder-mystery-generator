@@ -27,12 +27,6 @@ const STATIC_RESOURCES = [
   '/fonts/'
 ];
 
-// API エンドポイント
-const API_ENDPOINTS = [
-  '/api/generate',
-  '/api/ping'
-];
-
 /**
  * Service Worker インストール
  */
@@ -139,8 +133,6 @@ self.addEventListener('sync', (event) => {
  * APIリクエスト処理
  */
 async function handleApiRequest(request) {
-  const url = new URL(request.url);
-  
   try {
     // まずネットワークを試行
     const networkResponse = await fetch(request.clone());
@@ -322,6 +314,7 @@ async function cacheResource(url, cacheName = CACHE_NAME) {
     await cache.add(url);
     // Cached resource - debug log removed for production
   } catch (error) {
+    // Silently ignore cache errors
   }
 }
 
@@ -332,6 +325,7 @@ async function clearCache(cacheName) {
   try {
     await caches.delete(cacheName);
   } catch (error) {
+    // Silently ignore cache deletion errors
   }
 }
 
@@ -368,6 +362,7 @@ async function syncOfflineData() {
         await syncSingleItem(item);
         await markItemAsSynced(item.id);
       } catch (error) {
+        // Silently ignore individual sync errors
       }
     }
     
@@ -379,8 +374,9 @@ async function syncOfflineData() {
         synced: syncData.length
       });
     });
-    
+
   } catch (error) {
+    // Silently ignore background sync errors
   }
 }
 
@@ -412,7 +408,7 @@ async function syncSingleItem(item) {
 /**
  * アイテムを同期済みとしてマーク
  */
-async function markItemAsSynced(itemId) {
+async function markItemAsSynced(_itemId) {
   // 実際のプロダクションではIndexedDBを更新
 }
 
@@ -432,6 +428,7 @@ async function precacheResources() {
     try {
       await cache.add(url);
     } catch (error) {
+      // Silently ignore precache errors for individual resources
     }
   }
 }

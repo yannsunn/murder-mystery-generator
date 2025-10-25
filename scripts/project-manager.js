@@ -204,7 +204,7 @@ class ProjectManager {
     try {
       const packagePath = join(ROOT_DIR, 'package.json');
       if (existsSync(packagePath)) {
-        const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
+        JSON.parse(readFileSync(packagePath, 'utf8')); // Verify package.json is valid
         console.log('   ✅ Dependencies');
       }
     } catch (error) {

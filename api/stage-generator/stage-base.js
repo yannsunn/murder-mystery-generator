@@ -134,7 +134,7 @@ class StageBase {
   /**
    * 段階固有の処理（サブクラスで実装）
    */
-  async processStage(sessionData, _stageData) {
+  async processStage(_sessionData, _stageData) {
     throw new Error('processStage must be implemented by subclass');
   }
 

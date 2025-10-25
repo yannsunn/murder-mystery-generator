@@ -3,8 +3,8 @@
  * Vercel + Node.js スクリプトベースの自動デプロイメントシステム
  */
 
-import { execSync, spawn } from 'child_process';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
 import { performance } from 'perf_hooks';
 
 class UltraDeploymentSystem {
@@ -226,7 +226,7 @@ class UltraDeploymentSystem {
     
     // 致命的エラーのチェック
     const criticalFailures = Object.entries(testSuite)
-      .filter(([key, result]) => result.status === 'failed')
+      .filter(([_key, result]) => result.status === 'failed')
       .filter(([key]) => ['unit', 'integration'].includes(key)); // セキュリティとパフォーマンスは警告レベル
     
     if (criticalFailures.length > 0) {
@@ -263,7 +263,7 @@ class UltraDeploymentSystem {
     
     console.log('   🏗️ アプリケーションビルド...');
     try {
-      const buildResult = execSync('npm run build', { 
+      execSync('npm run build', {
         encoding: 'utf8',
         timeout: 180000,
         stdio: 'pipe'
@@ -424,7 +424,7 @@ class UltraDeploymentSystem {
     
     // 致命的な問題をチェック
     const failures = Object.entries(validation)
-      .filter(([key, result]) => result.status === 'failed');
+      .filter(([_key, result]) => result.status === 'failed');
     
     if (failures.length > 0) {
       console.warn(`⚠️ 検証警告: ${failures.map(([key]) => key).join(', ')}`);

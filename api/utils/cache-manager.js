@@ -221,13 +221,12 @@ class CacheManager {
    * メモリ最適化を実行
    */
   optimizeMemory() {
-    const stats = this.getAllStats();
     const systemMemory = this.caches.get('general').getSystemMemoryInfo();
     const memoryUsagePercent = parseFloat(systemMemory.usagePercent);
-    
+
     // メモリ使用率が高い場合、各キャッシュのサイズを調整
     if (memoryUsagePercent > 80) {
-      this.caches.forEach((cache, name) => {
+      this.caches.forEach((cache) => {
         const currentMax = cache.maxSize;
         const newMax = Math.max(cache.minSize, Math.floor(currentMax * 0.8));
         cache.adjustCachePolicy({ maxSize: newMax });

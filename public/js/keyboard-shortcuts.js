@@ -3,6 +3,8 @@
  * キーボードショートカットとアクセシビリティ強化
  */
 
+/* global showTab, currentActiveTab, closeImageModal, clearSearch, showToast */
+
 // ショートカットの状態管理
 const shortcutsEnabled = true;
 let helpModalVisible = false;
@@ -60,17 +62,6 @@ function navigateTabs(direction) {
 }
 
 // コピーと保存機能は削除（元のブラウザ機能を維持）
-
-/**
- * 🔍 検索入力にフォーカス
- */
-function focusSearchInput() {
-  const searchInput = document.getElementById('content-search');
-  if (searchInput) {
-    searchInput.focus();
-    searchInput.select();
-  }
-}
 
 /**
  * ❓ ショートカットヘルプ表示
@@ -297,6 +288,8 @@ function handleKeyboardShortcut(event) {
     try {
       shortcutFunction();
     } catch (error) {
+      // Silently fail for optional shortcuts
+      console.warn('Shortcut execution failed:', error);
     }
   }
 }
